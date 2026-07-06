@@ -1,0 +1,13 @@
+appId: com.apimonitor.erp
+productName: API Monitor ERP
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**/*
+  - package.json
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

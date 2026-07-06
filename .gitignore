@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Compiler outputs
+/out
+/dist
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Project-Specific Exclusions (Requested by USER)
+/erp.md
+/progress.md
+/skills.md
+/claude.md
+
+# Build configuration cache
+.eslintcache
+.vite-cache
+
+# Python helper scripts
+/generate_icons.py
+/get_b64.py

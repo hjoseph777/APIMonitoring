@@ -1,0 +1,149 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Typography Font Family - Clean System Fonts */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+    /* Font Sizes - Proper Hierarchy */
+    --text-xs: 0.75rem;    /* 12px */
+    --text-sm: 0.875rem;   /* 14px */
+    --text-base: 1rem;     /* 16px */
+    --text-lg: 1.125rem;   /* 18px */
+    --text-xl: 1.25rem;    /* 20px */
+    --text-2xl: 1.5rem;    /* 24px */
+    --text-3xl: 1.875rem;  /* 30px */
+
+    /* Light Mode (Clear Style) Variables */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #e2e8f0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.05);
+
+    /* Accents */
+    --color-blue: #3b82f6;
+    --color-green: #10b981;
+    --color-red: #ef4444;
+    --color-orange: #f59e0b;
+    --color-purple: #8b5cf6;
+    --color-cyan: #06b6d4;
+
+    --status-success: 142.1 76.2% 36.3%;
+    --status-error: 0 84.2% 60.2%;
+    --status-idle: 215.4 16.3% 46.9%;
+  }
+
+  .dark {
+    /* Tokyo Night Dark Mode Colors */
+    --bg-primary: #1a1b26;
+    --bg-secondary: #24283b;
+    --bg-card: #2d2f3f;
+    --text-primary: #c0caf5;
+    --text-secondary: #9aa5ce;
+    --border-color: #414868;
+    --shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+    /* Tokyo Night Accents */
+    --color-blue: #7aa2f7;
+    --color-green: #9ece6a;
+    --color-red: #f7768e;
+    --color-orange: #e0af68;
+    --color-purple: #bb9af7;
+    --color-cyan: #7dcfff;
+
+    /* Glow effects */
+    --glow-blue: 0 0 20px rgba(122, 162, 247, 0.12);
+    --glow-green: 0 0 20px rgba(158, 206, 106, 0.12);
+    --glow-red: 0 0 20px rgba(247, 118, 142, 0.12);
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.dark .glass-panel {
+  background: rgba(36, 40, 59, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(122, 162, 247, 0.15);
+  box-shadow: var(--shadow);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .glass-card {
+  background: rgba(45, 47, 63, 0.6);
+  border: 1px solid rgba(122, 162, 247, 0.08);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--color-blue);
+  transform: translateY(-1px);
+}
+
+.dark .glass-card:hover {
+  background: rgba(45, 47, 63, 0.8);
+  border-color: rgba(122, 162, 247, 0.25);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes pulse-fast {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(1.08); }
+}
+.animate-pulse-fast {
+  animation: pulse-fast 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
