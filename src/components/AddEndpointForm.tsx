@@ -132,7 +132,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Local ERP ERP_Sales"
               disabled={loading}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -144,7 +144,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
               onChange={(e) => setUrl(e.target.value)}
               placeholder="e.g., http://localhost:8080/api/sales"
               disabled={loading}
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -156,7 +156,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
                 value={interval}
                 onChange={(e) => setInterval(parseInt(e.target.value))}
                 disabled={loading}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value={1}>Every 1 minute</option>
                 <option value={2}>Every 2 minutes</option>
@@ -173,7 +173,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
                 value={timeoutVal}
                 onChange={(e) => setTimeoutVal(parseInt(e.target.value))}
                 disabled={loading}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value={5}>5 seconds</option>
                 <option value={10}>10 seconds</option>
@@ -255,3 +255,5 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
   )
 }
 export default AddEndpointForm
+
+
