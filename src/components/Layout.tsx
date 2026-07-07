@@ -47,100 +47,122 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Monitor },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'notification-json', label: 'Notification & JSON', icon: Database }
+    { id: 'settings', label: 'Endpoint Registry', icon: Settings },
+    { id: 'notification-json', label: 'Notification & JSON', icon: Database },
+    { id: 'reports', label: 'Reports', icon: BarChart3 }
   ]
 
   return (
-    <div className="flex flex-col min-h-screen bg-transparent text-slate-900 dark:text-slate-100 transition-colors duration-300 select-none">
-      {/* Horizontal Top Header (incorporating Nav tabs) */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 dark:bg-slate-900/85 dark:border-slate-800/80 backdrop-blur-md px-4 py-2 flex items-center justify-between transition-colors duration-300">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 select-none">
+      
+      {/* Static Left Sidebar */}
+      <aside className="w-56 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-850 flex flex-col justify-between shrink-0 transition-colors duration-300">
+        <div className="flex flex-col">
+          {/* Logo Brand Area */}
+          <div className="p-4 flex items-center gap-2 border-b border-slate-150 dark:border-slate-850">
+            <div className="w-5.5 h-5.5 bg-[#e51937] rounded-[5px] flex items-center justify-center shadow-sm shrink-0">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <g transform="rotate(45 12 12)">
+                  <path d="M12 2 Q12 12 2 12 Q12 12 12 22 Q12 12 22 12 Q12 12 12 2 Z" />
+                </g>
+              </svg>
+            </div>
+            <div className="flex items-baseline">
+              <span className="font-extrabold text-sm tracking-tighter text-[#e51937] lowercase">xerox</span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-550 font-bold uppercase tracking-wider ml-1">Monitor</span>
+            </div>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="p-3 space-y-1.5 flex-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                    isActive
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-850/60'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{tab.label}</span>
+                </button>
+              )
+            })}
+          </nav>
+        </div>
+
+        {/* Footer/Version Info in Sidebar */}
+        <div className="p-4 border-t border-slate-150 dark:border-slate-850 flex items-center gap-1.5 text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
+          <Cpu className="w-3.5 h-3.5" />
+          <span>v1.0.0 (GUI v2.0)</span>
+        </div>
+      </aside>
+
+      {/* Right-Side Content Wrapper */}
+      <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Left Brand Area */}
-        <div className="flex items-center gap-2">
-          {/* Exact Xerox Rounded Box Logo */}
-          <div className="w-5 h-5 bg-[#e51937] rounded-[5px] flex items-center justify-center shadow-sm shrink-0">
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-              <g transform="rotate(45 12 12)">
-                <path d="M12 2 Q12 12 2 12 Q12 12 12 22 Q12 12 22 12 Q12 12 12 2 Z" />
-              </g>
-            </svg>
-          </div>
-          <div className="flex items-baseline">
-            <span className="font-extrabold text-sm tracking-tighter text-[#e51937] lowercase">xerox</span>
-            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider ml-1">Monitor</span>
-          </div>
-        </div>
-
-        {/* Center Navigation Tabs (Horizontal) */}
-        <nav className="flex items-center gap-1">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
-                  isActive
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-900/50'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Right Status Actions Area */}
-        <div className="flex items-center gap-1.5">
-          {/* Status Dot */}
-          <div className="flex items-center gap-1 mr-1">
-            <span className={`h-2 w-2 rounded-full shadow-sm animate-pulse-fast ${getStatusColor()}`}></span>
-          </div>
-
-          {/* Theme Toggle */}
-          <button 
-            onClick={toggleTheme}
-            className="p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700/50 rounded-lg transition-all duration-200"
-            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-          </button>
-
-          {/* Notification Bell */}
-          <button className="relative p-1.5 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700/50 rounded-lg transition-all duration-200">
-            <Bell className="w-3.5 h-3.5" />
-            {alertCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
-                {alertCount}
+        {/* Top Header Bar */}
+        <header className="h-14 border-b border-slate-200 dark:border-slate-850 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-6 flex items-center justify-between transition-colors duration-300">
+          
+          {/* Status Indicators */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider flex items-center gap-1.5">
+              <Terminal className="w-3.5 h-3.5 text-blue-500" />
+              Status:
+            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-850 rounded-lg">
+              <span className={`h-2 w-2 rounded-full ${getStatusColor()}`}></span>
+              <span className="text-[10px] font-extrabold uppercase text-slate-650 dark:text-slate-350">
+                {systemStatus === 'online' ? 'All Systems Online' : `${systemStatus === 'warning' ? 'Minor Issues' : 'Critical Outages'}`}
               </span>
-            )}
-          </button>
-        </div>
-      </header>
+            </div>
+            
+            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-blue-500/5 border border-blue-500/10 rounded-lg text-blue-500 text-[10px] font-bold uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Shield Active (mTLS Bypass)
+            </div>
+          </div>
 
-      {/* Main Single Column Viewport */}
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1 p-4 overflow-y-auto max-w-5xl mx-auto w-full">
+          {/* Action Tools */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme}
+              className="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-850 dark:hover:bg-slate-750/80 border border-slate-200 dark:border-slate-800 rounded-xl transition-all duration-200 cursor-pointer"
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+
+            {/* Notification Bell */}
+            <button className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-850 dark:hover:bg-slate-750/80 border border-slate-200 dark:border-slate-800 rounded-xl transition-all duration-200 cursor-pointer">
+              <Bell className="w-3.5 h-3.5" />
+              {alertCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
+                  {alertCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-6 overflow-y-auto w-full max-w-5xl mx-auto">
           {children}
         </main>
-      </div>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-900 bg-slate-100 dark:bg-slate-950 px-4 py-2 flex items-center justify-between text-[9px] text-slate-500">
-        <div className="flex items-center gap-2">
-          <span>System Online</span>
-          <span className="text-slate-355">|</span>
-          <span>Version 1.0.0</span>
-        </div>
-        <div className="flex items-center gap-2 font-mono">
-          <span>Shield Active</span>
-        </div>
-      </footer>
+        {/* Footer */}
+        <footer className="h-8 border-t border-slate-200 dark:border-slate-850 bg-slate-100 dark:bg-slate-950 px-6 flex items-center justify-between text-[9px] text-slate-500">
+          <span>Xerox API Engine Running</span>
+          <span className="font-mono uppercase tracking-wider text-[8px]">Auto-polling active</span>
+        </footer>
+
+      </div>
     </div>
   )
 }

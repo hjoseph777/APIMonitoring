@@ -11,6 +11,7 @@ export interface Endpoint {
   authConfig: AuthConfig;
   authStatus?: 'valid' | 'expired' | 'failed' | 'none';
   responseTimeHistory?: number[]; // history of last response times in ms
+  timeout?: number; // in seconds
 }
 
 export type AuthConfig = 
@@ -62,6 +63,9 @@ declare global {
       exportBackup: () => Promise<string>;
       importBackup: (jsonString: string) => Promise<{ success: boolean }>;
       resetAllData: () => Promise<{ success: boolean }>;
+      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }>;
+      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }) => Promise<{ success: boolean }>;
+      sendTestAlert: (args: { webhookUrl: string; channelType: string }) => Promise<{ success: boolean; message?: string }>;
     }
   }
 }

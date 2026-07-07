@@ -160,6 +160,49 @@ app.whenReady().then(() => {
     return { success: true }
   })
 
+  // Global settings
+  ipcMain.handle('get-settings', () => {
+    const Store = require('electron-store')
+    const store = new Store()
+    return {
+      nativeNotify: store.get('nativeNotify', true),
+      smtpServer: store.get('smtpServer', 'smtp.company.com'),
+      notifyEmail: store.get('notifyEmail', 'admin@company.com'),
+      globalWebhook: store.get('globalWebhook', ''),
+      globalWebhookChannel: store.get('globalWebhookChannel', 'msteams')
+    }
+  })
+
+  ipcMain.handle('save-settings', (_, settings: any) => {
+    const Store = require('electron-store')
+    const store = new Store()
+    store.set('nativeNotify', settings.nativeNotify)
+    store.set('smtpServer', settings.smtpServer)
+    store.set('notifyEmail', settings.notifyEmail)
+    store.set('globalWebhook', settings.globalWebhook)
+    store.set('globalWebhookChannel', settings.globalWebhookChannel)
+    return { success: true }
+  })
+
+  ipcMain.handle('send-test-alert', async (_, { webhookUrl, channelType }) => {
+    try {
+      const axios = require('axios')
+      let payload: any = {}
+      const testMsg = `🧪 **[API Monitor Test Alert]** This is a simulated alert connection test.`
+
+      if (channelType === 'discord') {
+        payload = { content: testMsg }
+      } else {
+        payload = { text: testMsg }
+      }
+
+      await axios.post(webhookUrl, payload, { timeout: 5000 })
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  })
+
   // System Tray Initialization
   let tray: Tray | null = null
   tray = new Tray(appIcon)

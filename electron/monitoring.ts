@@ -113,10 +113,11 @@ export const MonitoringService = {
     let errorMessage = ''
 
     try {
+      const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 15000
       const config: any = {
         method: 'GET',
         url: endpoint.url,
-        timeout: 15000,
+        timeout: requestTimeout,
         headers: {}
       }
 
@@ -143,7 +144,7 @@ export const MonitoringService = {
         response = await axiosNtlm({
           method: 'GET',
           url: endpoint.url,
-          timeout: 15000,
+          timeout: requestTimeout,
           httpsAgent: config.httpsAgent,
           ntlm: {
             username: (auth as any).username,
@@ -261,12 +262,20 @@ export const MonitoringService = {
     const Store = require('electron-store')
     const store = new Store()
     const webhookUrl = store.get('globalWebhook')
+    const channelType = store.get('globalWebhookChannel') || 'msteams'
     if (!webhookUrl || typeof webhookUrl !== 'string') return
 
     try {
-      await axios.post(webhookUrl, {
-        content: `🚨 **[API Monitor Alert]** \`${endpointName}\` is offline!\nMessage: ${message}`
-      })
+      const alertText = `🚨 **[API Monitor Alert]** \`${endpointName}\` is offline!\nMessage: ${message}`
+      let payload: any = {}
+      
+      if (channelType === 'discord') {
+        payload = { content: alertText }
+      } else {
+        payload = { text: alertText }
+      }
+
+      await axios.post(webhookUrl, payload)
       console.log('Webhook alert notification dispatched.')
     } catch (err: any) {
       console.error('Failed dispatching webhook alert', err.message)
@@ -275,10 +284,11 @@ export const MonitoringService = {
 
   async testConnection(endpoint: Partial<Endpoint>): Promise<{ success: boolean; status?: number; message?: string }> {
     try {
+      const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 10000
       const config: any = {
         method: 'GET',
         url: endpoint.url,
-        timeout: 10000,
+        timeout: requestTimeout,
         headers: {}
       }
 
@@ -301,7 +311,7 @@ export const MonitoringService = {
         response = await axiosNtlm({
           method: 'GET',
           url: endpoint.url,
-          timeout: 10000,
+          timeout: requestTimeout,
           httpsAgent: config.httpsAgent,
           ntlm: {
             username: (auth as any).username,

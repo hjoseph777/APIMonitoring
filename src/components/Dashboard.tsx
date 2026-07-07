@@ -1,5 +1,5 @@
 import React from 'react'
-import { Activity, CheckCircle, XCircle, AlertTriangle, Clock } from 'lucide-react'
+import { Activity, CheckCircle, XCircle, AlertTriangle, Clock, Monitor } from 'lucide-react'
 import { Endpoint, Alert, Log } from '../types'
 import { useToast } from '../context/ToastContext'
 
@@ -38,30 +38,38 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
   return (
     <div className="space-y-5">
       {/* Stats Grid - Minimal Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           icon={Activity}
-          label="Total Endpoints"
+          label="Total Monitored"
           value={endpoints.length}
-          colorClass="text-blue-500 bg-blue-500/10 border-blue-500/20"
+          bgClass="bg-slate-100/40 dark:bg-slate-900/40"
+          textClass="text-slate-700 dark:text-slate-300"
+          borderClass="border-slate-200 dark:border-slate-800"
         />
         <StatCard
           icon={CheckCircle}
           label="Online Services"
           value={onlineCount}
-          colorClass="text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+          bgClass="bg-emerald-50/40 dark:bg-emerald-950/10"
+          textClass="text-emerald-600 dark:text-emerald-450"
+          borderClass="border-emerald-200/50 dark:border-emerald-900/20"
         />
         <StatCard
           icon={XCircle}
           label="Offline Failures"
           value={offlineCount}
-          colorClass="text-rose-500 bg-rose-500/10 border-rose-500/20"
+          bgClass="bg-rose-50/40 dark:bg-rose-950/10"
+          textClass="text-rose-600 dark:text-rose-450"
+          borderClass="border-rose-200/50 dark:border-rose-900/20"
         />
         <StatCard
           icon={AlertTriangle}
           label="Active Alerts"
           value={alertCount}
-          colorClass="text-amber-500 bg-amber-500/10 border-amber-500/20"
+          bgClass="bg-amber-50/40 dark:bg-amber-950/10"
+          textClass="text-amber-600 dark:text-amber-450"
+          borderClass="border-amber-200/50 dark:border-amber-900/20"
         />
       </div>
 
@@ -121,8 +129,16 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
             )
           })}
           {endpoints.length === 0 && (
-            <div className="p-8 text-center text-xs text-slate-700 dark:text-slate-300 font-semibold italic">
-              No endpoints monitored. Go to Settings tab to register your first endpoint.
+            <div className="p-8 text-center max-w-sm mx-auto space-y-3">
+              <div className="mx-auto w-10 h-10 rounded-full bg-blue-500/5 flex items-center justify-center border border-blue-500/10">
+                <Monitor className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200">No endpoints monitored</h3>
+                <p className="text-[10px] text-slate-500 mt-1 select-text">
+                  Register your first target server in the <strong>Endpoint Registry</strong> tab to begin live monitoring.
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -148,8 +164,10 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
               </div>
             ))}
             {recentAlerts.length === 0 && (
-              <div className="text-center text-[10px] text-slate-500 italic py-6">
-                All systems quiet. No active alerts.
+              <div className="text-center py-6 text-slate-500 flex flex-col items-center justify-center gap-1.5">
+                <CheckCircle className="w-4.5 h-4.5 text-emerald-500" />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500">All systems operational</span>
+                <p className="text-[9px] select-text">No active alerts triggered.</p>
               </div>
             )}
           </div>
@@ -177,8 +195,10 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
               </div>
             ))}
             {recentLogs.length === 0 && (
-              <div className="text-center text-[10px] text-slate-500 italic py-6">
-                No copy audits logged.
+              <div className="text-center py-6 text-slate-500 flex flex-col items-center justify-center gap-1.5">
+                <Activity className="w-4.5 h-4.5 text-slate-400" />
+                <span className="text-[9px] font-bold uppercase tracking-wider">No logs recorded</span>
+                <p className="text-[9px] select-text">Audit transaction records will appear here.</p>
               </div>
             )}
           </div>
@@ -193,16 +213,20 @@ interface StatCardProps {
   icon: React.ComponentType<{ className?: string }>
   label: string
   value: number
-  colorClass: string
+  bgClass: string
+  textClass: string
+  borderClass: string
 }
-function StatCard({ icon: Icon, label, value, colorClass }: StatCardProps) {
+function StatCard({ icon: Icon, label, value, bgClass, textClass, borderClass }: StatCardProps) {
   return (
-    <div className={`p-3.5 border rounded-xl flex items-center justify-between transition-all ${colorClass}`}>
+    <div className={`p-4 border rounded-2xl flex items-center justify-between shadow-sm transition-all duration-150 ${bgClass} ${borderClass}`}>
       <div>
-        <span className="text-[10px] uppercase font-bold tracking-wider opacity-80 block">{label}</span>
-        <span className="text-xl font-extrabold leading-none mt-1 block">{value}</span>
+        <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-500 dark:text-slate-400 block">{label}</span>
+        <span className={`text-2xl font-black leading-none mt-1.5 block ${textClass}`}>{value}</span>
       </div>
-      <Icon className="w-5 h-5 opacity-70 shrink-0" />
+      <div className={`p-2 rounded-xl bg-slate-100/60 dark:bg-slate-900/50 shrink-0`}>
+        <Icon className={`w-4 h-4 ${textClass}`} />
+      </div>
     </div>
   )
 }

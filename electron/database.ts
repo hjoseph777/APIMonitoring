@@ -28,7 +28,8 @@ try {
       consecutiveErrors INTEGER DEFAULT 0,
       authType TEXT NOT NULL,
       authConfig TEXT NOT NULL,
-      responseTimeHistory TEXT
+      responseTimeHistory TEXT,
+      timeout INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS alerts (
@@ -50,6 +51,14 @@ try {
       success INTEGER DEFAULT 1
     );
   `)
+
+  // Run migration for existing databases
+  try {
+    dbInstance.exec('ALTER TABLE endpoints ADD COLUMN timeout INTEGER;')
+  } catch (err) {
+    // Column already exists, ignore
+  }
+
   console.log('Database initialized successfully using better-sqlite3 at:', dbPath)
 } catch (e: any) {
   console.warn('better-sqlite3 native compilation not available or failed to load. Falling back to electron-store file-based DB.', e.message)
@@ -101,8 +110,8 @@ export const DatabaseService = {
   saveEndpoint(endpoint: Endpoint) {
     if (useSqlite) {
       const stmt = dbInstance.prepare(`
-        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       stmt.run(
         endpoint.id,
@@ -115,7 +124,8 @@ export const DatabaseService = {
         endpoint.consecutiveErrors,
         endpoint.authType,
         JSON.stringify(endpoint.authConfig),
-        JSON.stringify(endpoint.responseTimeHistory || [])
+        JSON.stringify(endpoint.responseTimeHistory || []),
+        endpoint.timeout !== undefined ? endpoint.timeout : null
       )
     } else {
       const endpoints = this.getEndpoints()

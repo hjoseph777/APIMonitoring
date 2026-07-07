@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   testConnection: (endpoint: Partial<Endpoint>) => ipcRenderer.invoke('test-connection', endpoint),
   exportBackup: () => ipcRenderer.invoke('export-backup'),
   importBackup: (jsonString: string) => ipcRenderer.invoke('import-backup', jsonString),
-  resetAllData: () => ipcRenderer.invoke('reset-all-data')
+  resetAllData: () => ipcRenderer.invoke('reset-all-data'),
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+  sendTestAlert: (args: { webhookUrl: string; channelType: string }) => ipcRenderer.invoke('send-test-alert', args)
 })
 export {}
