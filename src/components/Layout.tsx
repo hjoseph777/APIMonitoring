@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, ShieldCheck, Terminal, AlertTriangle, Monitor, Cpu, Sun, Moon, BarChart3, Settings } from 'lucide-react'
+import { Bell, ShieldCheck, Terminal, AlertTriangle, Monitor, Cpu, Sun, Moon, BarChart3, Settings, Database } from 'lucide-react'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -48,7 +48,8 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Monitor },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'notification-json', label: 'Notification & JSON', icon: Database }
   ]
 
   return (
