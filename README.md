@@ -141,31 +141,43 @@ The application's connection testing and authentication pipelines were thoroughl
    * **Target Endpoint**: `https://httpbin.org/basic-auth/user/pass`
    * **Credentials**: Username `user`, Password `pass`
    * **Result**: **Success (200 OK)** — Injecting the base64-encoded standard Basic header yields a verified response.
+   
+   ![Basic Auth Success](Pictures/Test_Basic_Auth_Success.png)
 
 2. **Basic Authentication Rejection**
    * **Target Endpoint**: `https://httpbin.org/basic-auth/user/pass`
    * **Credentials**: Username `user`, Password `wrong`
    * **Result**: **Failed (401 Unauthorized)** — The system correctly catches the authentication rejection.
 
+   ![Basic Auth Failure](Pictures/Test_Basic_Auth_Failure.png)
+
 3. **API Key Header Success**
    * **Target Endpoint**: `https://httpbin.org/headers`
    * **Config**: Key name `X-API-Key`, Value `my-secure-token`, Location `Header`
    * **Result**: **Success (200 OK)** — Header keys are correctly injected and echoed by the host.
+
+   ![API Key Header Success](Pictures/Test_API_Key_Header_Success.png)
 
 4. **API Key Header Rejection**
    * **Target Endpoint**: `https://httpbin.org/status/403`
    * **Config**: Key name `X-API-Key`, Value `my-secure-token`, Location `Header`
    * **Result**: **Failed (403 Forbidden)** — Proves the app captures HTTP client/permissions rejections correctly.
 
+   ![API Key Header Failure](Pictures/Test_API_Key_Header_Failure.png)
+
 5. **API Key Query Parameter Success**
    * **Target Endpoint**: `https://httpbin.org/get`
    * **Config**: Key name `api_key`, Value `my-query-token`, Location `Query Parameter`
    * **Result**: **Success (200 OK)** — Confirms parameters are successfully appended to URLs.
 
+   ![API Key Query Success](Pictures/Test_API_Key_Query_Success.png)
+
 6. **Public Endpoint (No Auth) Success**
    * **Target Endpoint**: `https://httpbin.org/get`
    * **Config**: Authentication `None`
    * **Result**: **Success (200 OK)** — Connects seamlessly without credentials.
+
+   ![Public Endpoint Success](Pictures/Test_Public_None_Success.png)
 
 *(Visual logs and screenshots capturing these manual test events are recorded in [Doc1.docx](file:///c:/Users/Owner/Xerox/API_Monitor/Pictures/Doc1.docx))*
 
