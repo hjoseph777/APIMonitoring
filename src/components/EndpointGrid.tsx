@@ -110,7 +110,7 @@ export function EndpointGrid({ endpoints, onRefresh, onDelete, loading = false }
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search endpoints..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500"
+            className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
           />
         </div>
 
@@ -119,7 +119,7 @@ export function EndpointGrid({ endpoints, onRefresh, onDelete, loading = false }
           <select
             value={statusFilter}
             onChange={(e: any) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+            className="w-full sm:w-auto bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-500"
           >
             <option value="all">All Statuses</option>
             <option value="success">Online Only</option>
@@ -177,3 +177,4 @@ export function EndpointGrid({ endpoints, onRefresh, onDelete, loading = false }
   )
 }
 export default EndpointGrid
+

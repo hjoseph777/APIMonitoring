@@ -62,7 +62,7 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
             <select
               value={alertThreshold}
               onChange={(e) => setAlertThreshold(e.target.value)}
-              className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+              className="bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500 cursor-pointer"
             >
               <option value="1">Alert after 1 failure</option>
               <option value="2">Alert after 2 failures</option>

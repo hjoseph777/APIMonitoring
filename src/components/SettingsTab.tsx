@@ -108,7 +108,7 @@ export function SettingsTab() {
               type="text"
               value={smtpServer}
               onChange={(e) => setSmtpServer(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none"
             />
           </div>
           <div>
@@ -117,7 +117,7 @@ export function SettingsTab() {
               type="text"
               value={smtpPort}
               onChange={(e) => setSmtpPort(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none"
             />
           </div>
           <div>
@@ -126,7 +126,7 @@ export function SettingsTab() {
               type="text"
               value={smtpUser}
               onChange={(e) => setSmtpUser(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none"
             />
           </div>
         </div>
@@ -145,7 +145,7 @@ export function SettingsTab() {
               value={globalWebhook}
               onChange={(e) => setGlobalWebhook(e.target.value)}
               placeholder="https://discord.com/api/webhooks/..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-900 focus:outline-none"
             />
             <p className="text-[10px] text-slate-500 mt-1">
               If configured, failures will trigger real-time JSON alert dispatches.
@@ -193,3 +193,4 @@ export function SettingsTab() {
   )
 }
 export default SettingsTab
+
