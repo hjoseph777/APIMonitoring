@@ -103,18 +103,6 @@ The following screenshots illustrate the layout and tray behavior options of the
 
 *Shows the standard Windows OS Jump list for the active taskbar window button.*
 
-### System Tray Icons Caret
-
-![System Tray Icons Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
-
-*The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
-
-### Expanded Tray Applications Pop-up
-
-![Tray Applications Pop-up](Pictures/Screenshot%202026-07-06%20174454.png)
-
-*The expanded Windows notification tray displaying all active background items.*
-
 ### Endpoint Authentication Configuration
 
 ![Endpoint Authentication Configuration](Pictures/AuthticationTypeScreenshot%202026-07-07%20082104.png)
@@ -126,6 +114,18 @@ The following screenshots illustrate the layout and tray behavior options of the
 ![Active Taskbar View](Pictures/Screenshot%202026-07-06%20174734.png)
 
 *The active Windows taskbar layout showcasing open explorer windows.*
+
+### System Tray Icons Caret
+
+![System Tray Icons Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
+
+*The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
+
+### Expanded Tray Applications Pop-up
+
+![Tray Applications Pop-up](Pictures/Screenshot%202026-07-06%20174454.png)
+
+*The expanded Windows notification tray displaying all active background items.*
 
 ### Tray Context Menu Controls
 
