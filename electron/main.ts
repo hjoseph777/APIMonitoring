@@ -142,6 +142,10 @@ app.whenReady().then(() => {
     return { status: 200 }
   })
 
+  ipcMain.handle('test-connection', async (_, endpoint: Partial<Endpoint>) => {
+    return await MonitoringService.testConnection(endpoint)
+  })
+
   // Backup and restore operations
   ipcMain.handle('export-backup', () => DatabaseService.exportBackup())
   ipcMain.handle('import-backup', (_, jsonString: string) => {

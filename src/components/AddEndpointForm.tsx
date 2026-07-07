@@ -13,6 +13,8 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
   const [authType, setAuthType] = useState('none')
   const [authConfig, setAuthConfig] = useState<any>({ type: 'none' })
   const [loading, setLoading] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
   const [error, setError] = useState('')
 
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -20,6 +22,42 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
   useEffect(() => {
     nameInputRef.current?.focus()
   }, [])
+
+  const handleTestConnection = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    setError('')
+    setTestResult(null)
+
+    if (!url.trim()) {
+      setError('URL is required to test connection')
+      return
+    }
+
+    try {
+      new URL(url)
+    } catch {
+      setError('Please provide a valid absolute URL (e.g. http://127.0.0.1:8080/api)')
+      return
+    }
+
+    setTesting(true)
+    try {
+      if (window.electronAPI) {
+        const res = await window.electronAPI.testConnection({ url, authType, authConfig })
+        if (res.success) {
+          setTestResult({ success: true, message: `Connected successfully! Status: ${res.status || 200}` })
+        } else {
+          setTestResult({ success: false, message: res.message || 'Connection failed.' })
+        }
+      } else {
+        setTestResult({ success: true, message: 'Mock connection test passed (Browser environment).' })
+      }
+    } catch (err: any) {
+      setTestResult({ success: false, message: err.message || 'Test failed' })
+    } finally {
+      setTesting(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -129,13 +167,39 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
         </div>
       </div>
 
+      {testResult && (
+        <div className={`p-3 rounded-xl border text-xs font-semibold ${
+          testResult.success 
+            ? 'bg-emerald-950/20 border-emerald-800/60 text-emerald-400' 
+            : 'bg-rose-950/20 border-rose-800/60 text-rose-400'
+        }`}>
+          {testResult.message}
+        </div>
+      )}
+
       {error && <p className="text-xs text-rose-500 font-semibold">{error}</p>}
 
-      <div className="flex justify-end pt-3 border-t border-slate-800/80">
+      <div className="flex justify-end gap-3 pt-3 border-t border-slate-800/80">
+        <button
+          type="button"
+          onClick={handleTestConnection}
+          disabled={loading || testing}
+          className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 border border-slate-700 rounded-xl text-sm font-semibold text-slate-200 transition-all cursor-pointer"
+        >
+          {testing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Testing...
+            </>
+          ) : (
+            'Test Connection'
+          )}
+        </button>
+
         <button
           type="submit"
-          disabled={loading}
-          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20"
+          disabled={loading || testing}
+          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
         >
           {loading ? (
             <>

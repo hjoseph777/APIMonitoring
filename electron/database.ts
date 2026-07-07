@@ -62,6 +62,28 @@ try {
 }
 
 export const DatabaseService = {
+  purgeOldLogs() {
+    try {
+      const cutOffDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+      if (useSqlite) {
+        dbInstance.prepare('DELETE FROM logs WHERE timestamp < ?').run(cutOffDate)
+        dbInstance.prepare('DELETE FROM alerts WHERE timestamp < ?').run(cutOffDate)
+        console.log('Database logs and alerts older than 7 days purged.')
+      } else {
+        const logs = (store.get('logs') as Log[]) || []
+        const filteredLogs = logs.filter((l: Log) => l.timestamp >= cutOffDate)
+        store.set('logs', filteredLogs)
+
+        const alerts = (store.get('alerts') as Alert[]) || []
+        const filteredAlerts = alerts.filter((a: Alert) => a.timestamp >= cutOffDate)
+        store.set('alerts', filteredAlerts)
+        console.log('Electron store logs and alerts older than 7 days purged.')
+      }
+    } catch (e: any) {
+      console.error('Failed to purge old logs:', e.message)
+    }
+  },
+
   // Endpoints CRUD
   getEndpoints(): Endpoint[] {
     if (useSqlite) {
@@ -274,4 +296,14 @@ export const DatabaseService = {
     }
   }
 }
+
+// Run initial log purge on startup
+try {
+  setTimeout(() => {
+    DatabaseService.purgeOldLogs()
+  }, 5000)
+} catch (e) {
+  console.error('Failed to run startup log purge:', e)
+}
+
 export default DatabaseService

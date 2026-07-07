@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   copyToClipboard: (text: string, endpointName?: string) => ipcRenderer.invoke('copy-to-clipboard', { text, endpointName }),
   validateCertificate: (path: string, passphrase?: string) => ipcRenderer.invoke('validate-certificate', { path, passphrase }),
   testAuthentication: (endpointId: string) => ipcRenderer.invoke('test-authentication', { endpointId }),
+  testConnection: (endpoint: Partial<Endpoint>) => ipcRenderer.invoke('test-connection', endpoint),
   exportBackup: () => ipcRenderer.invoke('export-backup'),
   importBackup: (jsonString: string) => ipcRenderer.invoke('import-backup', jsonString),
   resetAllData: () => ipcRenderer.invoke('reset-all-data')

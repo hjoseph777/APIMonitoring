@@ -19,7 +19,10 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
   * Dynamically updates tooltips showing outage warnings (e.g. `Xerox API Monitor - Outages: 2 offline`).
   * Features a tray context menu for focusing the app, triggering manual checks, or quitting.
 * **Direct Intranet Access**: Bypasses browser sandboxes and CORS limitations, allowing direct HTTP monitoring of local network addresses (`192.168.x.x`), loopbacks (`127.0.0.1`), and intranet servers.
-* **Enterprise Authentication Suite**: Supports static API Keys (including onboarding bearer tokens), Windows Auth (NTLM/Kerberos), client certificates (mTLS), session cookies, and OAuth2/JWT token exchange.
+* **Enterprise Authentication Suite**: Full active support for static API Keys (header/query), authentic Windows Auth (NTLM challenges via `axios-ntlm`), client certificates (mTLS), session cookies (automated cookie jar-based multi-step login flows), and OAuth2 Client Credentials (with token caching).
+* **Pre-Save Connection Test**: Direct credential validation option inside the Add Endpoint form to verify settings before storing.
+* **Self-Scheduling timeout loops**: Eliminates polling race conditions and request accumulation by using recursively queued timeouts rather than overlapping intervals.
+* **Automated Log Rotation**: In-database cleanup policy purging transaction histories and alerts older than 7 days on startup to limit SQLite disk space usage.
 
 ---
 

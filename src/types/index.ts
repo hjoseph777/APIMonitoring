@@ -40,3 +40,28 @@ export interface Log {
   type: 'info' | 'error' | 'xerox';
   success?: boolean; // specifically for xerox copy events
 }
+
+declare global {
+  interface Window {
+    electronAPI: {
+      getEndpoints: () => Promise<Endpoint[]>;
+      saveEndpoint: (endpoint: Endpoint) => Promise<{ success: boolean }>;
+      deleteEndpoint: (id: string) => Promise<{ success: boolean }>;
+      refreshEndpoint: (id: string) => Promise<{ success: boolean }>;
+      getAlerts: () => Promise<Alert[]>;
+      clearAllAlerts: () => Promise<{ success: boolean }>;
+      deleteAlert: (id: string) => Promise<{ success: boolean }>;
+      markAlertAsRead: (id: string) => Promise<{ success: boolean }>;
+      archiveAlerts: () => Promise<{ success: boolean }>;
+      getLogs: () => Promise<Log[]>;
+      clearLogs: () => Promise<{ success: boolean }>;
+      copyToClipboard: (text: string, endpointName?: string) => Promise<{ success: boolean }>;
+      validateCertificate: (path: string, passphrase?: string) => Promise<boolean>;
+      testAuthentication: (endpointId: string) => Promise<{ status: number }>;
+      testConnection: (endpoint: Partial<Endpoint>) => Promise<{ success: boolean; status?: number; message?: string }>;
+      exportBackup: () => Promise<string>;
+      importBackup: (jsonString: string) => Promise<{ success: boolean }>;
+      resetAllData: () => Promise<{ success: boolean }>;
+    }
+  }
+}
