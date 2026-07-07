@@ -110,7 +110,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search clipboard logs..."
-            className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500"
+            className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-400"
           />
         </div>
 
@@ -204,4 +204,5 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
   )
 }
 export default XeroxLogs
+
 

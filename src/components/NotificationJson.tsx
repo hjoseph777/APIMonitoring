@@ -159,7 +159,7 @@ export function NotificationJson() {
                   type="text"
                   value={smtpServer}
                   onChange={(e) => setSmtpServer(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
                 />
               </div>
             </div>
@@ -172,7 +172,7 @@ export function NotificationJson() {
                   value={notifyEmail}
                   onChange={(e) => setNotifyEmail(e.target.value)}
                   placeholder="admin@company.com, alerts@company.com"
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
                 />
               </div>
               <span className="text-[8px] text-slate-400 dark:text-slate-500 mt-1 block">Separate multiple addresses with commas</span>
@@ -185,7 +185,7 @@ export function NotificationJson() {
               <select
                 value={globalWebhookChannel}
                 onChange={(e) => setGlobalWebhookChannel(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400 cursor-pointer"
               >
                 <option value="msteams">MS Teams / Office 365</option>
                 <option value="discord">Discord Webhook</option>
@@ -202,7 +202,7 @@ export function NotificationJson() {
                   value={globalWebhook}
                   onChange={(e) => setGlobalWebhook(e.target.value)}
                   placeholder="https://outlook.office.com/webhook/..."
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
                 />
                 <button
                   type="button"
@@ -349,6 +349,7 @@ function SettingsSection({ title, children }: SettingsSectionProps) {
 }
 
 export default NotificationJson
+
 
 
 

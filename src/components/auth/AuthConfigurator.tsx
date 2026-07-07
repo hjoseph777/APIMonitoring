@@ -27,7 +27,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.key || ''}
                 onChange={(e) => handleConfigChange({ key: e.target.value })}
                 placeholder="e.g., X-API-Key or Authorization"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div>
@@ -37,7 +37,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.value || ''}
                 onChange={(e) => handleConfigChange({ value: e.target.value })}
                 placeholder="Enter API key token"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div>
@@ -45,7 +45,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               <select
                 value={value.location || 'header'}
                 onChange={(e) => handleConfigChange({ location: e.target.value })}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               >
                 <option value="header">Header</option>
                 <option value="query">Query Parameter</option>
@@ -64,7 +64,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.domain || ''}
                 onChange={(e) => handleConfigChange({ domain: e.target.value })}
                 placeholder="e.g., COMPANY.local"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
               <p className="text-[10px] text-slate-500 mt-1">Your Windows AD Domain.</p>
             </div>
@@ -75,7 +75,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.username || ''}
                 onChange={(e) => handleConfigChange({ username: e.target.value })}
                 placeholder="Username (without domain)"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div>
@@ -85,7 +85,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.password || ''}
                 onChange={(e) => handleConfigChange({ password: e.target.value })}
                 placeholder="Windows password"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
           </div>
@@ -139,7 +139,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.passphrase || ''}
                 onChange={(e) => handleConfigChange({ passphrase: e.target.value })}
                 placeholder="Certificate passphrase"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -167,7 +167,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.tokenUrl || ''}
                 onChange={(e) => handleConfigChange({ tokenUrl: e.target.value })}
                 placeholder="https://auth.company.com/oauth2/token"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -177,7 +177,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                   type="text"
                   value={value.clientId || ''}
                   onChange={(e) => handleConfigChange({ clientId: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
                 />
               </div>
               <div>
@@ -186,7 +186,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                   type="password"
                   value={value.clientSecret || ''}
                   onChange={(e) => handleConfigChange({ clientSecret: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
                 />
               </div>
             </div>
@@ -197,7 +197,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.scope || ''}
                 onChange={(e) => handleConfigChange({ scope: e.target.value })}
                 placeholder="e.g., api.read write"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
           </div>
@@ -213,7 +213,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                   type="text"
                   value={value.username || ''}
                   onChange={(e) => handleConfigChange({ username: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
                 />
               </div>
               <div>
@@ -222,7 +222,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                   type="password"
                   value={value.password || ''}
                   onChange={(e) => handleConfigChange({ password: e.target.value })}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
                 />
               </div>
             </div>
@@ -239,7 +239,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.loginUrl || ''}
                 onChange={(e) => handleConfigChange({ loginUrl: e.target.value })}
                 placeholder="https://erp.company.com/api/login"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div>
@@ -256,7 +256,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 }}
                 placeholder='{ "username": "admin", "password": "secure" }'
                 rows={3}
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-blue-400"
               />
             </div>
             <div>
@@ -266,7 +266,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 value={value.cookieName || ''}
                 onChange={(e) => handleConfigChange({ cookieName: e.target.value })}
                 placeholder="e.g., connect.sid or session_id"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
             </div>
           </div>
@@ -307,4 +307,5 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
   )
 }
 export default AuthConfigurator
+
 
