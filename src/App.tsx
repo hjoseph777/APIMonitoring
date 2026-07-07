@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import Settings from './components/Settings'
 import Reports from './components/Reports'
+import NotificationJson from './components/NotificationJson'
 
 import { MonitoringProvider, useMonitoringContext } from './context/MonitoringContext'
 import { ToastProvider, useToast } from './context/ToastContext'
@@ -87,6 +88,10 @@ function AppContent() {
           <Reports
             endpoints={endpoints}
           />
+        )}
+
+        {activeTab === 'notification-json' && (
+          <NotificationJson />
         )}
       </div>
     </Layout>

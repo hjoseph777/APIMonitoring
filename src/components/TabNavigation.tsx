@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Menu, X, Monitor, AlertTriangle, Terminal, Settings, BarChart3 } from 'lucide-react'
+import { Menu, X, Monitor, AlertTriangle, Terminal, Settings, BarChart3, Database } from 'lucide-react'
 
 interface TabNavigationProps {
   activeTab: string
@@ -13,7 +13,8 @@ export function TabNavigation({ activeTab, setActiveTab, alertCount }: TabNaviga
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: Monitor },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'notification-json', label: 'Notification & JSON', icon: Database }
   ]
 
   return (
