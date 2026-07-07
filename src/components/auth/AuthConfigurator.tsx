@@ -286,7 +286,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         <select
           value={type}
           onChange={(e) => onChange({ type: e.target.value, config: {} })}
-          className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-500"
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-400 cursor-pointer"
         >
           <option value="none">None (Public Endpoint)</option>
           <option value="apiKey">API Key Header/Query</option>

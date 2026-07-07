@@ -213,12 +213,12 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
       {error && <p className="text-xs text-rose-500 font-semibold">{error}</p>}
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+      <div className="flex justify-end gap-3 pt-3 border-t border-slate-700">
         <button
           type="button"
           onClick={handleTestConnection}
           disabled={loading || testing}
-          className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 border border-slate-700 rounded-xl text-sm font-semibold text-white transition-all cursor-pointer"
         >
           {testing ? (
             <>
@@ -227,7 +227,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
             </>
           ) : (
             <>
-              <Play className="w-4 h-4 text-blue-500" />
+              <Play className="w-4 h-4 text-blue-400" />
               Test Connection
             </>
           )}
@@ -236,7 +236,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
         <button
           type="submit"
           disabled={loading || testing}
-          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-blue-600/20 cursor-pointer"
+          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:opacity-50 text-white rounded-xl text-sm font-bold tracking-wide transition-all shadow-lg shadow-blue-600/30 cursor-pointer"
         >
           {loading ? (
             <>
