@@ -124,9 +124,9 @@ export const MonitoringService = {
       const agentOptions: any = { rejectUnauthorized: false }
       
       // Apply certificate config first if certificate auth
-      if (endpoint.authType === 'certificate' && endpoint.authConfig.type === 'certificate') {
+      if (endpoint.authType === 'certificate') {
         const auth = endpoint.authConfig
-        if (auth.certPath && fs.existsSync(auth.certPath)) {
+        if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
           const cert = fs.readFileSync(auth.certPath)
           agentOptions.pfx = cert
           agentOptions.passphrase = auth.passphrase || ''
@@ -138,7 +138,7 @@ export const MonitoringService = {
 
       let response: any
 
-      if (endpoint.authType === 'ntlm' && endpoint.authConfig.type === 'ntlm') {
+      if (endpoint.authType === 'ntlm') {
         const auth = endpoint.authConfig
         response = await axiosNtlm({
           method: 'GET',
@@ -146,17 +146,17 @@ export const MonitoringService = {
           timeout: 15000,
           httpsAgent: config.httpsAgent,
           ntlm: {
-            username: auth.username,
-            password: auth.password,
-            domain: auth.domain,
-            workstation: auth.workstation || ''
+            username: (auth as any).username,
+            password: (auth as any).password,
+            domain: (auth as any).domain,
+            workstation: (auth as any).workstation || ''
           },
           withCredentials: true
         })
       } else {
         // Standard Axios config setup
-        if (endpoint.authType === 'apiKey' && endpoint.authConfig.type === 'apiKey') {
-          const auth = endpoint.authConfig
+        if (endpoint.authType === 'apiKey') {
+          const auth = endpoint.authConfig as any
           if (auth.location === 'header') {
             config.headers[auth.key] = auth.value
           } else if (auth.location === 'query') {
@@ -164,17 +164,17 @@ export const MonitoringService = {
             urlObj.searchParams.append(auth.key, auth.value)
             config.url = urlObj.toString()
           }
-        } else if (endpoint.authType === 'basic' && endpoint.authConfig.type === 'basic') {
-          const auth = endpoint.authConfig
+        } else if (endpoint.authType === 'basic') {
+          const auth = endpoint.authConfig as any
           const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64')
           config.headers.Authorization = `Basic ${token}`
-        } else if (endpoint.authType === 'oauth2' && endpoint.authConfig.type === 'oauth2') {
+        } else if (endpoint.authType === 'oauth2') {
           const auth = endpoint.authConfig
           const token = await getOAuth2Token(id, auth)
           config.headers.Authorization = `Bearer ${token}`
         }
 
-        if (endpoint.authType === 'cookie' && endpoint.authConfig.type === 'cookie') {
+        if (endpoint.authType === 'cookie') {
           const auth = endpoint.authConfig
           const client = getCookieJarClient(id)
           // Run login first to seed cookies
@@ -283,9 +283,9 @@ export const MonitoringService = {
       }
 
       const agentOptions: any = { rejectUnauthorized: false }
-      if (endpoint.authType === 'certificate' && endpoint.authConfig?.type === 'certificate') {
+      if (endpoint.authType === 'certificate') {
         const auth = endpoint.authConfig
-        if (auth.certPath && fs.existsSync(auth.certPath)) {
+        if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
           const cert = fs.readFileSync(auth.certPath)
           agentOptions.pfx = cert
           agentOptions.passphrase = auth.passphrase || ''
@@ -296,7 +296,7 @@ export const MonitoringService = {
 
       let response: any
 
-      if (endpoint.authType === 'ntlm' && endpoint.authConfig?.type === 'ntlm') {
+      if (endpoint.authType === 'ntlm') {
         const auth = endpoint.authConfig
         response = await axiosNtlm({
           method: 'GET',
@@ -304,16 +304,16 @@ export const MonitoringService = {
           timeout: 10000,
           httpsAgent: config.httpsAgent,
           ntlm: {
-            username: auth.username,
-            password: auth.password,
-            domain: auth.domain,
-            workstation: auth.workstation || ''
+            username: (auth as any).username,
+            password: (auth as any).password,
+            domain: (auth as any).domain,
+            workstation: (auth as any).workstation || ''
           },
           withCredentials: true
         })
       } else {
-        if (endpoint.authType === 'apiKey' && endpoint.authConfig?.type === 'apiKey') {
-          const auth = endpoint.authConfig
+        if (endpoint.authType === 'apiKey') {
+          const auth = endpoint.authConfig as any
           if (auth.location === 'header') {
             config.headers[auth.key] = auth.value
           } else if (auth.location === 'query') {
@@ -321,17 +321,17 @@ export const MonitoringService = {
             urlObj.searchParams.append(auth.key, auth.value)
             config.url = urlObj.toString()
           }
-        } else if (endpoint.authType === 'basic' && endpoint.authConfig?.type === 'basic') {
-          const auth = endpoint.authConfig
+        } else if (endpoint.authType === 'basic') {
+          const auth = endpoint.authConfig as any
           const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64')
           config.headers.Authorization = `Basic ${token}`
-        } else if (endpoint.authType === 'oauth2' && endpoint.authConfig?.type === 'oauth2') {
+        } else if (endpoint.authType === 'oauth2') {
           const auth = endpoint.authConfig
           const token = await getOAuth2Token('test-temp', auth)
           config.headers.Authorization = `Bearer ${token}`
         }
 
-        if (endpoint.authType === 'cookie' && endpoint.authConfig?.type === 'cookie') {
+        if (endpoint.authType === 'cookie') {
           const auth = endpoint.authConfig
           const client = getCookieJarClient('test-temp')
           await performCookieLogin('test-temp', auth)
