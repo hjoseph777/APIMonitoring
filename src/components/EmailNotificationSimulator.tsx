@@ -90,7 +90,7 @@ export function EmailNotificationSimulator() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Simulation Composer */}
-      <form onSubmit={handleSendSimulation} className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-850 space-y-4">
+      <form onSubmit={handleSendSimulation} className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-800/80">
           <Mail className="w-5 h-5 text-blue-500" />
           <h2 className="text-md font-bold text-white uppercase tracking-wider">Email Notification Simulator</h2>
@@ -188,7 +188,7 @@ export function EmailNotificationSimulator() {
           </div>
         </div>
 
-        <div className="flex justify-end pt-3 border-t border-slate-850">
+        <div className="flex justify-end pt-3 border-t border-slate-800">
           <button
             type="submit"
             disabled={sending}
@@ -201,7 +201,7 @@ export function EmailNotificationSimulator() {
       </form>
 
       {/* History Log Panel */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-850 space-y-4 h-fit">
+      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4 h-fit">
         <div className="flex items-center gap-2 pb-3 border-b border-slate-800/80">
           <FileText className="w-4 h-4 text-slate-400" />
           <h3 className="text-xs font-bold text-white uppercase tracking-wider">Simulated SMTP Logs</h3>
@@ -209,7 +209,7 @@ export function EmailNotificationSimulator() {
 
         <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
           {history.map((email) => (
-            <div key={email.id} className="p-3 bg-slate-900/40 border border-slate-850 rounded-xl space-y-2 text-[11px]">
+            <div key={email.id} className="p-3 bg-slate-900/40 border border-slate-800 rounded-xl space-y-2 text-[11px]">
               <div className="flex items-center justify-between">
                 <span className="text-slate-400 font-mono text-[9px]">
                   {new Date(email.timestamp).toLocaleTimeString()}

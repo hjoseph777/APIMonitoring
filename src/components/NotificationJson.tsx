@@ -175,7 +175,7 @@ export function NotificationJson() {
                   className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
-              <span className="text-[8px] text-slate-400 dark:text-slate-550 mt-1 block">Separate multiple addresses with commas</span>
+              <span className="text-[8px] text-slate-400 dark:text-slate-500 mt-1 block">Separate multiple addresses with commas</span>
             </div>
           </div>
 
@@ -218,7 +218,7 @@ export function NotificationJson() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-850">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -245,13 +245,13 @@ export function NotificationJson() {
         <div className="flex flex-wrap gap-2.5">
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-800 text-slate-700 dark:text-slate-305 rounded-lg font-semibold transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-305 rounded-lg font-semibold transition-all cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-blue-400" />
             Export Backup JSON
           </button>
 
-          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-205 dark:border-slate-800 text-slate-700 dark:text-slate-355 rounded-lg font-semibold cursor-pointer transition-all">
+          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 rounded-lg font-semibold cursor-pointer transition-all">
             <Upload className="w-3.5 h-3.5 text-emerald-400" />
             Import Backup JSON
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
@@ -294,7 +294,7 @@ export function NotificationJson() {
             </p>
 
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase font-bold text-slate-550 dark:text-slate-400">
+              <label className="block text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400">
                 Type <span className="font-mono text-rose-500">DELETE</span> to confirm:
               </label>
               <input
@@ -302,11 +302,11 @@ export function NotificationJson() {
                 value={wipeConfirmInput}
                 onChange={(e) => setWipeConfirmInput(e.target.value)}
                 placeholder="DELETE"
-                className="w-full bg-slate-105 dark:bg-slate-950 border border-slate-205 dark:border-slate-800 rounded-lg px-2.5 py-1.5 font-mono text-center text-xs tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-rose-500"
+                className="w-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 font-mono text-center text-xs tracking-widest text-slate-800 dark:text-slate-200 focus:outline-none focus:border-rose-500"
               />
             </div>
 
-            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-150 dark:border-slate-850">
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => {
                   setIsWipeModalOpen(false)

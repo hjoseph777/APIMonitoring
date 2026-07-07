@@ -75,7 +75,7 @@ export function EndpointGrid({ endpoints, onRefresh, onDelete, loading = false }
 
   const renderEmptyState = () => {
     return (
-      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-900/10 border border-slate-850 rounded-2xl">
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-900/10 border border-slate-800 rounded-2xl">
         <svg
           className="w-16 h-16 text-slate-700 mb-4"
           fill="none"
@@ -102,7 +102,7 @@ export function EndpointGrid({ endpoints, onRefresh, onDelete, loading = false }
   return (
     <div className="space-y-6">
       {/* Search and Filters Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-900/40 border border-slate-850 p-4 rounded-2xl">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-900/40 border border-slate-800 p-4 rounded-2xl">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input

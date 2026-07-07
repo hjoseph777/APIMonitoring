@@ -78,7 +78,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
   }
 
   const renderEmptyState = () => (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-900/10 border border-slate-850 rounded-2xl">
+    <div className="flex flex-col items-center justify-center p-12 text-center bg-slate-900/10 border border-slate-800 rounded-2xl">
       <svg
         className="w-16 h-16 text-slate-700 mb-4"
         fill="none"
@@ -102,7 +102,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
   return (
     <div className="space-y-6">
       {/* Filters Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-900/40 border border-slate-850 p-4 rounded-2xl">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-900/40 border border-slate-800 p-4 rounded-2xl">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
@@ -118,7 +118,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-800 hover:bg-slate-850 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-800 hover:bg-slate-800 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all"
               title="Export as CSV"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -126,7 +126,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
             </button>
             <button
               onClick={handleExportJSON}
-              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-800 hover:bg-slate-850 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-800 hover:bg-slate-800 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all"
               title="Export as JSON"
             >
               <Code className="w-3.5 h-3.5" />
@@ -147,7 +147,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
         renderEmptyState()
       ) : (
         /* Logs table list */
-        <div className="glass-panel border border-slate-850 rounded-2xl overflow-hidden">
+        <div className="glass-panel border border-slate-800 rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -183,7 +183,7 @@ export function XeroxLogs({ logs, onClearLogs }: XeroxLogsProps) {
                     <td className="p-4 text-right">
                       <button
                         onClick={() => handleCopyText(log.message, log.id)}
-                        className="p-1.5 hover:bg-slate-850 rounded-lg text-slate-400 hover:text-white transition-all inline-flex items-center"
+                        className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-all inline-flex items-center"
                         title="Copy to Clipboard"
                       >
                         {copiedLogId === log.id ? (

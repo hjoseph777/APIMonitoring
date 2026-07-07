@@ -119,7 +119,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 />
                 <label
                   htmlFor="cert-upload-input"
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-850 hover:bg-slate-800 border border-slate-750 rounded-xl cursor-pointer text-xs font-semibold transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-800 border border-slate-700 rounded-xl cursor-pointer text-xs font-semibold transition-all"
                 >
                   <Upload className="w-4 h-4" />
                   Upload PFX File

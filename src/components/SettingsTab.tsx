@@ -71,7 +71,7 @@ export function SettingsTab() {
   return (
     <div className="space-y-6">
       {/* Backup and Restore */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-850 space-y-4">
+      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
         <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-800/60 pb-2">
           Backup & Restore Configurations
         </h2>
@@ -82,13 +82,13 @@ export function SettingsTab() {
         <div className="flex flex-wrap gap-3 pt-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-850 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold transition-all"
           >
             <Download className="w-4 h-4 text-blue-400" />
             Export Backup JSON
           </button>
 
-          <label className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-850 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-all">
+          <label className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold cursor-pointer transition-all">
             <Upload className="w-4 h-4 text-emerald-400" />
             Import Backup JSON
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
@@ -97,7 +97,7 @@ export function SettingsTab() {
       </div>
 
       {/* SMTP Email Configurations */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-850 space-y-4">
+      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
         <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-800/60 pb-2">
           SMTP Mail Configurations (Simulated)
         </h2>
@@ -133,7 +133,7 @@ export function SettingsTab() {
       </div>
 
       {/* Webhook Configuration */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-850 space-y-4">
+      <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
         <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-slate-800/60 pb-2">
           Global Notification Webhooks
         </h2>

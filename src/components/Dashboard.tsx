@@ -120,7 +120,7 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
                   </div>
                   <button
                     onClick={() => onRefresh(ep.id)}
-                    className="px-2.5 py-1 text-[9px] font-bold bg-slate-200 hover:bg-slate-300/80 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 rounded-md transition-all"
+                    className="px-2.5 py-1 text-[9px] font-bold bg-slate-200 hover:bg-slate-300/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md transition-all"
                   >
                     Check
                   </button>
@@ -183,7 +183,7 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
               <div
                 key={log.id}
                 onClick={() => handleCopy(log.message)}
-                className="p-2 bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/50 dark:hover:bg-slate-850/50 border border-slate-200/50 dark:border-slate-800 rounded-md text-[10px] flex items-center justify-between cursor-pointer transition-all gap-3"
+                className="p-2 bg-slate-100/30 dark:bg-slate-900/30 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 border border-slate-200/50 dark:border-slate-800 rounded-md text-[10px] flex items-center justify-between cursor-pointer transition-all gap-3"
               >
                 <div className="truncate">
                   <span className="font-bold text-slate-700 dark:text-slate-200 mr-2">{log.endpointName}</span>
@@ -221,7 +221,7 @@ function StatCard({ icon: Icon, label, value, bgClass, textClass, borderClass }:
   return (
     <div className={`p-4 border rounded-2xl flex items-center justify-between shadow-sm transition-all duration-150 ${bgClass} ${borderClass}`}>
       <div>
-        <span className="text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-300 block">{label}</span>
+        <span className="text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-200 block">{label}</span>
         <span className={`text-2xl font-black leading-none mt-1.5 block ${textClass}`}>{value}</span>
       </div>
       <div className={`p-2 rounded-xl bg-slate-100/60 dark:bg-slate-900/50 shrink-0`}>

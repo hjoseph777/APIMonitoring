@@ -115,7 +115,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
     <form onSubmit={handleSubmit} className="glass-panel p-6 rounded-2xl space-y-6">
       <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
         <Plus className="w-5 h-5 text-blue-500" />
-        <h2 className="text-md font-bold text-slate-850 dark:text-white uppercase tracking-wider">Add New Endpoint</h2>
+        <h2 className="text-md font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add New Endpoint</h2>
       </div>
 
       {/* Two Column Layout Grid */}

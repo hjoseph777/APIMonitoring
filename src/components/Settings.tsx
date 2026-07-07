@@ -32,7 +32,7 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
             {endpoints.map((ep) => (
               <div key={ep.id} className="p-3 flex items-center justify-between hover:bg-slate-100/35 dark:hover:bg-slate-900/20">
                 <div className="truncate pr-4">
-                  <div className="font-semibold text-slate-850 dark:text-slate-200">{ep.name}</div>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">{ep.name}</div>
                   <div className="text-[10px] text-slate-500 font-mono truncate">{ep.url}</div>
                 </div>
                 <button
@@ -61,7 +61,7 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
                 type="number"
                 value={defaultInterval}
                 onChange={(e) => setDefaultInterval(e.target.value)}
-                className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                className="w-full bg-slate-100 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
               />
               <span className="text-slate-400 font-semibold">minutes</span>
             </div>
@@ -73,7 +73,7 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
                 type="number"
                 value={alertThreshold}
                 onChange={(e) => setAlertThreshold(e.target.value)}
-                className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                className="w-full bg-slate-100 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
               />
               <span className="text-slate-400 font-semibold">checks</span>
             </div>
@@ -95,7 +95,7 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
               type="checkbox"
               checked={minimizeTray}
               onChange={(e) => setMinimizeTray(e.target.checked)}
-              className="rounded border-slate-355 text-blue-600 focus:ring-blue-500 dark:bg-slate-955 dark:border-slate-800"
+              className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-800"
             />
             <span className="text-slate-650 dark:text-slate-350">Minimize window to System tray on close</span>
           </label>

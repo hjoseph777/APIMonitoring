@@ -113,7 +113,7 @@ export function EndpointCard({ endpoint, onRefresh, onDelete }: EndpointCardProp
             <button
               onClick={handleRefreshClick}
               disabled={refreshing}
-              className="p-2 text-slate-400 hover:text-white bg-slate-900/50 hover:bg-slate-850 border border-slate-800/60 rounded-lg transition-all"
+              className="p-2 text-slate-400 hover:text-white bg-slate-900/50 hover:bg-slate-800 border border-slate-800/60 rounded-lg transition-all"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             </button>
@@ -133,7 +133,7 @@ export function EndpointCard({ endpoint, onRefresh, onDelete }: EndpointCardProp
 
       {/* Expandable details */}
       {expanded && (
-        <div className="px-5 pb-5 border-t border-slate-850 pt-4 bg-slate-900/10 space-y-4 text-xs">
+        <div className="px-5 pb-5 border-t border-slate-800 pt-4 bg-slate-900/10 space-y-4 text-xs">
           {/* Metadata Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-1">
@@ -160,7 +160,7 @@ export function EndpointCard({ endpoint, onRefresh, onDelete }: EndpointCardProp
           </div>
 
           {/* Stats details & sparkline */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-slate-900/35 p-3 rounded-xl border border-slate-850">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center bg-slate-900/35 p-3 rounded-xl border border-slate-800">
             <div className="flex items-center gap-6">
               <div>
                 <span className="text-slate-500 block text-[10px] uppercase">Consecutive Errors</span>

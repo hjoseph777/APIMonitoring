@@ -80,12 +80,12 @@ export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
       {/* Sparkline Latency Trace */}
-      <div className="md:col-span-2 bg-slate-900/30 p-5 rounded-2xl border border-slate-850">
+      <div className="md:col-span-2 bg-slate-900/30 p-5 rounded-2xl border border-slate-800">
         {drawChart()}
       </div>
 
       {/* Health / Uptime Summary */}
-      <div className="bg-slate-900/30 p-5 rounded-2xl border border-slate-850 flex flex-col justify-between space-y-4">
+      <div className="bg-slate-900/30 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
         <div className="space-y-1">
           <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Health Quotient</span>
           <div className="flex items-center gap-2">
