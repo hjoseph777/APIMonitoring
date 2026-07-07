@@ -53,13 +53,13 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
   ]
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 select-none">
+    <div className="flex min-h-screen bg-[var(--bg-primary)] text-slate-800 dark:text-slate-100 transition-colors duration-305 select-none">
       
       {/* Static Left Sidebar */}
-      <aside className="w-56 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-850 flex flex-col justify-between shrink-0 transition-colors duration-300">
+      <aside className="w-56 bg-[var(--bg-secondary)] border-r border-[var(--border-color)] flex flex-col justify-between shrink-0 transition-colors duration-300">
         <div className="flex flex-col">
           {/* Logo Brand Area */}
-          <div className="p-4 flex items-center gap-2 border-b border-slate-150 dark:border-slate-850">
+          <div className="p-4 flex items-center gap-2 border-b border-[var(--border-color)]">
             <div className="w-5.5 h-5.5 bg-[#e51937] rounded-[5px] flex items-center justify-center shadow-sm shrink-0">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
                 <g transform="rotate(45 12 12)">
@@ -69,7 +69,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
             </div>
             <div className="flex items-baseline">
               <span className="font-extrabold text-sm tracking-tighter text-[#e51937] lowercase">xerox</span>
-              <span className="text-[9px] text-slate-400 dark:text-slate-550 font-bold uppercase tracking-wider ml-1">Monitor</span>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider ml-1">Monitor</span>
             </div>
           </div>
 
@@ -85,7 +85,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-850/60'
+                      : 'text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-[var(--bg-primary)]'
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -97,7 +97,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         </div>
 
         {/* Footer/Version Info in Sidebar */}
-        <div className="p-4 border-t border-slate-150 dark:border-slate-850 flex items-center gap-1.5 text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
+        <div className="p-4 border-t border-[var(--border-color)] flex items-center gap-1.5 text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
           <Cpu className="w-3.5 h-3.5" />
           <span>v1.0.0 (GUI v2.0)</span>
         </div>
@@ -107,17 +107,17 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-slate-200 dark:border-slate-850 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-6 flex items-center justify-between transition-colors duration-300">
+        <header className="h-14 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/95 backdrop-blur-md px-6 flex items-center justify-between transition-colors duration-300">
           
           {/* Status Indicators */}
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <Terminal className="w-3.5 h-3.5 text-blue-500" />
               Status:
             </span>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-850 rounded-lg">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--bg-primary)] rounded-lg">
               <span className={`h-2 w-2 rounded-full ${getStatusColor()}`}></span>
-              <span className="text-[10px] font-extrabold uppercase text-slate-650 dark:text-slate-350">
+              <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-slate-350">
                 {systemStatus === 'online' ? 'All Systems Online' : `${systemStatus === 'warning' ? 'Minor Issues' : 'Critical Outages'}`}
               </span>
             </div>
@@ -133,14 +133,14 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
             {/* Theme Toggle */}
             <button 
               onClick={toggleTheme}
-              className="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-850 dark:hover:bg-slate-750/80 border border-slate-200 dark:border-slate-800 rounded-xl transition-all duration-200 cursor-pointer"
+              className="p-2 text-slate-650 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-[var(--bg-primary)] hover:opacity-90 border border-[var(--border-color)] rounded-xl transition-all duration-200 cursor-pointer"
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
               {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </button>
 
             {/* Notification Bell */}
-            <button className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-850 dark:hover:bg-slate-750/80 border border-slate-200 dark:border-slate-800 rounded-xl transition-all duration-200 cursor-pointer">
+            <button className="relative p-2 text-slate-650 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-[var(--bg-primary)] hover:opacity-90 border border-[var(--border-color)] rounded-xl transition-all duration-200 cursor-pointer">
               <Bell className="w-3.5 h-3.5" />
               {alertCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
@@ -157,7 +157,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         </main>
 
         {/* Footer */}
-        <footer className="h-8 border-t border-slate-200 dark:border-slate-850 bg-slate-100 dark:bg-slate-950 px-6 flex items-center justify-between text-[9px] text-slate-500">
+        <footer className="h-8 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-6 flex items-center justify-between text-[9px] text-slate-500">
           <span>Xerox API Engine Running</span>
           <span className="font-mono uppercase tracking-wider text-[8px]">Auto-polling active</span>
         </footer>

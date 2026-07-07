@@ -159,7 +159,7 @@ export function NotificationJson() {
                   type="text"
                   value={smtpServer}
                   onChange={(e) => setSmtpServer(e.target.value)}
-                  className="w-full bg-slate-105 border border-slate-205 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
             </div>
@@ -172,20 +172,20 @@ export function NotificationJson() {
                   value={notifyEmail}
                   onChange={(e) => setNotifyEmail(e.target.value)}
                   placeholder="admin@company.com, alerts@company.com"
-                  className="w-full bg-slate-105 border border-slate-205 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
               </div>
-              <span className="text-[8px] text-slate-400 dark:text-slate-500 mt-1 block">Separate multiple addresses with commas</span>
+              <span className="text-[8px] text-slate-400 dark:text-slate-550 mt-1 block">Separate multiple addresses with commas</span>
             </div>
           </div>
 
-          <div className="border-t border-slate-200 dark:border-slate-850 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="border-t border-[var(--border-color)] pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-slate-500 dark:text-slate-400 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">Channel Type</label>
               <select
                 value={globalWebhookChannel}
                 onChange={(e) => setGlobalWebhookChannel(e.target.value)}
-                className="w-full bg-slate-105 border border-slate-205 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900 cursor-pointer"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
               >
                 <option value="msteams">MS Teams / Office 365</option>
                 <option value="discord">Discord Webhook</option>
@@ -202,13 +202,13 @@ export function NotificationJson() {
                   value={globalWebhook}
                   onChange={(e) => setGlobalWebhook(e.target.value)}
                   placeholder="https://outlook.office.com/webhook/..."
-                  className="w-full bg-slate-105 border border-slate-205 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                  className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500"
                 />
                 <button
                   type="button"
                   onClick={handleTestWebhook}
                   disabled={testingWebhook || !globalWebhook}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 disabled:opacity-50 border border-slate-205 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg font-bold transition-all shrink-0 cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-primary)] hover:opacity-80 disabled:opacity-50 border border-[var(--border-color)] text-slate-700 dark:text-slate-200 rounded-lg font-bold transition-all shrink-0 cursor-pointer"
                   title="Send simulated test warning"
                 >
                   <Send className="w-3.5 h-3.5" />

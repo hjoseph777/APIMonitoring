@@ -112,10 +112,10 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass-panel p-6 rounded-2xl border border-slate-205 dark:border-slate-800 space-y-6">
-      <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+    <form onSubmit={handleSubmit} className="glass-panel p-6 rounded-2xl space-y-6">
+      <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
         <Plus className="w-5 h-5 text-blue-500" />
-        <h2 className="text-md font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add New Endpoint</h2>
+        <h2 className="text-md font-bold text-slate-850 dark:text-white uppercase tracking-wider">Add New Endpoint</h2>
       </div>
 
       {/* Two Column Layout Grid */}
@@ -132,7 +132,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Local ERP ERP_Sales"
               disabled={loading}
-              className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -144,7 +144,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
               onChange={(e) => setUrl(e.target.value)}
               placeholder="e.g., http://localhost:8080/api/sales"
               disabled={loading}
-              className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -158,7 +158,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
                 value={interval}
                 onChange={(e) => setInterval(parseInt(e.target.value) || 1)}
                 disabled={loading}
-                className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
               />
             </div>
             <div>
@@ -169,7 +169,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
                 value={timeoutVal}
                 onChange={(e) => setTimeoutVal(parseInt(e.target.value) || 1)}
                 disabled={loading}
-                className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
               />
             </div>
           </div>
