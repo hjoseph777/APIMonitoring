@@ -26,6 +26,20 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
 
 ---
 
+## 🛡️ Reliability, Accuracy & Security Architecture
+
+The application implements several advanced architectural patterns to ensure enterprise-grade monitoring stability:
+
+* **Overlapping Check Mitigation (Race-Condition Free)**: Instead of using strict interval loops (`setInterval`) which stack outstanding requests when pings lag or time out, the monitoring engine uses a recursive, self-scheduling `setTimeout` pattern. A subsequent check is queued only *after* the previous request's lifecycle has completely settled, ensuring highly accurate latency logs and preventing server overload.
+* **Stateful Enterprise Authentication**:
+  * **OAuth2 Client Credentials**: Automatically handles bearer token retrieval, caching, and auto-refresh mechanisms before expiry.
+  * **Session Cookie Authentication**: Features a cookie jar-based client that runs login flows, captures cookies, and persists session states across checks.
+  * **Windows Auth (NTLM)**: Implements authentic challenge-response handshakes via `axios-ntlm`.
+* **On-the-fly Verification (Pre-Save Connection Test)**: Users can validate endpoint connectivity and authentication credentials inside the creation form before committing changes to the local database, facilitating faster troubleshooting.
+* **Auto-Pruning Log Rotation**: On every application startup, a background cleanup sweep runs to purge logs and alert records older than 7 days, capping SQLite database growth and maintaining low resource overhead.
+
+---
+
 ## 🔍 Monitored Connection & API Errors
 
 The background monitoring engine actively catches, categorizes, and logs over 30 API connection issues, including:
