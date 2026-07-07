@@ -14,11 +14,93 @@ type Action =
   | { type: 'SET_LOGS'; payload: Log[] }
   | { type: 'SET_LOADING'; payload: boolean }
 
+const NOW = new Date()
+const t = (offsetMinutes: number) => new Date(NOW.getTime() - offsetMinutes * 60000).toISOString()
+
+const SEED_ENDPOINTS: Endpoint[] = [
+  {
+    id: 'seed-1',
+    name: 'ERP Sales API',
+    url: 'http://erp-server.xerox.local:8080/api/sales',
+    interval: 5,
+    status: 'success',
+    lastCheck: t(2),
+    errorCount: 0,
+    consecutiveErrors: 0,
+    authType: 'apiKey',
+    authConfig: { type: 'apiKey', key: 'X-API-Key', value: '***', location: 'header' },
+    responseTimeHistory: [120, 135, 118, 142, 127, 110, 131],
+    timeout: 10
+  },
+  {
+    id: 'seed-2',
+    name: 'HR Portal Service',
+    url: 'http://hr-portal.xerox.local:9090/api/employees',
+    interval: 10,
+    status: 'error',
+    lastCheck: t(8),
+    errorCount: 5,
+    consecutiveErrors: 3,
+    authType: 'ntlm',
+    authConfig: { type: 'ntlm', username: 'svc_monitor', password: '***', domain: 'XEROX' },
+    responseTimeHistory: [220, 540, 0, 0, 0],
+    timeout: 15
+  },
+  {
+    id: 'seed-3',
+    name: 'Finance Reporting',
+    url: 'https://finance.xerox.internal/api/reports',
+    interval: 15,
+    status: 'success',
+    lastCheck: t(1),
+    errorCount: 1,
+    consecutiveErrors: 0,
+    authType: 'basic',
+    authConfig: { type: 'basic', username: 'monitor_svc', password: '***' },
+    responseTimeHistory: [88, 94, 101, 97, 85, 90, 92],
+    timeout: 30
+  },
+  {
+    id: 'seed-4',
+    name: 'Inventory Sync',
+    url: 'http://inventory.xerox.local:7777/api/stock',
+    interval: 5,
+    status: 'idle',
+    lastCheck: t(5),
+    errorCount: 0,
+    consecutiveErrors: 0,
+    authType: 'none',
+    authConfig: { type: 'none' },
+    responseTimeHistory: [310, 298, 322, 315],
+    timeout: 10
+  }
+]
+
+const SEED_ALERTS: Alert[] = [
+  { id: 'sa-1', endpointId: 'seed-2', endpointName: 'HR Portal Service', message: 'Connection refused — NTLM auth failed after 3 retries', timestamp: t(8), read: false },
+  { id: 'sa-2', endpointId: 'seed-2', endpointName: 'HR Portal Service', message: 'Endpoint unreachable — response timeout after 15s', timestamp: t(23), read: false },
+  { id: 'sa-3', endpointId: 'seed-2', endpointName: 'HR Portal Service', message: 'HTTP 503 Service Unavailable', timestamp: t(45), read: true },
+  { id: 'sa-4', endpointId: 'seed-1', endpointName: 'ERP Sales API', message: 'Response time spike detected — 540ms (threshold: 300ms)', timestamp: t(60), read: true },
+  { id: 'sa-5', endpointId: 'seed-3', endpointName: 'Finance Reporting', message: 'HTTP 401 Unauthorized — credentials may have expired', timestamp: t(120), read: true },
+  { id: 'sa-6', endpointId: 'seed-4', endpointName: 'Inventory Sync', message: 'First check pending — endpoint registered', timestamp: t(5), read: true }
+]
+
+const SEED_LOGS: Log[] = [
+  { id: 'sl-1', endpointId: 'seed-1', endpointName: 'ERP Sales API', message: 'HTTP 200 OK — 127ms', timestamp: t(2), type: 'info' },
+  { id: 'sl-2', endpointId: 'seed-2', endpointName: 'HR Portal Service', message: 'Connection refused — retrying in 5 min', timestamp: t(8), type: 'error' },
+  { id: 'sl-3', endpointId: 'seed-3', endpointName: 'Finance Reporting', message: 'HTTP 200 OK — 90ms', timestamp: t(1), type: 'info' },
+  { id: 'sl-4', endpointId: 'seed-1', endpointName: 'ERP Sales API', message: 'Xerox audit log exported — 48 records copied', timestamp: t(15), type: 'xerox', success: true },
+  { id: 'sl-5', endpointId: 'seed-2', endpointName: 'HR Portal Service', message: 'HTTP 503 — endpoint marked as failed', timestamp: t(45), type: 'error' },
+  { id: 'sl-6', endpointId: 'seed-3', endpointName: 'Finance Reporting', message: 'Xerox audit log exported — 12 records copied', timestamp: t(30), type: 'xerox', success: true },
+  { id: 'sl-7', endpointId: 'seed-4', endpointName: 'Inventory Sync', message: 'HTTP 200 OK — 315ms', timestamp: t(5), type: 'info' },
+  { id: 'sl-8', endpointId: 'seed-1', endpointName: 'ERP Sales API', message: 'HTTP 200 OK — 131ms', timestamp: t(7), type: 'info' }
+]
+
 const initialState: MonitoringState = {
-  endpoints: [],
-  alerts: [],
-  logs: [],
-  loading: true
+  endpoints: SEED_ENDPOINTS,
+  alerts: SEED_ALERTS,
+  logs: SEED_LOGS,
+  loading: false
 }
 
 function monitoringReducer(state: MonitoringState, action: Action): MonitoringState {
