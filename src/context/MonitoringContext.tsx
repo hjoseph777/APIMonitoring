@@ -147,15 +147,17 @@ export function MonitoringProvider({ children }: { children: React.ReactNode }) 
     if (window.electronAPI) {
       try {
         const endpointsData = await window.electronAPI.getEndpoints()
-        dispatch({ type: 'SET_ENDPOINTS', payload: endpointsData || [] })
+        // Only overwrite seed data if the DB actually has real records
+        dispatch({ type: 'SET_ENDPOINTS', payload: endpointsData?.length ? endpointsData : SEED_ENDPOINTS })
 
         const alertsData = await window.electronAPI.getAlerts()
-        dispatch({ type: 'SET_ALERTS', payload: alertsData || [] })
+        dispatch({ type: 'SET_ALERTS', payload: alertsData?.length ? alertsData : SEED_ALERTS })
 
         const logsData = await window.electronAPI.getLogs()
-        dispatch({ type: 'SET_LOGS', payload: logsData || [] })
+        dispatch({ type: 'SET_LOGS', payload: logsData?.length ? logsData : SEED_LOGS })
       } catch (err) {
         console.error('Failed to sync data over IPC', err)
+        // Keep seed data on error
       }
     }
   }
