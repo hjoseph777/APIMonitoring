@@ -80,25 +80,41 @@ API_Monitor/
 
 The following screenshots illustrate the layout and tray behavior options of the application:
 
-* **Taskbar Navigation & Default Electron Frame**:
-  ![Windows Taskbar Jump List](Pictures/Screenshot%202026-07-06%20174303.png)
-  *Shows the standard Windows OS Jump list for the active taskbar window button.*
+### Taskbar Navigation & Default Electron Frame
 
-* **System Tray Icons Caret**:
-  ![System Tray Icons Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
-  *The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
+![Windows Taskbar Jump List](Pictures/Screenshot%202026-07-06%20174303.png)
 
-* **Expanded Tray Applications Pop-up**:
-  ![Tray Applications Pop-up](Pictures/Screenshot%202026-07-06%20174454.png)
-  *The expanded Windows notification tray displaying all active background items.*
+*Shows the standard Windows OS Jump list for the active taskbar window button.*
 
-* **Active Taskbar View**:
-  ![Active Taskbar View](Pictures/Screenshot%202026-07-06%20174734.png)
-  *The active Windows taskbar layout showcasing open explorer windows.*
+### System Tray Icons Caret
 
-* **Tray Context Menu Controls**:
-  ![Tray Context Menu Controls](Pictures/2nd_Tray_Screenshot%202026-07-06%20175037.png)
-  *The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
+![System Tray Icons Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
+
+*The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
+
+### Expanded Tray Applications Pop-up
+
+![Tray Applications Pop-up](Pictures/Screenshot%202026-07-06%20174454.png)
+
+*The expanded Windows notification tray displaying all active background items.*
+
+### Endpoint Authentication Configuration
+
+![Endpoint Authentication Configuration](Pictures/AuthticationTypeScreenshot%202026-07-07%20082104.png)
+
+*The settings panel showing the dropdown list of supported enterprise authentication methods, including API Key, Windows NTLM, mTLS Client Certificate, OAuth2, and Session Cookies.*
+
+### Active Taskbar View
+
+![Active Taskbar View](Pictures/Screenshot%202026-07-06%20174734.png)
+
+*The active Windows taskbar layout showcasing open explorer windows.*
+
+### Tray Context Menu Controls
+
+![Tray Context Menu Controls](Pictures/2nd_Tray_Screenshot%202026-07-06%20175037.png)
+
+*The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
 
 ---
 
