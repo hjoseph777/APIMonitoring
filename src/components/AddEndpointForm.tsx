@@ -151,26 +151,37 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
           {/* Grid for check interval and custom timeouts */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Check Interval (Min)</label>
-              <input
-                type="number"
-                min={1}
+              <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Check Interval</label>
+              <select
                 value={interval}
-                onChange={(e) => setInterval(parseInt(e.target.value) || 1)}
+                onChange={(e) => setInterval(parseInt(e.target.value))}
                 disabled={loading}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-              />
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer"
+              >
+                <option value={1}>Every 1 minute</option>
+                <option value={2}>Every 2 minutes</option>
+                <option value={5}>Every 5 minutes</option>
+                <option value={10}>Every 10 minutes</option>
+                <option value={15}>Every 15 minutes</option>
+                <option value={30}>Every 30 minutes</option>
+                <option value={60}>Every 60 minutes</option>
+              </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Timeout (Sec)</label>
-              <input
-                type="number"
-                min={1}
+              <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Timeout</label>
+              <select
                 value={timeoutVal}
-                onChange={(e) => setTimeoutVal(parseInt(e.target.value) || 1)}
+                onChange={(e) => setTimeoutVal(parseInt(e.target.value))}
                 disabled={loading}
-                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500"
-              />
+                className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 cursor-pointer"
+              >
+                <option value={5}>5 seconds</option>
+                <option value={10}>10 seconds</option>
+                <option value={15}>15 seconds</option>
+                <option value={30}>30 seconds</option>
+                <option value={60}>60 seconds</option>
+                <option value={120}>120 seconds</option>
+              </select>
             </div>
           </div>
         </div>
@@ -192,8 +203,8 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
       {testResult && (
         <div className={`p-3 rounded-xl border text-xs font-semibold ${
           testResult.success 
-            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-450' 
-            : 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 text-rose-600 dark:text-rose-450'
+            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300' 
+            : 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
         }`}>
           {testResult.message}
         </div>
