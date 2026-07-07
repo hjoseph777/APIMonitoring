@@ -43,40 +43,40 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
           icon={Activity}
           label="Total Monitored"
           value={endpoints.length}
-          bgClass="bg-slate-100/40 dark:bg-slate-900/40"
-          textClass="text-slate-700 dark:text-slate-300"
-          borderClass="border-slate-200 dark:border-slate-800"
+          bgClass="bg-slate-100/60 dark:bg-slate-800/40"
+          textClass="text-slate-700 dark:text-slate-100"
+          borderClass="border-slate-200 dark:border-slate-700"
         />
         <StatCard
           icon={CheckCircle}
           label="Online Services"
           value={onlineCount}
-          bgClass="bg-emerald-50/40 dark:bg-emerald-950/10"
-          textClass="text-emerald-600 dark:text-emerald-450"
-          borderClass="border-emerald-200/50 dark:border-emerald-900/20"
+          bgClass="bg-emerald-50/60 dark:bg-emerald-900/20"
+          textClass="text-emerald-700 dark:text-emerald-300"
+          borderClass="border-emerald-200 dark:border-emerald-800/50"
         />
         <StatCard
           icon={XCircle}
           label="Offline Failures"
           value={offlineCount}
-          bgClass="bg-rose-50/40 dark:bg-rose-950/10"
-          textClass="text-rose-600 dark:text-rose-450"
-          borderClass="border-rose-200/50 dark:border-rose-900/20"
+          bgClass="bg-rose-50/60 dark:bg-rose-900/20"
+          textClass="text-rose-700 dark:text-rose-300"
+          borderClass="border-rose-200 dark:border-rose-800/50"
         />
         <StatCard
           icon={AlertTriangle}
           label="Active Alerts"
           value={alertCount}
-          bgClass="bg-amber-50/40 dark:bg-amber-950/10"
-          textClass="text-amber-600 dark:text-amber-450"
-          borderClass="border-amber-200/50 dark:border-amber-900/20"
+          bgClass="bg-amber-50/60 dark:bg-amber-900/20"
+          textClass="text-amber-700 dark:text-amber-300"
+          borderClass="border-amber-200 dark:border-amber-800/50"
         />
       </div>
 
       {/* Endpoint Status List - Clean Tableless View */}
       <div className="glass-panel rounded-xl overflow-hidden border">
         <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/20 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-350">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-100">
             Endpoint Status Cockpit
           </h2>
           <span className="text-[10px] text-blue-600 dark:text-blue-400 font-mono font-bold">Auto-polling active</span>
@@ -129,14 +129,14 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
             )
           })}
           {endpoints.length === 0 && (
-            <div className="p-8 text-center max-w-sm mx-auto space-y-3">
-              <div className="mx-auto w-10 h-10 rounded-full bg-blue-500/5 flex items-center justify-center border border-blue-500/10">
-                <Monitor className="w-5 h-5 text-blue-500" />
+            <div className="p-10 text-center max-w-sm mx-auto space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-blue-500/15 flex items-center justify-center border border-blue-400/30">
+                <Monitor className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200">No endpoints monitored</h3>
-                <p className="text-[10px] text-slate-500 dark:text-slate-350 mt-1 select-text">
-                  Register your first target server in the <strong>Endpoint Registry</strong> tab to begin live monitoring.
+                <h3 className="font-bold text-sm text-slate-700 dark:text-white">No endpoints monitored</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-300 mt-1.5 select-text leading-relaxed">
+                  Register your first target server in the <strong className="text-blue-400">Endpoint Registry</strong> tab to begin live monitoring.
                 </p>
               </div>
             </div>
@@ -221,7 +221,7 @@ function StatCard({ icon: Icon, label, value, bgClass, textClass, borderClass }:
   return (
     <div className={`p-4 border rounded-2xl flex items-center justify-between shadow-sm transition-all duration-150 ${bgClass} ${borderClass}`}>
       <div>
-        <span className="text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-200 block">{label}</span>
+        <span className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-300 block mb-0.5">{label}</span>
         <span className={`text-2xl font-black leading-none mt-1.5 block ${textClass}`}>{value}</span>
       </div>
       <div className={`p-2 rounded-xl bg-slate-100/60 dark:bg-slate-900/50 shrink-0`}>
