@@ -14,7 +14,7 @@ interface EmailSimulation {
 }
 
 export function EmailNotificationSimulator() {
-  const [to, setTo] = useState('sysadmin@company.com')
+  const [to, setTo] = useState('sysadmin@company.com, alerts@company.com')
   const [cc, setCc] = useState('')
   const [bcc, setBcc] = useState('')
   const [subject, setSubject] = useState('[ALERT] ERP Endpoint API_Sales is OFFLINE')
@@ -98,11 +98,13 @@ export function EmailNotificationSimulator() {
 
         <div className="space-y-3 text-xs">
           <div>
-            <label className="block text-slate-400 font-semibold mb-1">To</label>
+            <label className="block text-slate-400 font-semibold mb-1">To (comma-separated)</label>
             <input
               type="email"
+              multiple
               value={to}
               onChange={(e) => setTo(e.target.value)}
+              placeholder="admin@company.com, alerts@company.com"
               required
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500"
             />

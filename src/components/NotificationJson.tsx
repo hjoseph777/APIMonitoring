@@ -96,10 +96,11 @@ export function NotificationJson() {
                 type="text"
                 value={notifyEmail}
                 onChange={(e) => setNotifyEmail(e.target.value)}
-                placeholder="admin@company.com"
+                placeholder="admin@company.com, alerts@company.com"
                 className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
               />
             </div>
+            <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 block">Separate multiple addresses with commas</span>
           </div>
           <div>
             <label className="block text-slate-500 font-semibold mb-1 font-mono">Discord / Webhook URL</label>
