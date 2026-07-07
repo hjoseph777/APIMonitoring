@@ -135,7 +135,7 @@ export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps
               </div>
               <div>
                 <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200">No endpoints monitored</h3>
-                <p className="text-[10px] text-slate-500 mt-1 select-text">
+                <p className="text-[10px] text-slate-500 dark:text-slate-350 mt-1 select-text">
                   Register your first target server in the <strong>Endpoint Registry</strong> tab to begin live monitoring.
                 </p>
               </div>
@@ -221,7 +221,7 @@ function StatCard({ icon: Icon, label, value, bgClass, textClass, borderClass }:
   return (
     <div className={`p-4 border rounded-2xl flex items-center justify-between shadow-sm transition-all duration-150 ${bgClass} ${borderClass}`}>
       <div>
-        <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-500 dark:text-slate-400 block">{label}</span>
+        <span className="text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-300 block">{label}</span>
         <span className={`text-2xl font-black leading-none mt-1.5 block ${textClass}`}>{value}</span>
       </div>
       <div className={`p-2 rounded-xl bg-slate-100/60 dark:bg-slate-900/50 shrink-0`}>

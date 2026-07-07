@@ -85,7 +85,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-[var(--bg-primary)]'
+                      : 'text-slate-550 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-slate-800/40'
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
