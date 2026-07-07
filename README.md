@@ -103,17 +103,17 @@ The following screenshots illustrate the layout and tray behavior options of the
 
 *Shows the standard Windows OS Jump list for the active taskbar window button.*
 
+### Active Application Settings View
+
+![Active Application Settings View](Pictures/Screenshot%202026-07-06%20174734.png)
+
+*The main application interface displaying the settings tab with endpoint registration, check interval settings, notifications, and the Test Connection button.*
+
 ### Endpoint Authentication Configuration
 
 ![Endpoint Authentication Configuration](Pictures/AuthticationTypeScreenshot%202026-07-07%20082104.png)
 
 *The settings panel showing the dropdown list of supported enterprise authentication methods, including API Key, Windows NTLM, mTLS Client Certificate, OAuth2, and Session Cookies.*
-
-### Active Taskbar View
-
-![Active Taskbar View](Pictures/Screenshot%202026-07-06%20174734.png)
-
-*The active Windows taskbar layout showcasing open explorer windows.*
 
 ### System Tray Icons Caret
 
