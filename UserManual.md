@@ -12,6 +12,7 @@ Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to 
 5. [Configuring Chat Alerts & Webhooks (Teams/Discord/Slack)](#5-configuring-chat-alerts--webhooks)
 6. [Email Simulator & Toast Alerts](#6-email-simulator--toast-alerts)
 7. [Database Backup & Recovery](#7-database-backup--recovery)
+8. [System Tray & Background Operations](#8-system-tray--background-operations)
 
 ---
 
@@ -46,10 +47,16 @@ To start monitoring a new URL:
 5. Click **Test Connection** to execute a test before saving. If successful, you will see a green check banner.
 6. Click **+ Add Endpoint** to save and activate monitoring.
 
+![Endpoint Settings View](Pictures/Screenshot%202026-07-06%20174734.png)
+*(The Settings Panel showing the endpoint configuration inputs and the pre-save Test Connection option)*
+
 ---
 
 ## 4. Authentication Guide
 The application supports multiple security layers. Under the **Authentication Method** dropdown, select the protocol required by your target server:
+
+![Authentication Dropdown Menu](Pictures/AuthticationTypeScreenshot%202026-07-07%20082104.png)
+*(Supported enterprise authentication methods dropdown list)*
 
 ### A. None (Public Endpoint)
 * **Use Case**: Public websites, unauthenticated internal status pages.
@@ -117,3 +124,24 @@ Under the **Backup & Data Controls** section of the **Notification & JSON** tab:
 * **Export Backup JSON**: Click this button to save your entire configuration (all registered endpoints, historical logs, and custom system settings) as a local `.json` file.
 * **Import Backup JSON**: Click this button to upload a previously saved backup file. This will restore all your endpoints and system configurations instantly.
 * **Wipe Database Records**: Click this to clear all endpoints, alert histories, and logs from your database, resetting the application to a clean slate.
+
+---
+
+## 8. System Tray & Background Operations
+The application is designed to run 24/7 in the background without cluttering your desktop space.
+
+* **Minimize on Close**: Clicking the `X` (close window) button automatically hides the app into your Windows system tray.
+* **Outage Tooltips**: Hovering over the Xerox system tray icon displays the current number of offline outages.
+* **Tray Context Menu**: Right-clicking the tray icon exposes options to focus the window, run an on-demand check, or quit.
+
+### Visual Guide:
+
+#### System Tray Caret location:
+![Windows Notification Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
+
+#### Expanded Notification Icons:
+![System Tray Expanded List](Pictures/Screenshot%202026-07-06%20174454.png)
+
+#### Right-Click Context Menu controls:
+![Tray Right-Click Options](Pictures/2nd_Tray_Screenshot%202026-07-06%20175037.png)
+
