@@ -103,14 +103,14 @@ export function NotificationJson() {
             <span className="text-[9px] text-slate-400 dark:text-slate-500 mt-1 block">Separate multiple addresses with commas</span>
           </div>
           <div>
-            <label className="block text-slate-500 font-semibold mb-1 font-mono">Discord / Webhook URL</label>
+            <label className="block text-slate-500 font-semibold mb-1 font-mono">Chat Webhook URL (MS Teams / Discord / Slack)</label>
             <div className="flex items-center gap-2">
               <Webhook className="w-4 h-4 text-slate-455 shrink-0" />
               <input
                 type="text"
                 value={globalWebhook}
                 onChange={(e) => setGlobalWebhook(e.target.value)}
-                placeholder="https://discord.com/api/webhooks/..."
+                placeholder="https://outlook.office.com/... or https://discord.com/..."
                 className="w-full bg-slate-105 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 dark:bg-slate-900"
               />
             </div>
