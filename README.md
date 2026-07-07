@@ -133,6 +133,42 @@ The following screenshots illustrate the layout and tray behavior options of the
 
 *The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
 
+## 🧪 Manual Verification & Integration Tests
+
+The application's connection testing and authentication pipelines were thoroughly validated through 6 core manual integration test cases executed against public test endpoints:
+
+1. **Basic Authentication Success**
+   * **Target Endpoint**: `https://httpbin.org/basic-auth/user/pass`
+   * **Credentials**: Username `user`, Password `pass`
+   * **Result**: **Success (200 OK)** — Injecting the base64-encoded standard Basic header yields a verified response.
+
+2. **Basic Authentication Rejection**
+   * **Target Endpoint**: `https://httpbin.org/basic-auth/user/pass`
+   * **Credentials**: Username `user`, Password `wrong`
+   * **Result**: **Failed (401 Unauthorized)** — The system correctly catches the authentication rejection.
+
+3. **API Key Header Success**
+   * **Target Endpoint**: `https://httpbin.org/headers`
+   * **Config**: Key name `X-API-Key`, Value `my-secure-token`, Location `Header`
+   * **Result**: **Success (200 OK)** — Header keys are correctly injected and echoed by the host.
+
+4. **API Key Header Rejection**
+   * **Target Endpoint**: `https://httpbin.org/status/403`
+   * **Config**: Key name `X-API-Key`, Value `my-secure-token`, Location `Header`
+   * **Result**: **Failed (403 Forbidden)** — Proves the app captures HTTP client/permissions rejections correctly.
+
+5. **API Key Query Parameter Success**
+   * **Target Endpoint**: `https://httpbin.org/get`
+   * **Config**: Key name `api_key`, Value `my-query-token`, Location `Query Parameter`
+   * **Result**: **Success (200 OK)** — Confirms parameters are successfully appended to URLs.
+
+6. **Public Endpoint (No Auth) Success**
+   * **Target Endpoint**: `https://httpbin.org/get`
+   * **Config**: Authentication `None`
+   * **Result**: **Success (200 OK)** — Connects seamlessly without credentials.
+
+*(Visual logs and screenshots capturing these manual test events are recorded in [Doc1.docx](file:///c:/Users/Owner/Xerox/API_Monitor/Pictures/Doc1.docx))*
+
 ---
 
 ## ⚙️ Development Guide
