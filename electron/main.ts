@@ -17,6 +17,7 @@ const getIcon = (status: 'online' | 'warning' | 'offline' | 'idle') => {
 }
 
 let mainWindow: BrowserWindow | null = null
+let tray: Tray | null = null
 const appIcon = getIcon('idle')
 
 // Enforce single instance lock in production to prevent duplicate tray icons
@@ -220,7 +221,11 @@ app.whenReady().then(() => {
   })
 
   // System Tray Initialization
-  let tray: Tray | null = null
+  if (tray) {
+    try {
+      tray.destroy()
+    } catch (e) {}
+  }
   tray = new Tray(appIcon)
   
   const updateTrayMenu = () => {
@@ -301,5 +306,12 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
+  }
+})
+
+app.on('before-quit', () => {
+  if (tray) {
+    tray.destroy()
+    tray = null
   }
 })
