@@ -113,81 +113,88 @@ export const MonitoringService = {
     let errorMessage = ''
 
     try {
-      const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 15000
-      const config: any = {
-        method: 'GET',
-        url: endpoint.url,
-        timeout: requestTimeout,
-        headers: {}
-      }
-
-      // Configure HTTPS Agent for SSL / self-signed certs
-      const agentOptions: any = { rejectUnauthorized: false }
-      
-      // Apply certificate config first if certificate auth
-      if (endpoint.authType === 'certificate') {
-        const auth = endpoint.authConfig
-        if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
-          const cert = fs.readFileSync(auth.certPath)
-          agentOptions.pfx = cert
-          agentOptions.passphrase = auth.passphrase || ''
-          agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? false
-        }
-      }
-
-      config.httpsAgent = new https.Agent(agentOptions)
-
-      let response: any
-
-      if (endpoint.authType === 'ntlm') {
-        const auth = endpoint.authConfig
-        response = await axiosNtlm({
+      if (id.startsWith('seed-')) {
+        // Mock successful checks for seed endpoints with realistic response times
+        latency = Math.floor(Math.random() * 80) + 70 // 70ms - 150ms
+        status = 'success'
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      } else {
+        const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 15000
+        const config: any = {
           method: 'GET',
           url: endpoint.url,
           timeout: requestTimeout,
-          httpsAgent: config.httpsAgent,
-          ntlm: {
-            username: (auth as any).username,
-            password: (auth as any).password,
-            domain: (auth as any).domain,
-            workstation: (auth as any).workstation || ''
-          },
-          withCredentials: true
-        })
-      } else {
-        // Standard Axios config setup
-        if (endpoint.authType === 'apiKey') {
-          const auth = endpoint.authConfig as any
-          if (auth.location === 'header') {
-            config.headers[auth.key] = auth.value
-          } else if (auth.location === 'query') {
-            const urlObj = new URL(endpoint.url)
-            urlObj.searchParams.append(auth.key, auth.value)
-            config.url = urlObj.toString()
+          headers: {}
+        }
+
+        // Configure HTTPS Agent for SSL / self-signed certs
+        const agentOptions: any = { rejectUnauthorized: false }
+        
+        // Apply certificate config first if certificate auth
+        if (endpoint.authType === 'certificate') {
+          const auth = endpoint.authConfig
+          if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
+            const cert = fs.readFileSync(auth.certPath)
+            agentOptions.pfx = cert
+            agentOptions.passphrase = auth.passphrase || ''
+            agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? false
           }
-        } else if (endpoint.authType === 'basic') {
-          const auth = endpoint.authConfig as any
-          const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64')
-          config.headers.Authorization = `Basic ${token}`
-        } else if (endpoint.authType === 'oauth2') {
-          const auth = endpoint.authConfig
-          const token = await getOAuth2Token(id, auth)
-          config.headers.Authorization = `Bearer ${token}`
         }
 
-        if (endpoint.authType === 'cookie') {
+        config.httpsAgent = new https.Agent(agentOptions)
+
+        let response: any
+
+        if (endpoint.authType === 'ntlm') {
           const auth = endpoint.authConfig
-          const client = getCookieJarClient(id)
-          // Run login first to seed cookies
-          await performCookieLogin(id, auth)
-          response = await client.request(config)
+          response = await axiosNtlm({
+            method: 'GET',
+            url: endpoint.url,
+            timeout: requestTimeout,
+            httpsAgent: config.httpsAgent,
+            ntlm: {
+              username: (auth as any).username,
+              password: (auth as any).password,
+              domain: (auth as any).domain,
+              workstation: (auth as any).workstation || ''
+            },
+            withCredentials: true
+          })
         } else {
-          response = await axios(config)
-        }
-      }
+          // Standard Axios config setup
+          if (endpoint.authType === 'apiKey') {
+            const auth = endpoint.authConfig as any
+            if (auth.location === 'header') {
+              config.headers[auth.key] = auth.value
+            } else if (auth.location === 'query') {
+              const urlObj = new URL(endpoint.url)
+              urlObj.searchParams.append(auth.key, auth.value)
+              config.url = urlObj.toString()
+            }
+          } else if (endpoint.authType === 'basic') {
+            const auth = endpoint.authConfig as any
+            const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64')
+            config.headers.Authorization = `Basic ${token}`
+          } else if (endpoint.authType === 'oauth2') {
+            const auth = endpoint.authConfig
+            const token = await getOAuth2Token(id, auth)
+            config.headers.Authorization = `Bearer ${token}`
+          }
 
-      latency = Date.now() - startTime
-      status = response.status >= 200 && response.status < 400 ? 'success' : 'error'
+          if (endpoint.authType === 'cookie') {
+            const auth = endpoint.authConfig
+            const client = getCookieJarClient(id)
+            // Run login first to seed cookies
+            await performCookieLogin(id, auth)
+            response = await client.request(config)
+          } else {
+            response = await axios(config)
+          }
+        }
+
+        latency = Date.now() - startTime
+        status = response.status >= 200 && response.status < 400 ? 'success' : 'error'
+      }
     } catch (err: any) {
       status = 'error'
       latency = Date.now() - startTime
