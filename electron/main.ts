@@ -220,12 +220,6 @@ app.whenReady().then(() => {
       ? 'warning' 
       : 'online'
       
-    const newIcon = getIcon(currentStatus)
-    tray?.setImage(newIcon)
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setIcon(newIcon)
-    }
-
     const statusText = totalCount === 0
       ? 'Xerox API Monitor - No Endpoints Registered'
       : currentStatus === 'offline'
@@ -233,6 +227,19 @@ app.whenReady().then(() => {
       : currentStatus === 'warning'
       ? `Xerox API Monitor - Warning: ${offlineCount} of ${totalCount} Offline`
       : 'Xerox API Monitor - All Systems Online'
+
+    const newIcon = getIcon(currentStatus)
+    tray?.setImage(newIcon)
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setIcon(newIcon)
+      if (process.platform === 'win32') {
+        try {
+          mainWindow.setOverlayIcon(newIcon, statusText)
+        } catch (err) {
+          console.error('Failed to set taskbar overlay icon:', err)
+        }
+      }
+    }
       
     const contextMenu = Menu.buildFromTemplate([
       { label: statusText, enabled: false },
