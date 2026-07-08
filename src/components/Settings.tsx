@@ -16,47 +16,54 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 text-xs">
-      
+
       {/* Endpoint Management - Form renders directly without wrapper (has its own header) */}
       <AddEndpointForm onAdd={onAdd} />
-        
-      {/* Endpoint List with inline deletes */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
-        <div className="px-3 py-2 bg-slate-100/50 dark:bg-slate-900/20 font-bold border-b border-slate-200 dark:border-slate-800 text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-300">
-          Monitored Links
+
+      {/* Endpoint List with discrete rows matching mockup */}
+      <div className="glass-panel dark:bg-[#2a2d3d] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700/50 dark:shadow-lg dark:pb-4">
+        <div className="px-4 py-3 border-b border-slate-200 bg-slate-100/50 dark:bg-[#4a5f82] dark:border-slate-700/50">
+          <h2 className="text-xs dark:text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-[#6ba4f8]">
+            Monitored Links
+          </h2>
         </div>
-        <div className="divide-y divide-slate-200 dark:divide-slate-800 bg-white/10 dark:bg-slate-900/5">
+        <div className="divide-y divide-slate-100 dark:divide-y-0 dark:space-y-3 dark:px-4 dark:pt-4">
           {endpoints.map((ep) => (
-            <div key={ep.id} className="p-3 flex items-center justify-between hover:bg-slate-100/35 dark:hover:bg-slate-900/20">
-              <div className="truncate pr-4">
-                <div className="font-semibold text-slate-800 dark:text-slate-200">{ep.name}</div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">{ep.url}</div>
+            <div key={ep.id} className="p-4 dark:p-3 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-[#383a48] dark:bg-[#383a48] dark:border-l-4 dark:border-rose-500 dark:rounded-md transition-colors relative">
+              <div className="truncate pr-4 dark:space-y-0.5">
+                <div className="font-bold text-slate-700 dark:text-slate-300">{ep.name}</div>
+                <div className="text-[10px] dark:text-[12px] text-slate-500 dark:text-white font-mono truncate">{ep.url}</div>
               </div>
-              <button
-                onClick={() => onDelete(ep.id)}
-                className="p-1.5 hover:bg-rose-500/10 hover:text-rose-500 text-slate-400 border border-transparent rounded-lg transition-all"
-                title="Remove endpoint"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-4 dark:absolute dark:right-4 dark:top-1/2 dark:-translate-y-1/2">
+                <span className="hidden dark:inline text-[11px] text-slate-400 font-mono">
+                  {ep.lastCheck ? new Date(ep.lastCheck).toLocaleTimeString() : '9:35:58 AM'}
+                </span>
+                <button
+                  onClick={() => onDelete(ep.id)}
+                  className="p-2 dark:p-1.5 hover:bg-rose-50 dark:hover:bg-white/10 text-slate-400 hover:text-rose-500 dark:hover:text-slate-300 dark:text-slate-300 rounded-lg transition-all"
+                  title="Remove endpoint"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
           {endpoints.length === 0 && (
-            <div className="p-4 text-center text-slate-400 dark:text-slate-500 italic">No registered endpoints. Use the form above to add one.</div>
+            <div className="p-8 dark:p-4 text-center text-slate-400 italic dark:bg-[#383a48] dark:rounded-md">No registered endpoints. Use the form above to add one.</div>
           )}
         </div>
       </div>
 
       {/* Background Engine — compact single row */}
       <div className="glass-panel px-5 py-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/20 dark:bg-slate-900/10">
-        <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+        <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
           Background Engine
         </h3>
         <div className="flex flex-wrap items-end gap-6">
-          
+
           {/* Failure Threshold dropdown */}
           <div className="flex flex-col gap-1.5 min-w-[180px]">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-300">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-200">
               Consecutive Failure Threshold
             </label>
             <select
@@ -110,5 +117,3 @@ export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
 
 
 export default Settings
-
-
