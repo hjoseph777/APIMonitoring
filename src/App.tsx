@@ -25,7 +25,13 @@ function AppContent() {
   // State calculations for header and stats
   const alertCount = alerts.filter((a) => !a.read).length
   const offlineCount = endpoints.filter((e) => e.status === 'error').length
-  const systemStatus = offlineCount > 0 ? 'warning' as const : 'online' as const
+  const systemStatus = endpoints.length === 0
+    ? 'online' as const
+    : offlineCount === endpoints.length
+    ? 'offline' as const
+    : offlineCount > 0
+    ? 'warning' as const
+    : 'online' as const
 
   // Add Endpoint wrapped with Toast
   const handleAddEndpoint = async (newEndpoint: any) => {
