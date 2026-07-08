@@ -19,6 +19,20 @@ const getIcon = (status: 'online' | 'warning' | 'offline' | 'idle') => {
 let mainWindow: BrowserWindow | null = null
 const appIcon = getIcon('idle')
 
+// Enforce single instance lock to prevent duplicate tray icons
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.show()
+      mainWindow.focus()
+    }
+  })
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 750,
