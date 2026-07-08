@@ -255,9 +255,10 @@ app.whenReady().then(() => {
       mainWindow.setIcon(newIcon)
       if (process.platform === 'win32') {
         try {
-          mainWindow.setOverlayIcon(newIcon, statusText)
+          // Clear any overlay icon to avoid double circle duplication on the taskbar
+          mainWindow.setOverlayIcon(null, '')
         } catch (err) {
-          console.error('Failed to set taskbar overlay icon:', err)
+          console.error('Failed to clear taskbar overlay icon:', err)
         }
       }
     }
