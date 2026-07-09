@@ -3,11 +3,10 @@ import { Endpoint } from '../types'
 import { UptimeChart } from './ui/UptimeChart'
 import { BarChart3 } from 'lucide-react'
 
-interface ReportsProps {
-  endpoints: Endpoint[]
-}
+import { useMonitoringStore } from '../store/monitoringStore'
 
-export function Reports({ endpoints }: ReportsProps) {
+export function Reports() {
+  const endpoints = useMonitoringStore(state => state.endpoints)
   return (
     <div className="space-y-6">
       {endpoints.map((ep) => (

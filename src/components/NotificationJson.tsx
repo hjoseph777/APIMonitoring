@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Download, Upload, Mail, Webhook, Cpu, Send, AlertTriangle, Play, Trash2, ShieldAlert } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
-import { useMonitoringContext } from '../context/MonitoringContext'
+import { useMonitoringStore } from '../store/monitoringStore'
 
 export function NotificationJson() {
   const { addToast } = useToast()
-  const { refetchData } = useMonitoringContext()
+  const refetchData = useMonitoringStore(state => state.refetchData)
 
   // Option states
   const [nativeNotify, setNativeNotify] = useState(true)

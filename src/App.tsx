@@ -1,29 +1,34 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import Settings from './components/Settings'
 import Reports from './components/Reports'
 import NotificationJson from './components/NotificationJson'
 
-import { MonitoringProvider, useMonitoringContext } from './context/MonitoringContext'
+import { useMonitoringStore } from './store/monitoringStore'
 import { ToastProvider, useToast } from './context/ToastContext'
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState('dashboard')
   const { addToast } = useToast()
 
-  // Pull global state and actions from Context
-  const {
-    state,
-    addEndpoint,
-    deleteEndpoint,
-    refreshEndpoint
-  } = useMonitoringContext()
+  const endpoints = useMonitoringStore(state => state.endpoints)
+  const alerts = useMonitoringStore(state => state.alerts)
+  const addEndpoint = useMonitoringStore(state => state.addEndpoint)
+  const deleteEndpoint = useMonitoringStore(state => state.deleteEndpoint)
+  const refreshEndpoint = useMonitoringStore(state => state.refreshEndpoint)
+  const refetchData = useMonitoringStore(state => state.refetchData)
 
-  const { endpoints, alerts, logs } = state
+  // Sync state from the main process every 3 seconds so the UI stays up to date
+  useEffect(() => {
+    refetchData()
+    const timer = setInterval(refetchData, 3000)
+    return () => clearInterval(timer)
+  }, [refetchData])
 
   const alertCount = alerts.filter((a) => !a.read).length
   const offlineCount = endpoints.filter((e) => e.status === 'error').length
+  
   // Roll up into a single system health label shown in the header
   const systemStatus = endpoints.length === 0
     ? 'online' as const
@@ -74,26 +79,15 @@ function AppContent() {
       <div className="space-y-4">
         {/* Main Content Router */}
         {activeTab === 'dashboard' && (
-          <Dashboard
-            endpoints={endpoints}
-            alerts={alerts}
-            logs={logs}
-            onRefresh={handleRefreshEndpoint}
-          />
+          <Dashboard />
         )}
         
         {activeTab === 'settings' && (
-          <Settings
-            endpoints={endpoints}
-            onAdd={handleAddEndpoint}
-            onDelete={handleDeleteEndpoint}
-          />
+          <Settings />
         )}
 
         {activeTab === 'reports' && (
-          <Reports
-            endpoints={endpoints}
-          />
+          <Reports />
         )}
 
         {activeTab === 'notification-json' && (
@@ -107,9 +101,7 @@ function AppContent() {
 function App() {
   return (
     <ToastProvider>
-      <MonitoringProvider>
-        <AppContent />
-      </MonitoringProvider>
+      <AppContent />
     </ToastProvider>
   )
 }

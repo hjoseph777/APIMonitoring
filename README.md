@@ -94,7 +94,7 @@ The background monitoring engine actively catches, categorizes, and logs over 30
 
 ## 🛠️ Tech Stack
 
-* **Frontend**: React 18, TypeScript, TailwindCSS (Tokyo Night & Clear themes), Lucide Icons
+* **Frontend**: React 18, TypeScript, TailwindCSS (Tokyo Night & Clear themes), Zustand (Atomic Store), Lucide Icons
 * **Runtime / Shell**: Electron 28+, `electron-store` (Preferences), `electron-safe-storage` (Credentials encryption)
 * **Build System**: `electron-vite`, `vite`
 * **Local Database**: `better-sqlite3` (with `electron-store` fallback)
@@ -123,9 +123,10 @@ API_Monitor/
 │   │   ├── AddEndpointForm.tsx  # New endpoint creation form with connection test
 │   │   ├── Reports.tsx          # Per-endpoint latency chart report page
 │   │   └── NotificationJson.tsx # Enterprise Settings (Auto-start, Updates, Maintenance), SMTP, Webhooks
+│   ├── store/
+│   │   └── monitoringStore.ts    # Global Zustand atomic store synced from Electron main
 │   ├── context/
-│   │   ├── ToastContext.tsx      # Toast notification provider and display logic
-│   │   └── MonitoringContext.tsx # Global state reducer synced from Electron main
+│   │   └── ToastContext.tsx      # Toast notification provider and display logic
 │   ├── types/
 │   │   └── index.ts             # Shared TypeScript types (Endpoint, Alert, Log, AuthConfig)
 │   ├── App.tsx                  # Root component and tab router

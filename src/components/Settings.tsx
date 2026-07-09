@@ -3,13 +3,13 @@ import { Trash2 } from 'lucide-react'
 import { Endpoint } from '../types'
 import AddEndpointForm from './AddEndpointForm'
 
-interface SettingsProps {
-  endpoints: Endpoint[]
-  onAdd: (newEp: any) => Promise<void>
-  onDelete: (id: string) => Promise<void>
-}
+import { useMonitoringStore } from '../store/monitoringStore'
 
-export function Settings({ endpoints, onAdd, onDelete }: SettingsProps) {
+export function Settings() {
+  const endpoints = useMonitoringStore(state => state.endpoints)
+  const onAdd = useMonitoringStore(state => state.addEndpoint)
+  const onDelete = useMonitoringStore(state => state.deleteEndpoint)
+
   const [alertThreshold, setAlertThreshold] = useState('2')
   const [autoStart, setAutoStart] = useState(true)
   const [minimizeTray, setMinimizeTray] = useState(true)

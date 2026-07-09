@@ -2,16 +2,15 @@ import React from 'react'
 import { Activity, CheckCircle, XCircle, AlertTriangle, Clock, Monitor } from 'lucide-react'
 import { Endpoint, Alert, Log } from '../types'
 import { useToast } from '../context/ToastContext'
+import { useMonitoringStore } from '../store/monitoringStore'
 
-interface DashboardProps {
-  endpoints: Endpoint[]
-  alerts: Alert[]
-  logs: Log[]
-  onRefresh: (id: string) => Promise<void>
-}
-
-export function Dashboard({ endpoints, alerts, logs, onRefresh }: DashboardProps) {
+export function Dashboard() {
   const { addToast } = useToast()
+  
+  const endpoints = useMonitoringStore(state => state.endpoints)
+  const alerts = useMonitoringStore(state => state.alerts)
+  const logs = useMonitoringStore(state => state.logs)
+  const onRefresh = useMonitoringStore(state => state.refreshEndpoint)
 
   const onlineCount = endpoints.filter((e) => e.status === 'success').length
   const offlineCount = endpoints.filter((e) => e.status === 'error').length

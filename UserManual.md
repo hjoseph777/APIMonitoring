@@ -166,7 +166,7 @@ If you would like to test the application interface without configuring real end
 ---
 
 ## 8. System Tray & Background Operations
-The application is designed to run 24/7 in the background without cluttering your desktop space.
+The application is designed to run 24/7 in the background without cluttering your desktop space. Powered by a high-performance Zustand atomic store, the UI efficiently synchronizes with the background engine without lag.
 
 * **Minimize on Close**: Clicking the `X` (close window) button automatically hides the app into your Windows system tray.
 * **Launch at Startup**: You can enable **Launch at System Startup** in the **Notification & JSON** settings so the monitor starts immediately upon boot.
