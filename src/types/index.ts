@@ -12,6 +12,7 @@ export interface Endpoint {
   authStatus?: 'valid' | 'expired' | 'failed' | 'none';
   responseTimeHistory?: number[]; // history of last response times in ms
   timeout?: number; // in seconds
+  allowSelfSigned?: boolean; // allow self-signed / internal TLS certificates (default: false)
 }
 
 export type AuthConfig = 
@@ -63,10 +64,12 @@ declare global {
       exportBackup: () => Promise<string>;
       importBackup: (jsonString: string) => Promise<{ success: boolean }>;
       resetAllData: () => Promise<{ success: boolean }>;
-      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }>;
-      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }) => Promise<{ success: boolean }>;
+      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean }>;
+      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean }) => Promise<{ success: boolean }>;
       sendTestAlert: (args: { webhookUrl: string; channelType: string }) => Promise<{ success: boolean; message?: string }>;
       sendTestEmail: () => Promise<{ success: boolean; message?: string }>;
+      seedDemoData: (mode: 'green' | 'mixed') => Promise<{ success: boolean; message?: string }>;
+      clearDemoData: () => Promise<{ success: boolean; message?: string }>;
     }
   }
 }

@@ -33,6 +33,13 @@ The Xerox API Monitor ERP is a lightweight desktop utility designed to monitor i
 ### Performance Architecture
 Under the hood, the user interface relies on a **Zustand Atomic Store**. This architectural choice ensures that the application remains extremely responsive and consumes minimal CPU. By using an atomic store rather than traditional React Context, the high-frequency latency updates arriving from the background engine only re-render the specific charts and text fields that need to change, rather than redrawing the entire application every time a sync occurs.
 
+### Enterprise Dependability Guarantees
+To ensure stable 24/7 background operation on corporate infrastructure, the Xerox API Monitor strictly enforces:
+* **Zero-Collision Cryptographic IDs**: All records are generated using `crypto.randomUUID()`, guaranteeing globally unique IDs and safe backup restorations.
+* **In-Flight Request Deduplication**: The engine intelligently coalesces simultaneous identical checks, preventing overlapping network chatter.
+* **Bounded Queries & Log Capping**: Database read queries are permanently capped (e.g., maximum 500 records pushed to the UI at a time), and long-term storage is strictly pruned past 5,000 records. This prevents memory leaks and ensures the application never slows down as weeks or months pass.
+* **Event-Driven Polling**: The monitoring engine operates on state-change events rather than constant CPU polling, minimizing power consumption when running in the background.
+
 ---
 
 ## 2. Dashboard Navigation
@@ -44,7 +51,7 @@ When you launch the application, you are greeted by the **Dashboard**.
   * **Offline Failures**: Number of links currently failing.
   * **Active Alerts**: Unread warning logs for offline endpoints.
 * **Endpoint Status Cockpit**: Displays a real-time list of all monitored links, their status (Online/Offline), current response latency (ms), and last check timestamp.
-* **Xerox Logs Tracker**: Scrollable audit trail showing the success and failure history of all background check events.
+* **Xerox Logs Tracker**: Scrollable audit trail showing the success and failure history of all background check events. *(Note: High-frequency local UI actions like copying payloads to the clipboard are explicitly excluded from database logging to prevent bloat).*
 
 ---
 

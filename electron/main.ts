@@ -1,12 +1,18 @@
 import { app, BrowserWindow, ipcMain, clipboard, Tray, Menu, nativeImage } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
+import { randomUUID } from 'crypto'
+import axios from 'axios'
 import * as fs from 'fs'
 import DatabaseService from './database'
 import MonitoringService from './monitoring'
 import { Endpoint, Log } from '../src/types'
 
 let isQuitting = false
+
+// Module-level electron-store singleton
+const Store = require('electron-store')
+const mainStore = new Store()
 
 import { ICON_IDLE, ICON_ONLINE, ICON_WARNING, ICON_OFFLINE } from './icons_b64'
 
@@ -70,9 +76,7 @@ app.whenReady().then(() => {
     app.setAppUserModelId(app.name)
   }
 
-  const Store = require('electron-store')
-  const store = new Store()
-  if (store.get('autoUpdatesEnabled', false)) {
+  if (mainStore.get('autoUpdatesEnabled', false)) {
     try {
       autoUpdater.checkForUpdatesAndNotify()
     } catch (e) {
@@ -86,12 +90,10 @@ app.whenReady().then(() => {
   // Start background log exporter
   setInterval(() => {
     try {
-      const Store = require('electron-store')
-      const store = new Store()
-      if (store.get('autoExportLogs', false)) {
-        const exportPath = store.get('exportPath', '')
+      if (mainStore.get('autoExportLogs', false)) {
+        const exportPath = mainStore.get('exportPath', '')
         if (exportPath && fs.existsSync(exportPath)) {
-          const lastExportTime = store.get('lastExportTime', 0)
+          const lastExportTime = mainStore.get('lastExportTime', 0)
           // 7 days = 604800000 ms
           if (Date.now() - lastExportTime > 604800000) {
             const logs = DatabaseService.getLogs()
@@ -110,7 +112,7 @@ app.whenReady().then(() => {
               
               const filename = `api_monitor_logs_${new Date().toISOString().split('T')[0]}.csv`
               fs.writeFileSync(join(exportPath, filename), csv)
-              store.set('lastExportTime', Date.now())
+              mainStore.set('lastExportTime', Date.now())
             }
           }
         }
@@ -126,17 +128,20 @@ app.whenReady().then(() => {
   ipcMain.handle('save-endpoint', (_, endpoint: Endpoint) => {
     DatabaseService.saveEndpoint(endpoint)
     MonitoringService.schedule(endpoint) // Schedule/re-schedule
+    updateTrayMenu()
     return { success: true }
   })
 
   ipcMain.handle('delete-endpoint', (_, id: string) => {
     MonitoringService.unschedule(id)
     DatabaseService.deleteEndpoint(id)
+    updateTrayMenu()
     return { success: true }
   })
 
   ipcMain.handle('refresh-endpoint', async (_, id: string) => {
     await MonitoringService.checkEndpoint(id)
+    updateTrayMenu()
     return { success: true }
   })
 
@@ -164,7 +169,7 @@ app.whenReady().then(() => {
     return { success: true }
   })
 
-  // Clipboard copy and log tracking
+  // Clipboard copy
   ipcMain.handle('copy-to-clipboard', (_, { text, endpointName }) => {
     let success = false
     try {
@@ -173,18 +178,6 @@ app.whenReady().then(() => {
     } catch (err) {
       success = false
     }
-
-    const log: Log = {
-      id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
-      endpointName: endpointName || 'System',
-      message: success 
-        ? `Successfully copied payload buffer to clipboard.`
-        : `Failed copying payload buffer to clipboard.`,
-      timestamp: new Date().toISOString(),
-      type: 'xerox',
-      success
-    }
-    DatabaseService.saveLog(log)
     return { success }
   })
 
@@ -251,41 +244,37 @@ app.whenReady().then(() => {
 
   // Global settings
   ipcMain.handle('get-settings', () => {
-    const Store = require('electron-store')
-    const store = new Store()
     return {
-      nativeNotify: store.get('nativeNotify', true),
-      smtpServer: store.get('smtpServer', 'smtp.company.com'),
-      smtpPort: store.get('smtpPort', '587'),
-      smtpUser: store.get('smtpUser', ''),
-      smtpPass: store.get('smtpPass', ''),
-      notifyEmail: store.get('notifyEmail', 'admin@company.com'),
-      globalWebhook: store.get('globalWebhook', ''),
-      globalWebhookChannel: store.get('globalWebhookChannel', 'msteams'),
-      runAtStartup: store.get('runAtStartup', false),
-      maintenanceMode: store.get('maintenanceMode', false),
-      autoExportLogs: store.get('autoExportLogs', false),
-      exportPath: store.get('exportPath', ''),
-      autoUpdatesEnabled: store.get('autoUpdatesEnabled', false)
+      nativeNotify: mainStore.get('nativeNotify', true),
+      smtpServer: mainStore.get('smtpServer', 'smtp.company.com'),
+      smtpPort: mainStore.get('smtpPort', '587'),
+      smtpUser: mainStore.get('smtpUser', ''),
+      smtpPass: mainStore.get('smtpPass', ''),
+      notifyEmail: mainStore.get('notifyEmail', 'admin@company.com'),
+      globalWebhook: mainStore.get('globalWebhook', ''),
+      globalWebhookChannel: mainStore.get('globalWebhookChannel', 'msteams'),
+      runAtStartup: mainStore.get('runAtStartup', false),
+      maintenanceMode: mainStore.get('maintenanceMode', false),
+      autoExportLogs: mainStore.get('autoExportLogs', false),
+      exportPath: mainStore.get('exportPath', ''),
+      autoUpdatesEnabled: mainStore.get('autoUpdatesEnabled', false)
     }
   })
 
   ipcMain.handle('save-settings', (_, settings: any) => {
-    const Store = require('electron-store')
-    const store = new Store()
-    store.set('nativeNotify', settings.nativeNotify)
-    store.set('smtpServer', settings.smtpServer)
-    store.set('smtpPort', settings.smtpPort)
-    store.set('smtpUser', settings.smtpUser)
-    store.set('smtpPass', settings.smtpPass)
-    store.set('notifyEmail', settings.notifyEmail)
-    store.set('globalWebhook', settings.globalWebhook)
-    store.set('globalWebhookChannel', settings.globalWebhookChannel)
-    store.set('runAtStartup', settings.runAtStartup)
-    store.set('maintenanceMode', settings.maintenanceMode)
-    store.set('autoExportLogs', settings.autoExportLogs)
-    store.set('exportPath', settings.exportPath)
-    store.set('autoUpdatesEnabled', settings.autoUpdatesEnabled)
+    mainStore.set('nativeNotify', settings.nativeNotify)
+    mainStore.set('smtpServer', settings.smtpServer)
+    mainStore.set('smtpPort', settings.smtpPort)
+    mainStore.set('smtpUser', settings.smtpUser)
+    mainStore.set('smtpPass', settings.smtpPass)
+    mainStore.set('notifyEmail', settings.notifyEmail)
+    mainStore.set('globalWebhook', settings.globalWebhook)
+    mainStore.set('globalWebhookChannel', settings.globalWebhookChannel)
+    mainStore.set('runAtStartup', settings.runAtStartup)
+    mainStore.set('maintenanceMode', settings.maintenanceMode)
+    mainStore.set('autoExportLogs', settings.autoExportLogs)
+    mainStore.set('exportPath', settings.exportPath)
+    mainStore.set('autoUpdatesEnabled', settings.autoUpdatesEnabled)
 
     if (app.setLoginItemSettings) {
       app.setLoginItemSettings({
@@ -293,12 +282,12 @@ app.whenReady().then(() => {
       })
     }
     
+    updateTrayMenu()
     return { success: true }
   })
 
   ipcMain.handle('send-test-alert', async (_, { webhookUrl, channelType }) => {
     try {
-      const axios = require('axios')
       let payload: any = {}
       const testMsg = `🧪 **[API Monitor Test Alert]** This is a simulated alert connection test.`
 
@@ -317,13 +306,11 @@ app.whenReady().then(() => {
 
   ipcMain.handle('send-test-email', async () => {
     try {
-      const Store = require('electron-store')
-      const store = new Store()
-      const smtpServer = store.get('smtpServer', '')
-      const smtpPort = store.get('smtpPort', '587')
-      const smtpUser = store.get('smtpUser', '')
-      const smtpPass = store.get('smtpPass', '')
-      const notifyEmail = store.get('notifyEmail', '')
+      const smtpServer = mainStore.get('smtpServer', '')
+      const smtpPort = mainStore.get('smtpPort', '587')
+      const smtpUser = mainStore.get('smtpUser', '')
+      const smtpPass = mainStore.get('smtpPass', '')
+      const notifyEmail = mainStore.get('notifyEmail', '')
 
       if (!smtpServer || !notifyEmail) {
         throw new Error('SMTP Server and Recipient Email are required.')
@@ -377,9 +364,7 @@ app.whenReady().then(() => {
   tray = new Tray(appIcon)
   
   const updateTrayMenu = () => {
-    const Store = require('electron-store')
-    const store = new Store()
-    const maintenanceMode = store.get('maintenanceMode', false)
+    const maintenanceMode = mainStore.get('maintenanceMode', false)
 
     const endpoints = DatabaseService.getEndpoints()
     const offlineCount = endpoints.filter(e => e.status === 'error').length
@@ -452,7 +437,7 @@ app.whenReady().then(() => {
   }
   
   updateTrayMenu()
-  setInterval(updateTrayMenu, 3500)
+  MonitoringService.onStateChange = updateTrayMenu
 
   createWindow()
 

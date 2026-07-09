@@ -1,6 +1,7 @@
 import axios from 'axios'
 import https from 'https'
 import fs from 'fs'
+import { randomUUID } from 'crypto'
 import { Notification } from 'electron'
 import DatabaseService from './database'
 import { Endpoint, Alert, Log } from '../src/types'
@@ -17,6 +18,14 @@ const activeRequests = new Map<string, Promise<any>>()
 // Caches for OAuth2 tokens and Cookie Jars
 const oauth2Cache = new Map<string, { token: string; expiresAt: number }>()
 const cookieJars = new Map<string, CookieJar>()
+
+// Cookie session validity tracking — only re-login when session has expired
+const cookieSessionExpiry = new Map<string, number>()
+const COOKIE_SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
+
+// Module-level electron-store singleton (avoids repeated construction per loop)
+const Store = require('electron-store')
+const monitorStore = new Store()
 
 async function getOAuth2Token(endpointId: string, authConfig: any): Promise<string> {
   const cached = oauth2Cache.get(endpointId)
@@ -62,7 +71,19 @@ async function performCookieLogin(endpointId: string, authConfig: any) {
   })
 }
 
+// Only re-runs the login flow when the cached session has expired or was invalidated
+async function performCookieLoginIfNeeded(endpointId: string, authConfig: any) {
+  const now = Date.now()
+  const expiry = cookieSessionExpiry.get(endpointId) ?? 0
+  if (expiry < now) {
+    await performCookieLogin(endpointId, authConfig)
+    cookieSessionExpiry.set(endpointId, now + COOKIE_SESSION_TTL_MS)
+  }
+}
+
 export const MonitoringService = {
+  onStateChange: null as (() => void) | null,
+
   start() {
     console.log('Background Monitoring Engine started...')
     this.scheduleAll()
@@ -91,10 +112,7 @@ export const MonitoringService = {
 
   async runCheckLoop(id: string) {
     try {
-      const Store = require('electron-store')
-      const store = new Store()
-      
-      if (!store.get('maintenanceMode', false)) {
+      if (!monitorStore.get('maintenanceMode', false)) {
         await this.checkEndpoint(id)
       }
     } catch (err) {
@@ -143,8 +161,12 @@ export const MonitoringService = {
           headers: {}
         }
 
-        // Configure HTTPS Agent for SSL / self-signed certs
-        const agentOptions: any = { rejectUnauthorized: false }
+        // Configure HTTPS Agent for SSL / self-signed certs.
+        // Reject unauthorised by default (secure). Only disable when the user
+        // has explicitly enabled "Allow Self-Signed Certificates" on this endpoint,
+        // or when using certificate auth where the server cert may be self-signed.
+        const defaultRejectUnauthorized = !(endpoint.allowSelfSigned === true)
+        const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized }
         
         // Apply certificate config first if certificate auth
         if (endpoint.authType === 'certificate') {
@@ -153,7 +175,8 @@ export const MonitoringService = {
             const cert = fs.readFileSync(auth.certPath)
             agentOptions.pfx = cert
             agentOptions.passphrase = auth.passphrase || ''
-            agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? false
+            // For mTLS, respect the per-cert setting; fall back to the endpoint's allowSelfSigned flag
+            agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? !defaultRejectUnauthorized
           }
         }
 
@@ -206,8 +229,8 @@ export const MonitoringService = {
             if (endpoint.authType === 'cookie') {
               const auth = endpoint.authConfig
               const client = getCookieJarClient(id)
-              // Run login first to seed cookies
-              await performCookieLogin(id, auth)
+              // Only re-login when the cached session has expired
+              await performCookieLoginIfNeeded(id, auth)
               reqPromise = client.request(config)
             } else {
               reqPromise = axios(config)
@@ -224,11 +247,19 @@ export const MonitoringService = {
 
         latency = Date.now() - startTime
         status = response.status >= 200 && response.status < 400 ? 'success' : 'error'
+        // Invalidate cookie session cache on auth failures so the next check re-logs in
+        if (endpoint.authType === 'cookie' && (response.status === 401 || response.status === 403)) {
+          cookieSessionExpiry.delete(id)
+        }
       }
     } catch (err: any) {
       status = 'error'
       latency = Date.now() - startTime
       errorMessage = err.message || 'Network connection refused'
+      // Invalidate cookie session on any network error so the next cycle attempts a fresh login
+      if (endpoint.authType === 'cookie') {
+        cookieSessionExpiry.delete(id)
+      }
     }
 
     // Process and Update Endpoint State
@@ -248,7 +279,7 @@ export const MonitoringService = {
       // Save Alert log when threshold is reached (e.g. 2 consecutive errors)
       if (consecutiveErrors === 2 || consecutiveErrors % 5 === 0) {
         const alert: Alert = {
-          id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+          id: randomUUID(),
           endpointId: currentEp.id,
           endpointName: currentEp.name,
           message: errorMessage || `Failed checks consecutive threshold hit (${consecutiveErrors} failures).`,
@@ -277,7 +308,7 @@ export const MonitoringService = {
 
     // Save check audit log
     const checkLog: Log = {
-      id: Date.now().toString() + Math.random().toString(36).substring(2, 6),
+      id: randomUUID(),
       endpointId: currentEp.id,
       endpointName: currentEp.name,
       message: status === 'success' ? `Reachable. Latency: ${latency}ms.` : `Failure check: ${errorMessage}`,
@@ -285,6 +316,10 @@ export const MonitoringService = {
       type: status === 'success' ? 'info' : 'error'
     }
     DatabaseService.saveLog(checkLog)
+
+    if (this.onStateChange) {
+      this.onStateChange()
+    }
   },
 
   dispatchNotification(title: string, message: string) {
@@ -297,10 +332,8 @@ export const MonitoringService = {
   },
 
   async triggerWebhook(endpointName: string, message: string) {
-    const Store = require('electron-store')
-    const store = new Store()
-    const webhookUrl = store.get('globalWebhook')
-    const channelType = store.get('globalWebhookChannel') || 'msteams'
+    const webhookUrl = monitorStore.get('globalWebhook')
+    const channelType = monitorStore.get('globalWebhookChannel') || 'msteams'
     if (!webhookUrl || typeof webhookUrl !== 'string') return
 
     try {
@@ -321,13 +354,11 @@ export const MonitoringService = {
   },
 
   async triggerEmail(endpointName: string, message: string) {
-    const Store = require('electron-store')
-    const store = new Store()
-    const smtpServer = store.get('smtpServer', '')
-    const smtpPort = store.get('smtpPort', '587')
-    const smtpUser = store.get('smtpUser', '')
-    const smtpPass = store.get('smtpPass', '')
-    const notifyEmail = store.get('notifyEmail', '')
+    const smtpServer = monitorStore.get('smtpServer', '')
+    const smtpPort = monitorStore.get('smtpPort', '587')
+    const smtpUser = monitorStore.get('smtpUser', '')
+    const smtpPass = monitorStore.get('smtpPass', '')
+    const notifyEmail = monitorStore.get('notifyEmail', '')
 
     if (!smtpServer || !notifyEmail) return
 
@@ -381,14 +412,15 @@ export const MonitoringService = {
         headers: {}
       }
 
-      const agentOptions: any = { rejectUnauthorized: false }
+      const defaultRejectUnauthorized = !(endpoint.allowSelfSigned === true)
+      const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized }
       if (endpoint.authType === 'certificate') {
         const auth = endpoint.authConfig
         if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
           const cert = fs.readFileSync(auth.certPath)
           agentOptions.pfx = cert
           agentOptions.passphrase = auth.passphrase || ''
-          agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? false
+          agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? !defaultRejectUnauthorized
         }
       }
       config.httpsAgent = new https.Agent(agentOptions)

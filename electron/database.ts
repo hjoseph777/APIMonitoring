@@ -29,7 +29,8 @@ try {
       authType TEXT NOT NULL,
       authConfig TEXT NOT NULL,
       responseTimeHistory TEXT,
-      timeout INTEGER
+      timeout INTEGER,
+      allow_self_signed INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS alerts (
@@ -59,6 +60,12 @@ try {
     // Column already exists, ignore
   }
 
+  try {
+    dbInstance.exec('ALTER TABLE endpoints ADD COLUMN allow_self_signed INTEGER DEFAULT 0;')
+  } catch (err) {
+    // Column already exists, ignore
+  }
+
   console.log('Database initialized successfully using better-sqlite3 at:', dbPath)
 } catch (e: any) {
   console.warn('better-sqlite3 native compilation not available or failed to load. Falling back to electron-store file-based DB.', e.message)
@@ -77,10 +84,14 @@ export const DatabaseService = {
       if (useSqlite) {
         dbInstance.prepare('DELETE FROM logs WHERE timestamp < ?').run(cutOffDate)
         dbInstance.prepare('DELETE FROM alerts WHERE timestamp < ?').run(cutOffDate)
+        // Also cap total log count to prevent unbounded growth from high-frequency endpoints
+        dbInstance.prepare(`DELETE FROM logs WHERE id NOT IN (
+          SELECT id FROM logs ORDER BY timestamp DESC LIMIT 5000
+        )`).run()
         console.log('Database logs and alerts older than 7 days purged.')
       } else {
         const logs = (store.get('logs') as Log[]) || []
-        const filteredLogs = logs.filter((l: Log) => l.timestamp >= cutOffDate)
+        const filteredLogs = logs.filter((l: Log) => l.timestamp >= cutOffDate).slice(-5000)
         store.set('logs', filteredLogs)
 
         const alerts = (store.get('alerts') as Alert[]) || []
@@ -99,6 +110,7 @@ export const DatabaseService = {
       const rows = dbInstance.prepare('SELECT * FROM endpoints').all()
       return rows.map((row: any) => ({
         ...row,
+        allowSelfSigned: row.allow_self_signed === 1,
         responseTimeHistory: row.responseTimeHistory ? JSON.parse(row.responseTimeHistory) : [],
         authConfig: JSON.parse(row.authConfig)
       }))
@@ -110,8 +122,8 @@ export const DatabaseService = {
   saveEndpoint(endpoint: Endpoint) {
     if (useSqlite) {
       const stmt = dbInstance.prepare(`
-        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout, allow_self_signed)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       stmt.run(
         endpoint.id,
@@ -125,7 +137,8 @@ export const DatabaseService = {
         endpoint.authType,
         JSON.stringify(endpoint.authConfig),
         JSON.stringify(endpoint.responseTimeHistory || []),
-        endpoint.timeout !== undefined ? endpoint.timeout : null
+        endpoint.timeout !== undefined ? endpoint.timeout : null,
+        endpoint.allowSelfSigned ? 1 : 0
       )
     } else {
       const endpoints = this.getEndpoints()
@@ -223,13 +236,14 @@ export const DatabaseService = {
   // Logs
   getLogs(): Log[] {
     if (useSqlite) {
-      const rows = dbInstance.prepare('SELECT * FROM logs').all()
+      // Return the 500 most recent log entries to prevent unbounded IPC payload size
+      const rows = dbInstance.prepare('SELECT * FROM logs ORDER BY timestamp DESC LIMIT 500').all()
       return rows.map((row: any) => ({
         ...row,
         success: row.success === 1
       }))
     } else {
-      return (store.get('logs') as Log[]) || []
+      return ((store.get('logs') as Log[]) || []).slice(-500)
     }
   },
 
@@ -268,27 +282,35 @@ export const DatabaseService = {
   importBackup(jsonString: string): boolean {
     try {
       const parsed = JSON.parse(jsonString)
-      if (parsed.endpoints && Array.isArray(parsed.endpoints)) {
-        if (useSqlite) {
-          dbInstance.prepare('DELETE FROM endpoints').run()
-          dbInstance.prepare('DELETE FROM alerts').run()
-          dbInstance.prepare('DELETE FROM logs').run()
-        } else {
-          store.set('endpoints', [])
-          store.set('alerts', [])
-          store.set('logs', [])
-        }
-        
-        parsed.endpoints.forEach((ep: Endpoint) => this.saveEndpoint(ep))
-        if (parsed.alerts && Array.isArray(parsed.alerts)) {
-          parsed.alerts.forEach((al: Alert) => this.saveAlert(al))
-        }
-        if (parsed.logs && Array.isArray(parsed.logs)) {
-          parsed.logs.forEach((lo: Log) => this.saveLog(lo))
-        }
-        return true
+      if (!parsed.endpoints || !Array.isArray(parsed.endpoints)) return false
+
+      // Validate each endpoint has required fields and a well-formed URL
+      for (const ep of parsed.endpoints) {
+        if (!ep.id || typeof ep.id !== 'string') return false
+        if (!ep.name || typeof ep.name !== 'string') return false
+        if (!ep.url || typeof ep.url !== 'string') return false
+        try { new URL(ep.url) } catch { return false }
+        if (!['none','apiKey','ntlm','certificate','oauth2','basic','cookie'].includes(ep.authType)) return false
       }
-      return false
+
+      if (useSqlite) {
+        dbInstance.prepare('DELETE FROM endpoints').run()
+        dbInstance.prepare('DELETE FROM alerts').run()
+        dbInstance.prepare('DELETE FROM logs').run()
+      } else {
+        store.set('endpoints', [])
+        store.set('alerts', [])
+        store.set('logs', [])
+      }
+
+      parsed.endpoints.forEach((ep: Endpoint) => this.saveEndpoint(ep))
+      if (parsed.alerts && Array.isArray(parsed.alerts)) {
+        parsed.alerts.forEach((al: Alert) => this.saveAlert(al))
+      }
+      if (parsed.logs && Array.isArray(parsed.logs)) {
+        parsed.logs.forEach((lo: Log) => this.saveLog(lo))
+      }
+      return true
     } catch {
       return false
     }

@@ -43,6 +43,7 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
 The application implements several advanced architectural patterns to ensure enterprise-grade monitoring stability:
 
 * **Strict Single-Instance Singleton**: Enforces a global OS-level single-instance lock to ensure only one background monitor runs at a time. This prevents duplicated tray icons, duplicated alerts, and concurrent SQLite database file corruption, even during local development.
+* **Event-Driven Zero-Poll Tray**: System tray updates are strictly event-driven (triggered by state changes or IPC actions) rather than constantly polled on an interval, heavily reducing idle CPU usage.
 * **Overlapping Check Mitigation (Race-Condition Free)**: Instead of using strict interval loops (`setInterval`) which stack outstanding requests when pings lag or time out, the monitoring engine uses a recursive, self-scheduling `setTimeout` pattern. A subsequent check is queued only *after* the previous request's lifecycle has completely settled, ensuring highly accurate latency logs and preventing server overload.
 * **Secure-by-Default TLS Verification**: SSL certificate validation is **enabled by default** for all endpoints. Endpoints that monitor intranet servers with self-signed certificates can individually opt-in to accepting unverified certificates via the "Accept self-signed / internal TLS certificates" checkbox in the endpoint form. This prevents global SSL bypass while still supporting all common enterprise network topologies.
 * **Stateful Enterprise Authentication**:
@@ -52,6 +53,10 @@ The application implements several advanced architectural patterns to ensure ent
 * **On-the-fly Verification (Pre-Save Connection Test)**: Users can validate endpoint connectivity and authentication credentials inside the creation form before committing changes to the local database, facilitating faster troubleshooting.
 * **Universal Email Notifications Engine**: Native `nodemailer` integration allows real SMTP alert dispatches using any enterprise mail server (Gmail, Outlook, custom domains) with custom ports, credentials, and live UI configuration testing.
 * **Auto-Pruning Log Rotation**: On every application startup, a background cleanup sweep runs to purge logs and alert records older than 7 days, capping SQLite database growth and maintaining low resource overhead.
+* **Zero-Collision Cryptographic IDs**: Implements `crypto.randomUUID()` guaranteeing globally unique, secure identifiers across the frontend and backend architectures.
+* **In-Flight Request Deduplication**: Identical overlapping network requests are intelligently coalesced using an in-flight Promise cache, preventing redundant network chatter and SQLite locking.
+* **Strict Data Validation & Bounded Queries**: Backup imports undergo structural/URL validation, and database queries are hard-capped (e.g. `LIMIT 500`) to guarantee UI responsiveness regardless of the underlying dataset size.
+* **High-Performance Singletons**: Core background services (like the database store) are instantiated strictly once at the module level, completely eliminating garbage collection spikes during hot monitoring loops.
 
 ---
 

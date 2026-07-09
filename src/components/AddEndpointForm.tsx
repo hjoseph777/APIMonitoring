@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Plus, Loader2, Play } from 'lucide-react'
 import { AuthConfigurator } from './auth/AuthConfigurator'
+import type { Endpoint } from '../types'
 
 interface AddEndpointFormProps {
-  onAdd: (endpoint: { name: string; url: string; interval: number; authType: string; authConfig: any; timeout?: number }) => Promise<void>
+  onAdd: (endpoint: { name: string; url: string; interval: number; authType: string; authConfig: any; timeout?: number; allowSelfSigned?: boolean }) => Promise<void>
 }
 
 export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
@@ -13,6 +14,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
   const [timeoutVal, setTimeoutVal] = useState(10)
   const [authType, setAuthType] = useState('none')
   const [authConfig, setAuthConfig] = useState<any>({ type: 'none' })
+  const [allowSelfSigned, setAllowSelfSigned] = useState(false)
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
@@ -44,7 +46,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
     setTesting(true)
     try {
       if (window.electronAPI) {
-        const res = await window.electronAPI.testConnection({ url, authType, authConfig, timeout: timeoutVal })
+        const res = await window.electronAPI.testConnection({ url, authType: authType as Endpoint['authType'], authConfig, timeout: timeoutVal, allowSelfSigned })
         if (res.success) {
           setTestResult({ success: true, message: `Connected successfully! Status: ${res.status || 200}` })
         } else {
@@ -94,7 +96,8 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
         interval,
         authType,
         authConfig,
-        timeout: timeoutVal
+        timeout: timeoutVal,
+        allowSelfSigned
       })
       // Clear form
       setName('')
@@ -103,6 +106,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
       setTimeoutVal(10)
       setAuthType('none')
       setAuthConfig({ type: 'none' })
+      setAllowSelfSigned(false)
       nameInputRef.current?.focus()
     } catch (err: any) {
       setError(err.message || 'Failed to add endpoint')
@@ -211,6 +215,21 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
       )}
 
       {error && <p className="text-xs text-rose-500 font-semibold">{error}</p>}
+
+      {/* Self-signed certificate option for internal / intranet HTTPS endpoints */}
+      <label className="flex items-center gap-2 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={allowSelfSigned}
+          onChange={(e) => setAllowSelfSigned(e.target.checked)}
+          disabled={loading}
+          className="w-4 h-4 rounded accent-blue-500 cursor-pointer"
+        />
+        <span className="text-xs text-slate-400">
+          Accept self-signed / internal TLS certificates
+          <span className="ml-1 text-slate-500">(enable for intranet endpoints with self-signed HTTPS)</span>
+        </span>
+      </label>
 
       {/* Action Buttons */}
       <div className="flex justify-end gap-3 pt-3 border-t border-slate-700">

@@ -131,7 +131,12 @@ export function NotificationJson() {
           smtpPass,
           notifyEmail,
           globalWebhook,
-          globalWebhookChannel
+          globalWebhookChannel,
+          runAtStartup,
+          maintenanceMode,
+          autoExportLogs,
+          exportPath,
+          autoUpdatesEnabled
         })
 
         const res = await window.electronAPI.sendTestEmail()
@@ -225,7 +230,7 @@ export function NotificationJson() {
 
   // Wipe confirm
   const executeWipe = async () => {
-    if (wipeConfirmInput !== 'RESET') return
+    if (wipeConfirmInput !== 'DELETE') return
     if (window.electronAPI && window.electronAPI.resetAllData) {
       try {
         await window.electronAPI.resetAllData()
@@ -546,7 +551,7 @@ export function NotificationJson() {
                 Cancel
               </button>
               <button
-                onClick={handleReset}
+                onClick={executeWipe}
                 disabled={wipeConfirmInput !== 'DELETE'}
                 className="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-600/30 disabled:text-rose-400/40 text-white rounded-lg font-bold transition-all cursor-pointer"
               >

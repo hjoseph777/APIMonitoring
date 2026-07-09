@@ -56,7 +56,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
   addEndpoint: async (newEp: any) => {
     const created: Endpoint = {
-      id: Date.now().toString(),
+      id: window.crypto.randomUUID(),
       name: newEp.name,
       url: newEp.url,
       interval: newEp.interval,
@@ -65,7 +65,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       consecutiveErrors: 0,
       authType: newEp.authType,
       authConfig: newEp.authConfig,
-      responseTimeHistory: []
+      responseTimeHistory: [],
+      timeout: newEp.timeout,
+      allowSelfSigned: newEp.allowSelfSigned === true
     }
     if (window.electronAPI) {
       await window.electronAPI.saveEndpoint(created)
