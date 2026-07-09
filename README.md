@@ -156,25 +156,3 @@ The following screenshots illustrate the layout and tray behavior options of the
 
 *The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
 
----
-
-## ⚙️ Development Guide
-
-### Prerequisites
-Make sure you have Node.js (v18+) installed.
-
-### Setup and Installation
-1. Install project dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Start the hot-reloading development environment:
-   ```bash
-   npm run dev
-   ```
-
-3. Compile and build the production bundles:
-   ```bash
-   npm run compile
-   ```
