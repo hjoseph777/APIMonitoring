@@ -21,7 +21,7 @@ Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to 
 3. [Registering & Configuring Endpoints](#3-registering--configuring-endpoints)
 4. [Authentication Guide](#4-authentication-guide)
 5. [Configuring Chat Alerts & Webhooks (Teams/Discord/Slack)](#5-configuring-chat-alerts--webhooks)
-6. [Email Simulator & Toast Alerts](#6-email-simulator--toast-alerts)
+6. [SMTP Email & Native Toast Alerts](#6-smtp-email--native-toast-alerts)
 7. [Database Backup & Recovery](#7-database-backup--recovery)
 8. [System Tray & Background Operations](#8-system-tray--background-operations)
 
