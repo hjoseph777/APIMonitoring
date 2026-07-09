@@ -107,22 +107,22 @@ The background monitoring engine actively catches, categorizes, and logs over 30
 ```text
 API_Monitor/
 ├── electron/
-│   ├── main.ts             # Main process entry, tray loop & IPC handler registration
+│   ├── main.ts             # Main process entry, auto-updater, tray loop & IPC handlers
 │   ├── preload.ts          # Secure context bridge mapping exposed to the renderer
-│   ├── database.ts         # SQLite wrapper with electron-store fallback
-│   └── monitoring.ts       # 24/7 background HTTP(S) polling engine
+│   ├── database.ts         # SQLite wrapper, log rotation & credential encryption
+│   └── monitoring.ts       # 24/7 background engine, deduplication cache & alerts
 ├── src/
 │   ├── components/
 │   │   ├── ui/
 │   │   │   └── UptimeChart.tsx  # SVG latency sparkline & health gauge
 │   │   ├── auth/
-│   │   │   └── AuthConfigurator.tsx # Auth method selector and field forms
+│   │   │   └── AuthConfigurator.tsx # Multi-Auth method selector and credentials UI
 │   │   ├── Layout.tsx           # App shell — sidebar nav & header bar
 │   │   ├── Dashboard.tsx        # Status cockpit with stats, endpoint list, feeds
-│   │   ├── Settings.tsx         # Endpoint registry and background engine config
+│   │   ├── Settings.tsx         # Endpoint registry and core database config
 │   │   ├── AddEndpointForm.tsx  # New endpoint creation form with connection test
 │   │   ├── Reports.tsx          # Per-endpoint latency chart report page
-│   │   └── NotificationJson.tsx # Notification settings, webhooks, backup controls
+│   │   └── NotificationJson.tsx # Enterprise Settings (Auto-start, Updates, Maintenance), SMTP, Webhooks
 │   ├── context/
 │   │   ├── ToastContext.tsx      # Toast notification provider and display logic
 │   │   └── MonitoringContext.tsx # Global state reducer synced from Electron main
