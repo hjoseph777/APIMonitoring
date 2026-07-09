@@ -126,8 +126,9 @@ To push real-time failure alerts directly to your team's chat rooms:
 
 ---
 
-## 6. Email Simulator & Toast Alerts
-* **Recipient Alert Emails**: Enter comma-separated email addresses (e.g., `admin@company.com, alerts@company.com`) inside the **Notification & JSON** tab. The system registers these addresses to compile system alert dispatches.
+## 6. SMTP Email & Native Toast Alerts
+* **Configuring Real SMTP Emails**: To receive actual email dispatches when endpoints fail, you must configure a real mail server in the **Notification & JSON** tab under **SMTP Settings**. Provide your mail server host (e.g., `smtp.company.com`), port (e.g., `587`), and any necessary SMTP username and password credentials.
+* **Recipient Alert Emails**: Enter comma-separated destination email addresses (e.g., `admin@company.com, alerts@company.com`) in the notification settings. The background engine will securely connect to your SMTP server and dispatch real HTML-formatted email alerts to these recipients immediately when an endpoint drops offline.
 * **Native OS Toast Banners**: Toggle the *"Enable native OS toast banners"* checkbox. When checked, standard Windows slide-in alert notifications will display on your screen the instant a monitored endpoint status changes.
 
 ---
