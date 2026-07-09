@@ -124,7 +124,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
         {/* Column 1: Endpoint Parameters */}
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Endpoint Name</label>
+            <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">Endpoint Name</label>
             <input
               ref={nameInputRef}
               type="text"
@@ -137,7 +137,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">URL</label>
+            <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">URL</label>
             <input
               type="text"
               value={url}
@@ -151,7 +151,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
           {/* Grid for check interval and custom timeouts */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Check Interval</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">Check Interval</label>
               <select
                 value={interval}
                 onChange={(e) => setInterval(parseInt(e.target.value))}
@@ -168,7 +168,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Timeout</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">Timeout</label>
               <select
                 value={timeoutVal}
                 onChange={(e) => setTimeoutVal(parseInt(e.target.value))}
@@ -255,7 +255,3 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
   )
 }
 export default AddEndpointForm
-
-
-
-

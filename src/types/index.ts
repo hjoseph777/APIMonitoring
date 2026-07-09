@@ -63,9 +63,10 @@ declare global {
       exportBackup: () => Promise<string>;
       importBackup: (jsonString: string) => Promise<{ success: boolean }>;
       resetAllData: () => Promise<{ success: boolean }>;
-      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }>;
-      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }) => Promise<{ success: boolean }>;
+      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }>;
+      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string }) => Promise<{ success: boolean }>;
       sendTestAlert: (args: { webhookUrl: string; channelType: string }) => Promise<{ success: boolean; message?: string }>;
+      sendTestEmail: () => Promise<{ success: boolean; message?: string }>;
     }
   }
 }

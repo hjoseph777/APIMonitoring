@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, ShieldCheck, Terminal, AlertTriangle, Monitor, Cpu, Sun, Moon, BarChart3, Settings, Database } from 'lucide-react'
+import { Bell, ShieldCheck, Terminal, Monitor, Cpu, Sun, Moon, BarChart3, Settings, Database } from 'lucide-react'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -69,7 +69,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
             </div>
             <div className="flex items-baseline">
               <span className="font-extrabold text-sm tracking-tighter text-[#e51937] lowercase">xerox</span>
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider ml-1">Monitor</span>
+              <span className="text-[9px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider ml-1">Monitor</span>
             </div>
           </div>
 
@@ -85,7 +85,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-slate-800/40'
+                      : 'text-slate-600 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-slate-800/40'
                   }`}
                 >
                   <Icon className="w-4 h-4 shrink-0" />
@@ -97,7 +97,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         </div>
 
         {/* Footer/Version Info in Sidebar */}
-        <div className="p-4 border-t border-[var(--border-color)] flex items-center gap-1.5 text-[9px] text-slate-400 font-semibold uppercase tracking-wider">
+        <div className="p-4 border-t border-[var(--border-color)] flex items-center gap-1.5 text-[9px] text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wider">
           <Cpu className="w-3.5 h-3.5" />
           <span>v1.0.0 (GUI v2.0)</span>
         </div>
@@ -111,7 +111,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
           
           {/* Status Indicators */}
           <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
               <Terminal className="w-3.5 h-3.5 text-blue-500" />
               Status:
             </span>
@@ -157,7 +157,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         </main>
 
         {/* Footer */}
-        <footer className="h-8 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-6 flex items-center justify-between text-[9px] text-slate-500">
+        <footer className="h-8 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-6 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
           <span>Xerox API Engine Running</span>
           <span className="font-mono uppercase tracking-wider text-[8px]">Auto-polling active</span>
         </footer>

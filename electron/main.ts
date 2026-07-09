@@ -20,20 +20,18 @@ let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 const appIcon = getIcon('idle')
 
-// Enforce single instance lock in production to prevent duplicate tray icons
-if (app.isPackaged) {
-  const gotTheLock = app.requestSingleInstanceLock()
-  if (!gotTheLock) {
-    app.quit()
-  } else {
-    app.on('second-instance', () => {
-      if (mainWindow) {
-        if (mainWindow.isMinimized()) mainWindow.restore()
-        mainWindow.show()
-        mainWindow.focus()
-      }
-    })
-  }
+// Enforce single instance lock globally to prevent duplicate tray icons and background monitoring
+const gotTheLock = app.requestSingleInstanceLock()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.show()
+      mainWindow.focus()
+    }
+  })
 }
 
 function createWindow() {
@@ -177,6 +175,27 @@ app.whenReady().then(() => {
     return { success: true }
   })
 
+  // Demonstration / Seeding operations
+  ipcMain.handle('seed-demo-data', (_, mode: 'green' | 'mixed') => {
+    try {
+      DatabaseService.seedDemoData(mode)
+      MonitoringService.scheduleAll()
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  })
+
+  ipcMain.handle('clear-demo-data', () => {
+    try {
+      DatabaseService.clearDemoData()
+      MonitoringService.scheduleAll()
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  })
+
   // Global settings
   ipcMain.handle('get-settings', () => {
     const Store = require('electron-store')
@@ -184,6 +203,9 @@ app.whenReady().then(() => {
     return {
       nativeNotify: store.get('nativeNotify', true),
       smtpServer: store.get('smtpServer', 'smtp.company.com'),
+      smtpPort: store.get('smtpPort', '587'),
+      smtpUser: store.get('smtpUser', ''),
+      smtpPass: store.get('smtpPass', ''),
       notifyEmail: store.get('notifyEmail', 'admin@company.com'),
       globalWebhook: store.get('globalWebhook', ''),
       globalWebhookChannel: store.get('globalWebhookChannel', 'msteams')
@@ -195,6 +217,9 @@ app.whenReady().then(() => {
     const store = new Store()
     store.set('nativeNotify', settings.nativeNotify)
     store.set('smtpServer', settings.smtpServer)
+    store.set('smtpPort', settings.smtpPort)
+    store.set('smtpUser', settings.smtpUser)
+    store.set('smtpPass', settings.smtpPass)
     store.set('notifyEmail', settings.notifyEmail)
     store.set('globalWebhook', settings.globalWebhook)
     store.set('globalWebhookChannel', settings.globalWebhookChannel)
@@ -215,6 +240,59 @@ app.whenReady().then(() => {
 
       await axios.post(webhookUrl, payload, { timeout: 5000 })
       return { success: true }
+    } catch (err: any) {
+      return { success: false, message: err.message }
+    }
+  })
+
+  ipcMain.handle('send-test-email', async () => {
+    try {
+      const Store = require('electron-store')
+      const store = new Store()
+      const smtpServer = store.get('smtpServer', '')
+      const smtpPort = store.get('smtpPort', '587')
+      const smtpUser = store.get('smtpUser', '')
+      const smtpPass = store.get('smtpPass', '')
+      const notifyEmail = store.get('notifyEmail', '')
+
+      if (!smtpServer || !notifyEmail) {
+        throw new Error('SMTP Server and Recipient Email are required.')
+      }
+
+      const nodemailer = require('nodemailer')
+      const transporter = nodemailer.createTransport({
+        host: smtpServer,
+        port: parseInt(smtpPort, 10),
+        secure: parseInt(smtpPort, 10) === 465,
+        auth: (smtpUser && smtpPass) ? {
+          user: smtpUser,
+          pass: smtpPass
+        } : undefined
+      })
+
+      const emails = notifyEmail.split(',').map((e: string) => e.trim()).filter(Boolean)
+      
+      const info = await transporter.sendMail({
+        from: `"Xerox API Monitor" <${smtpUser || 'noreply@xerox-monitor.local'}>`,
+        to: emails.join(', '),
+        subject: "🧪 Test Email - Xerox API Monitor",
+        text: "This is a test email from your Xerox API Monitor ERP to verify your SMTP configuration.",
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: #ef4444; padding: 16px; color: white;">
+              <h2 style="margin: 0; font-size: 18px;">🧪 Xerox API Monitor - SMTP Test</h2>
+            </div>
+            <div style="padding: 24px; background-color: #f8fafc; color: #334155;">
+              <p style="font-size: 16px; margin-top: 0;"><strong>Success!</strong></p>
+              <p>Your SMTP configuration in the Xerox API Monitor is working correctly. You will now receive alert notifications at this address when an endpoint goes offline.</p>
+              <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;" />
+              <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Sent automatically by your local Xerox API Monitor background service.</p>
+            </div>
+          </div>
+        `
+      })
+
+      return { success: true, message: `Email sent: ${info.messageId}` }
     } catch (err: any) {
       return { success: false, message: err.message }
     }

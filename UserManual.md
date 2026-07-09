@@ -1,6 +1,17 @@
-# Xerox API Monitor ERP - User Manual
+# Xerox API Monitor ERP — User Manual
 
-Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to help system administrators and operators configure, monitor, and maintain corporate ERP API links using the desktop application.
+<div align="center">
+  <img src="resources/icon.svg" width="128" height="128" alt="API Monitor ERP Logo">
+</div>
+
+| | |
+|---|---|
+| **Author** | Harry Joseph |
+| **Version** | 1.0.0 |
+| **Date** | July 8, 2026 |
+| **Audience** | System Administrators, IT Operators, Integrators & Automation Engineers |
+
+Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to help system administrators, IT operators, integrators, and automation engineers configure, monitor, and maintain corporate ERP API connections using the desktop application.
 
 ---
 
@@ -47,7 +58,7 @@ To start monitoring a new URL:
 5. Click **Test Connection** to execute a test before saving. If successful, you will see a green check banner.
 6. Click **+ Add Endpoint** to save and activate monitoring.
 
-![Endpoint Settings View](Pictures/Screenshot%202026-07-06%20174734.png)
+![Endpoint Settings View](Pictures/image1.png)
 *(The Settings Panel showing the endpoint configuration inputs and the pre-save Test Connection option)*
 
 ---
@@ -55,7 +66,7 @@ To start monitoring a new URL:
 ## 4. Authentication Guide
 The application supports multiple security layers. Under the **Authentication Method** dropdown, select the protocol required by your target server:
 
-![Authentication Dropdown Menu](Pictures/AuthticationTypeScreenshot%202026-07-07%20082104.png)
+![Authentication Dropdown Menu](Pictures/image2.png)
 *(Supported enterprise authentication methods dropdown list)*
 
 ### A. None (Public Endpoint)
@@ -119,11 +130,25 @@ To push real-time failure alerts directly to your team's chat rooms:
 ---
 
 ## 7. Database Backup & Recovery
-Under the **Backup & Data Controls** section of the **Notification & JSON** tab:
 
-* **Export Backup JSON**: Click this button to save your entire configuration (all registered endpoints, historical logs, and custom system settings) as a local `.json` file.
+Because this application uses native system APIs, all of your configurations, logs, and alerts are securely centralized in a predictable location on your machine.
+
+### A. Raw Storage Paths (Windows)
+If you wish to copy your raw database files directly to a USB drive or secondary server, navigate to the isolated `AppData\Roaming` folder for your Windows user profile (e.g., `C:\Users\Administrator\AppData\Roaming\api-monitor-erp\`).
+* **The SQLite Database**: `api_monitor.db` (Contains all endpoints, historical ping logs, and alert records)
+* **The Configuration File**: `config.json` (Contains your SMTP credentials, Webhook URLs, and UI toggles)
+
+### B. GUI Export & Backup (Recommended)
+You do not need to hunt through hidden Windows folders to back up your data. Under the **Backup & Data Controls** section of the **Notification & JSON** tab:
+
+* **Export Backup JSON**: Click this button to save your entire configuration (all registered endpoints, historical logs, and custom system settings) as a single local `.json` file.
 * **Import Backup JSON**: Click this button to upload a previously saved backup file. This will restore all your endpoints and system configurations instantly.
-* **Wipe Database Records**: Click this to clear all endpoints, alert histories, and logs from your database, resetting the application to a clean slate.
+* **Wipe Database Records**: Click this to securely clear all endpoints, alert histories, and logs from your database, resetting the application to a clean slate.
+
+### C. Extracting Logs
+If you simply want to export your log history for reporting purposes:
+1. Go to the **Dashboard** tab and scroll down to **Xerox Logs**.
+2. Click **[ Download CSV ]** or **[ Download JSON ]** to instantly save the formatted logs straight to your Desktop or Documents folder.
 
 ---
 
@@ -137,11 +162,15 @@ The application is designed to run 24/7 in the background without cluttering you
 ### Visual Guide:
 
 #### System Tray Caret location:
-![Windows Notification Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
+![Windows Notification Caret](Pictures/image3.png)
 
 #### Expanded Notification Icons:
-![System Tray Expanded List](Pictures/Screenshot%202026-07-06%20174454.png)
+![System Tray Expanded List](Pictures/image4.png)
 
 #### Right-Click Context Menu controls:
-![Tray Right-Click Options](Pictures/2nd_Tray_Screenshot%202026-07-06%20175037.png)
+![Tray Right-Click Options](Pictures/image5.png)
 
+#### Active Tray Context Menu:
+![Active Tray Context Menu](Pictures/image6.png)
+
+---

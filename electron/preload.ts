@@ -30,6 +30,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   resetAllData: () => ipcRenderer.invoke('reset-all-data'),
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
-  sendTestAlert: (args: { webhookUrl: string; channelType: string }) => ipcRenderer.invoke('send-test-alert', args)
+  sendTestAlert: (args: { webhookUrl: string; channelType: string }) => ipcRenderer.invoke('send-test-alert', args),
+  sendTestEmail: () => ipcRenderer.invoke('send-test-email'),
+  seedDemoData: (mode: 'green' | 'mixed') => ipcRenderer.invoke('seed-demo-data', mode),
+  clearDemoData: () => ipcRenderer.invoke('clear-demo-data')
 })
 export {}

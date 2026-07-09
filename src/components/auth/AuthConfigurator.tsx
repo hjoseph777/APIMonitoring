@@ -1,6 +1,5 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Upload } from 'lucide-react'
-import { AuthConfig } from '../../types'
 
 interface AuthConfiguratorProps {
   type: string
@@ -21,7 +20,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">API Key Name</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">API Key Name</label>
               <input
                 type="text"
                 value={value.key || ''}
@@ -31,7 +30,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">API Key Value</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">API Key Value</label>
               <input
                 type="password"
                 value={value.value || ''}
@@ -41,7 +40,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Location</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Location</label>
               <select
                 value={value.location || 'header'}
                 onChange={(e) => handleConfigChange({ location: e.target.value })}
@@ -58,7 +57,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Domain</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Domain</label>
               <input
                 type="text"
                 value={value.domain || ''}
@@ -66,10 +65,10 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 placeholder="e.g., COMPANY.local"
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
-              <p className="text-[10px] text-slate-500 mt-1">Your Windows AD Domain.</p>
+              <p className="text-[10px] text-slate-400 mt-1">Your Windows AD Domain.</p>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Username</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Username</label>
               <input
                 type="text"
                 value={value.username || ''}
@@ -79,7 +78,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
               <input
                 type="password"
                 value={value.password || ''}
@@ -95,7 +94,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Certificate File (.pfx/.p12)</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Certificate File (.pfx/.p12)</label>
               <div className="flex items-center gap-3">
                 <input
                   type="file"
@@ -106,7 +105,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                     const file = e.target.files?.[0]
                     if (file) {
                       const path = (file as any).path || file.name
-                      // Mock validation check for UI visual
+                      // Run the native cert validation via IPC; fall back to true in browser
                       const isValid = window.electronAPI ? await window.electronAPI.validateCertificate(path, value.passphrase) : true
                       if (isValid) {
                         handleConfigChange({ certPath: path })
@@ -133,7 +132,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               {validationError && <p className="text-rose-500 text-[10px] mt-1">{validationError}</p>}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Passphrase (optional)</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Passphrase (optional)</label>
               <input
                 type="password"
                 value={value.passphrase || ''}
@@ -161,7 +160,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Token URL</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Token URL</label>
               <input
                 type="text"
                 value={value.tokenUrl || ''}
@@ -172,7 +171,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Client ID</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Client ID</label>
                 <input
                   type="text"
                   value={value.clientId || ''}
@@ -181,7 +180,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Client Secret</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Client Secret</label>
                 <input
                   type="password"
                   value={value.clientSecret || ''}
@@ -191,7 +190,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Scope (optional)</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Scope (optional)</label>
               <input
                 type="text"
                 value={value.scope || ''}
@@ -208,7 +207,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Username</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Username</label>
                 <input
                   type="text"
                   value={value.username || ''}
@@ -217,7 +216,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Password</label>
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
                 <input
                   type="password"
                   value={value.password || ''}
@@ -233,7 +232,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         return (
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Login URL</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Login URL</label>
               <input
                 type="text"
                 value={value.loginUrl || ''}
@@ -243,7 +242,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Login Credentials Payload (JSON)</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Login Credentials Payload (JSON)</label>
               <textarea
                 value={typeof value.credentials === 'string' ? value.credentials : JSON.stringify(value.credentials || {}, null, 2)}
                 onChange={(e) => {
@@ -260,7 +259,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase mb-1">Expected Cookie Name</label>
+              <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Expected Cookie Name</label>
               <input
                 type="text"
                 value={value.cookieName || ''}
@@ -273,14 +272,14 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
         )
 
       default:
-        return <p className="text-xs text-slate-500">No authentication configuration required.</p>
+        return <p className="text-xs text-slate-400">No authentication configuration required.</p>
     }
   }
 
   return (
     <div className="border border-slate-800 rounded-2xl p-5 bg-slate-900/20 space-y-4">
       <div>
-        <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+        <label className="block text-xs font-bold text-slate-200 uppercase tracking-wider mb-2">
           Authentication Method
         </label>
         <select
@@ -307,5 +306,3 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
   )
 }
 export default AuthConfigurator
-
-

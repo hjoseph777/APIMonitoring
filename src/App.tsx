@@ -22,9 +22,9 @@ function AppContent() {
 
   const { endpoints, alerts, logs } = state
 
-  // State calculations for header and stats
   const alertCount = alerts.filter((a) => !a.read).length
   const offlineCount = endpoints.filter((e) => e.status === 'error').length
+  // Roll up into a single system health label shown in the header
   const systemStatus = endpoints.length === 0
     ? 'online' as const
     : offlineCount === endpoints.length
@@ -33,7 +33,7 @@ function AppContent() {
     ? 'warning' as const
     : 'online' as const
 
-  // Add Endpoint wrapped with Toast
+  // Wire in a toast notification when an endpoint is successfully added or fails
   const handleAddEndpoint = async (newEndpoint: any) => {
     try {
       await addEndpoint(newEndpoint)
@@ -43,7 +43,7 @@ function AppContent() {
     }
   }
 
-  // Delete Endpoint wrapped with Toast
+  // Confirm deletion with a toast so the user knows it went through
   const handleDeleteEndpoint = async (id: string) => {
     try {
       const ep = endpoints.find(e => e.id === id)
@@ -54,7 +54,7 @@ function AppContent() {
     }
   }
 
-  // Refresh wrapped with Toast
+  // Trigger an immediate check outside the normal polling cycle
   const handleRefreshEndpoint = async (id: string) => {
     try {
       await refreshEndpoint(id)

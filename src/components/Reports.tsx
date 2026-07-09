@@ -15,9 +15,9 @@ export function Reports({ endpoints }: ReportsProps) {
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <div>
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">{ep.name}</h3>
-              <p className="text-[10px] text-slate-500 font-mono select-text">{ep.url}</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-300 font-mono select-text">{ep.url}</p>
             </div>
-            <div className="flex items-center gap-2 text-slate-500 text-[10px]">
+            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-300 text-[10px]">
               <BarChart3 className="w-3.5 h-3.5" />
               <span>10-Point Trace</span>
             </div>
@@ -28,7 +28,7 @@ export function Reports({ endpoints }: ReportsProps) {
       ))}
       
       {endpoints.length === 0 && (
-        <div className="glass-panel p-8 rounded-xl border text-center text-xs text-slate-500 italic">
+        <div className="glass-panel p-8 rounded-xl border text-center text-xs text-slate-400 dark:text-slate-300 italic">
           No metrics available. Register endpoints in Settings to display reports.
         </div>
       )}

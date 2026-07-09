@@ -1,4 +1,15 @@
-# Xerox API Monitor ERP
+# Xerox API Monitor ERP Desktop
+
+<div align="center">
+  <img src="resources/icon.svg" width="128" height="128" alt="API Monitor ERP Logo">
+</div>
+
+| | |
+|---|---|
+| **Author** | Harry Joseph |
+| **Version** | 1.0.0 |
+| **Date** | July 8, 2026 |
+| **Platform** | Windows (Electron Desktop App) |
 
 A lightweight, enterprise-ready desktop application dedicated exclusively to **HTTP/HTTPS API endpoint monitoring**, built using **Electron**, **React**, **Vite**, and **TypeScript**.
 
@@ -13,7 +24,7 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
 * **Horizontal Navigation Cockpit**: Reorganized into a clean three-tab layout:
   * **Dashboard (Status Only)**: Minimal StatCards (Total, Online, Offline, Alerts), endpoint status checklist, active alerts feed, and Xerox clipboard copy audit logs.
   * **Reports (Diagnostic Charts)**: Dedicated performance panel containing 10-point response time line charts (inline SVG) and Uptime health gauges.
-  * **Settings (Configuration Center)**: Consolidated inputs for adding/removing endpoints, setting custom check intervals, native OS banner toggles, SMTP servers, Discord/Slack webhooks, and JSON data backup exports.
+  * **Settings (Configuration Center)**: Consolidated inputs for adding/removing endpoints, setting custom check intervals, native OS banner toggles, real universal SMTP engine configuration (Host, Port, User, Pass) with connection testing, Discord/Slack webhooks, and JSON data backup exports.
 * **24/7 System Tray Operations**: 
   * Minimizes to tray automatically on close to prevent interruption.
   * Dynamically updates tooltips showing outage warnings (e.g. `Xerox API Monitor - Outages: 2 offline`).
@@ -22,6 +33,7 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
 * **Enterprise Authentication Suite**: Full active support for static API Keys (header/query), authentic Windows Auth (NTLM challenges via `axios-ntlm`), client certificates (mTLS), session cookies (automated cookie jar-based multi-step login flows), and OAuth2 Client Credentials (with token caching).
 * **Pre-Save Connection Test**: Direct credential validation option inside the Add Endpoint form to verify settings before storing.
 * **Self-Scheduling timeout loops**: Eliminates polling race conditions and request accumulation by using recursively queued timeouts rather than overlapping intervals.
+* **Demonstration Tools**: Embedded 1-click seeding utilities inside the Settings tab to inject live mock endpoints (healthy or mixed) to instantly test the UI and SMTP/Webhook alert dispatchers.
 * **Automated Log Rotation**: In-database cleanup policy purging transaction histories and alerts older than 7 days on startup to limit SQLite disk space usage.
 
 ---
@@ -30,13 +42,24 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
 
 The application implements several advanced architectural patterns to ensure enterprise-grade monitoring stability:
 
+* **Strict Single-Instance Singleton**: Enforces a global OS-level single-instance lock to ensure only one background monitor runs at a time. This prevents duplicated tray icons, duplicated alerts, and concurrent SQLite database file corruption, even during local development.
 * **Overlapping Check Mitigation (Race-Condition Free)**: Instead of using strict interval loops (`setInterval`) which stack outstanding requests when pings lag or time out, the monitoring engine uses a recursive, self-scheduling `setTimeout` pattern. A subsequent check is queued only *after* the previous request's lifecycle has completely settled, ensuring highly accurate latency logs and preventing server overload.
 * **Stateful Enterprise Authentication**:
   * **OAuth2 Client Credentials**: Automatically handles bearer token retrieval, caching, and auto-refresh mechanisms before expiry.
   * **Session Cookie Authentication**: Features a cookie jar-based client that runs login flows, captures cookies, and persists session states across checks.
   * **Windows Auth (NTLM)**: Implements authentic challenge-response handshakes via `axios-ntlm`.
 * **On-the-fly Verification (Pre-Save Connection Test)**: Users can validate endpoint connectivity and authentication credentials inside the creation form before committing changes to the local database, facilitating faster troubleshooting.
+* **Universal Email Notifications Engine**: Native `nodemailer` integration allows real SMTP alert dispatches using any enterprise mail server (Gmail, Outlook, custom domains) with custom ports, credentials, and live UI configuration testing.
 * **Auto-Pruning Log Rotation**: On every application startup, a background cleanup sweep runs to purge logs and alert records older than 7 days, capping SQLite database growth and maintaining low resource overhead.
+
+---
+
+## 💾 Database & Storage Paths
+Because this application runs securely on your machine, no external databases are required. All endpoints, logs, and alerts are centralized in an isolated `AppData` folder on your machine:
+* **Database**: `C:\Users\<Username>\AppData\Roaming\api-monitor-erp\api_monitor.db`
+* **Settings**: `C:\Users\<Username>\AppData\Roaming\api-monitor-erp\config.json`
+
+You can back up these files directly, or use the **Export Backup JSON** button inside the GUI to download everything instantly.
 
 ---
 
@@ -65,30 +88,30 @@ The background monitoring engine actively catches, categorizes, and logs over 30
 ```text
 API_Monitor/
 ├── electron/
-│   ├── main.ts             # Main process setup, Tray loop & IPC Handlers
-│   ├── preload.ts          # IPC Secure Context Bridge mapping
-│   ├── database.ts         # Database wrapper with SQLite/Store fallback
-│   └── monitoring.ts       # 24/7 Background HTTP(S) checking service loop
+│   ├── main.ts             # Main process entry, tray loop & IPC handler registration
+│   ├── preload.ts          # Secure context bridge mapping exposed to the renderer
+│   ├── database.ts         # SQLite wrapper with electron-store fallback
+│   └── monitoring.ts       # 24/7 background HTTP(S) polling engine
 ├── src/
-│   ├── components/         # Core UI layouts and dashboards
-│   │   ├── ui/             # Reusable UI widgets
-│   │   │   ├── Spinner.tsx  # Loading spinner animation
-│   │   │   ├── Skeleton.tsx # Loading skeleton block
-│   │   │   └── UptimeChart.tsx # SVG response time graph & health gauge
-│   │   ├── Layout.tsx      # Top horizontal navbar layout
-│   │   ├── StatsCards.tsx  # KPI summary metrics cards
-│   │   ├── Dashboard.tsx   # Dashboard status cockpit
-│   │   ├── Settings.tsx    # Configuration center (forms, auth, backup)
-│   │   ├── Reports.tsx     # Latency graphs mapping page
-│   │   └── XeroxLogs.tsx   # Audit clipboard records
-│   ├── context/            # React Global Providers
-│   │   ├── ToastContext.tsx # Toast Stacking manager Provider
-│   │   └── MonitoringContext.tsx # Central Reducer State Provider
+│   ├── components/
+│   │   ├── ui/
+│   │   │   └── UptimeChart.tsx  # SVG latency sparkline & health gauge
+│   │   ├── auth/
+│   │   │   └── AuthConfigurator.tsx # Auth method selector and field forms
+│   │   ├── Layout.tsx           # App shell — sidebar nav & header bar
+│   │   ├── Dashboard.tsx        # Status cockpit with stats, endpoint list, feeds
+│   │   ├── Settings.tsx         # Endpoint registry and background engine config
+│   │   ├── AddEndpointForm.tsx  # New endpoint creation form with connection test
+│   │   ├── Reports.tsx          # Per-endpoint latency chart report page
+│   │   └── NotificationJson.tsx # Notification settings, webhooks, backup controls
+│   ├── context/
+│   │   ├── ToastContext.tsx      # Toast notification provider and display logic
+│   │   └── MonitoringContext.tsx # Global state reducer synced from Electron main
 │   ├── types/
-│   │   └── index.ts        # TypeScript contracts (Endpoint, Auth, Logs)
-│   ├── App.tsx             # Application wrapper
-│   ├── index.css           # CSS entry, variables, and Tokyo Night themes
-│   └── main.tsx            # Renderer entry point
+│   │   └── index.ts             # Shared TypeScript types (Endpoint, Alert, Log, AuthConfig)
+│   ├── App.tsx                  # Root component and tab router
+│   ├── index.css                # CSS variables, theme tokens, and global utilities
+│   └── main.tsx                 # Renderer process entry point
 ```
 
 ---
@@ -97,89 +120,41 @@ API_Monitor/
 
 The following screenshots illustrate the layout and tray behavior options of the application:
 
-### Taskbar Navigation & Default Electron Frame
-
-![Windows Taskbar Jump List](Pictures/Screenshot%202026-07-06%20174303.png)
-
-*Shows the standard Windows OS Jump list for the active taskbar window button.*
-
 ### Active Application Settings View
 
-![Active Application Settings View](Pictures/Screenshot%202026-07-06%20174734.png)
+![Active Application Settings View](Pictures/image1.png)
 
 *The main application interface displaying the settings tab with endpoint registration, check interval settings, notifications, and the Test Connection button.*
 
 ### Endpoint Authentication Configuration
 
-![Endpoint Authentication Configuration](Pictures/AuthticationTypeScreenshot%202026-07-07%20082104.png)
+![Endpoint Authentication Configuration](Pictures/image2.png)
 
 *The settings panel showing the dropdown list of supported enterprise authentication methods, including API Key, Windows NTLM, mTLS Client Certificate, OAuth2, and Session Cookies.*
 
 ### System Tray Icons Caret
 
-![System Tray Icons Caret](Pictures/First_Tray_with_statusScreenshot%202026-07-06%20175134.png)
+![System Tray Icons Caret](Pictures/image3.png)
 
 *The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
 
 ### Expanded Tray Applications Pop-up
 
-![Tray Applications Pop-up](Pictures/Screenshot%202026-07-06%20174454.png)
+![Tray Applications Pop-up](Pictures/image4.png)
 
 *The expanded Windows notification tray displaying all active background items.*
 
 ### Tray Context Menu Controls
 
-![Tray Context Menu Controls](Pictures/2nd_Tray_Screenshot%202026-07-06%20175037.png)
+![Tray Context Menu Controls](Pictures/image5.png)
 
 *The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
 
-## 🧪 Manual Verification & Integration Tests
+### Active Tray Context Menu
 
-The application's connection testing and authentication pipelines were thoroughly validated through 6 core manual integration test cases executed against public test endpoints:
+![Active Tray Context Menu](Pictures/image6.png)
 
-1. **Basic Authentication Success**
-   * **Target Endpoint**: `https://httpbin.org/basic-auth/user/pass`
-   * **Credentials**: Username `user`, Password `pass`
-   * **Result**: **Success (200 OK)** — Injecting the base64-encoded standard Basic header yields a verified response.
-   
-   ![Basic Auth Success](Pictures/Test_Basic_Auth_Success.png)
-
-2. **Basic Authentication Rejection**
-   * **Target Endpoint**: `https://httpbin.org/basic-auth/user/pass`
-   * **Credentials**: Username `user`, Password `wrong`
-   * **Result**: **Failed (401 Unauthorized)** — The system correctly catches the authentication rejection.
-
-   ![Basic Auth Failure](Pictures/Test_Basic_Auth_Failure.png)
-
-3. **API Key Header Success**
-   * **Target Endpoint**: `https://httpbin.org/headers`
-   * **Config**: Key name `X-API-Key`, Value `my-secure-token`, Location `Header`
-   * **Result**: **Success (200 OK)** — Header keys are correctly injected and echoed by the host.
-
-   ![API Key Header Success](Pictures/Test_API_Key_Header_Success.png)
-
-4. **API Key Header Rejection**
-   * **Target Endpoint**: `https://httpbin.org/status/403`
-   * **Config**: Key name `X-API-Key`, Value `my-secure-token`, Location `Header`
-   * **Result**: **Failed (403 Forbidden)** — Proves the app captures HTTP client/permissions rejections correctly.
-
-   ![API Key Header Failure](Pictures/Test_API_Key_Header_Failure.png)
-
-5. **API Key Query Parameter Success**
-   * **Target Endpoint**: `https://httpbin.org/get`
-   * **Config**: Key name `api_key`, Value `my-query-token`, Location `Query Parameter`
-   * **Result**: **Success (200 OK)** — Confirms parameters are successfully appended to URLs.
-
-   ![API Key Query Success](Pictures/Test_API_Key_Query_Success.png)
-
-6. **Public Endpoint (No Auth) Success**
-   * **Target Endpoint**: `https://httpbin.org/get`
-   * **Config**: Authentication `None`
-   * **Result**: **Success (200 OK)** — Connects seamlessly without credentials.
-
-   ![Public Endpoint Success](Pictures/Test_Public_None_Success.png)
-
-*(Visual logs and screenshots capturing these manual test events are recorded in [Doc1.docx](file:///c:/Users/Owner/Xerox/API_Monitor/Pictures/Doc1.docx))*
+*The interactive context menu launched directly from the system tray.*
 
 ---
 

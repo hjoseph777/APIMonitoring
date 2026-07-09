@@ -114,10 +114,18 @@ export const MonitoringService = {
 
     try {
       if (id.startsWith('seed-')) {
-        // Mock successful checks for seed endpoints with realistic response times
-        latency = Math.floor(Math.random() * 80) + 70 // 70ms - 150ms
-        status = 'success'
-        await new Promise((resolve) => setTimeout(resolve, 100))
+        if (id.startsWith('seed-error-')) {
+          // Mock a failing endpoint to trigger alerts and test SMTP
+          latency = 5000
+          status = 'error'
+          await new Promise((resolve) => setTimeout(resolve, 500))
+          throw new Error('Simulated 503 Service Unavailable')
+        } else {
+          // Mock successful checks for healthy seed endpoints
+          latency = Math.floor(Math.random() * 80) + 70 // 70ms - 150ms
+          status = 'success'
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
       } else {
         const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 15000
         const config: any = {
@@ -228,6 +236,7 @@ export const MonitoringService = {
         DatabaseService.saveAlert(alert)
         this.dispatchNotification(currentEp.name, alert.message)
         this.triggerWebhook(currentEp.name, alert.message)
+        this.triggerEmail(currentEp.name, alert.message)
       }
     } else {
       consecutiveErrors = 0
@@ -286,6 +295,57 @@ export const MonitoringService = {
       console.log('Webhook alert notification dispatched.')
     } catch (err: any) {
       console.error('Failed dispatching webhook alert', err.message)
+    }
+  },
+
+  async triggerEmail(endpointName: string, message: string) {
+    const Store = require('electron-store')
+    const store = new Store()
+    const smtpServer = store.get('smtpServer', '')
+    const smtpPort = store.get('smtpPort', '587')
+    const smtpUser = store.get('smtpUser', '')
+    const smtpPass = store.get('smtpPass', '')
+    const notifyEmail = store.get('notifyEmail', '')
+
+    if (!smtpServer || !notifyEmail) return
+
+    try {
+      const nodemailer = require('nodemailer')
+      const transporter = nodemailer.createTransport({
+        host: smtpServer,
+        port: parseInt(smtpPort, 10),
+        secure: parseInt(smtpPort, 10) === 465,
+        auth: (smtpUser && smtpPass) ? {
+          user: smtpUser,
+          pass: smtpPass
+        } : undefined
+      })
+
+      const emails = notifyEmail.split(',').map((e: string) => e.trim()).filter(Boolean)
+      
+      await transporter.sendMail({
+        from: `"Xerox API Monitor" <${smtpUser || 'noreply@xerox-monitor.local'}>`,
+        to: emails.join(', '),
+        subject: `🚨 Alert: ${endpointName} is offline!`,
+        text: `The endpoint ${endpointName} is currently offline. Error: ${message}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: #ef4444; padding: 16px; color: white;">
+              <h2 style="margin: 0; font-size: 18px;">🚨 API Monitor Alert</h2>
+            </div>
+            <div style="padding: 24px; background-color: #f8fafc; color: #334155;">
+              <p style="font-size: 16px; margin-top: 0;"><strong>${endpointName}</strong> is offline!</p>
+              <p style="color: #64748b; font-size: 14px; background: #f1f5f9; padding: 12px; border-radius: 6px; border-left: 4px solid #ef4444;">${message}</p>
+              <p>Please check the endpoint server or VPN connection immediately.</p>
+              <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;" />
+              <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Sent automatically by your local Xerox API Monitor background service.</p>
+            </div>
+          </div>
+        `
+      })
+      console.log('SMTP alert notification dispatched.')
+    } catch (err: any) {
+      console.error('Failed dispatching SMTP alert', err.message)
     }
   },
 

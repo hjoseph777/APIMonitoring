@@ -1,5 +1,4 @@
-import React from 'react'
-import { Activity, ShieldCheck, Heart } from 'lucide-react'
+import { ShieldCheck, Heart } from 'lucide-react'
 
 interface UptimeChartProps {
   latencyHistory?: number[]
@@ -7,7 +6,6 @@ interface UptimeChartProps {
 }
 
 export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
-  const uptimeScore = status === 'success' ? 100 : status === 'error' ? 0 : 100
 
   // Draw SVG sparkline path
   const drawChart = () => {
@@ -35,7 +33,7 @@ export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold uppercase">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase">
           <span>Latency Trace</span>
           <span className="text-blue-400">Peak: {maxVal}ms</span>
         </div>
@@ -87,7 +85,7 @@ export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
       {/* Health / Uptime Summary */}
       <div className="bg-slate-900/30 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
         <div className="space-y-1">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Health Quotient</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider block">Health Quotient</span>
           <div className="flex items-center gap-2">
             <Heart className={`w-5 h-5 ${status === 'success' ? 'text-red-500 fill-red-500' : 'text-slate-600'}`} />
             <span className="text-xl font-black text-white">{status === 'success' ? '100%' : status === 'error' ? '0%' : 'N/A'}</span>
@@ -95,7 +93,7 @@ export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
         </div>
 
         <div className="space-y-1">
-          <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Service Status</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider block">Service Status</span>
           <div className="flex items-center gap-1.5">
             <ShieldCheck className={`w-4 h-4 ${status === 'success' ? 'text-emerald-400' : 'text-rose-400'}`} />
             <span className="text-xs font-semibold text-slate-300">
@@ -104,7 +102,7 @@ export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
           </div>
         </div>
 
-        <div className="text-[9px] text-slate-500">
+        <div className="text-[9px] text-slate-400">
           Uptime ratio calculated over the last 10 execution loops.
         </div>
       </div>

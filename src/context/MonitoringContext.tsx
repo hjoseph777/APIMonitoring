@@ -155,7 +155,8 @@ export function MonitoringProvider({ children }: { children: React.ReactNode }) 
     return false
   }
 
-  // Periodic polling check loop
+  // Sync state from the main process every 3 seconds so the UI stays
+  // up to date with any background monitoring events that occurred
   useEffect(() => {
     refetchData()
     const timer = setInterval(refetchData, 3000)

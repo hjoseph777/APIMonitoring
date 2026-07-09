@@ -304,6 +304,85 @@ export const DatabaseService = {
       store.set('alerts', [])
       store.set('logs', [])
     }
+  },
+
+  clearDemoData() {
+    if (useSqlite) {
+      dbInstance.prepare("DELETE FROM endpoints WHERE id LIKE 'seed-%'").run()
+      dbInstance.prepare("DELETE FROM alerts WHERE id LIKE 'sa-%' OR endpointId LIKE 'seed-%'").run()
+      dbInstance.prepare("DELETE FROM logs WHERE id LIKE 'sl-%' OR endpointId LIKE 'seed-%'").run()
+    } else {
+      const endpoints = (store.get('endpoints') as Endpoint[] || []).filter((e) => !e.id.startsWith('seed-'))
+      store.set('endpoints', endpoints)
+      const alerts = (store.get('alerts') as Alert[] || []).filter((a) => !a.id.startsWith('sa-') && !a.endpointId.startsWith('seed-'))
+      store.set('alerts', alerts)
+      const logs = (store.get('logs') as Log[] || []).filter((l) => !l.id.startsWith('sl-') && !l.endpointId?.startsWith('seed-'))
+      store.set('logs', logs)
+    }
+  },
+
+  seedDemoData(mode: 'green' | 'mixed') {
+    this.clearDemoData()
+    const t = (mins: number) => new Date(Date.now() - mins * 60000).toISOString()
+    const seedEndpoints: Endpoint[] = [
+      {
+        id: 'seed-1',
+        name: 'ERP Sales API',
+        url: 'https://api.xerox.com/v1/sales',
+        interval: 1,
+        status: 'success',
+        lastCheck: t(2),
+        errorCount: 0,
+        consecutiveErrors: 0,
+        authType: 'oauth2',
+        authConfig: { type: 'oauth2', clientId: 'app_123', clientSecret: '***', tokenUrl: 'https://oauth.xerox.com/token' },
+        responseTimeHistory: [120, 135, 125, 140, 130],
+        timeout: 10
+      },
+      {
+        id: mode === 'mixed' ? 'seed-error-1' : 'seed-2',
+        name: 'HR Portal Service',
+        url: 'http://10.0.0.15/api/health',
+        interval: 1,
+        status: mode === 'mixed' ? 'error' : 'success',
+        lastCheck: t(8),
+        errorCount: mode === 'mixed' ? 10 : 0,
+        consecutiveErrors: mode === 'mixed' ? 3 : 0,
+        authType: 'ntlm',
+        authConfig: { type: 'ntlm', username: 'svc_monitor', password: '***', domain: 'XEROX' },
+        responseTimeHistory: mode === 'mixed' ? [5000] : [220, 240, 215, 230, 225],
+        timeout: 15
+      },
+      {
+        id: mode === 'mixed' ? 'seed-error-2' : 'seed-3',
+        name: 'Finance Reporting',
+        url: 'https://finance.xerox.internal/api/reports',
+        interval: 1,
+        status: mode === 'mixed' ? 'error' : 'success',
+        lastCheck: t(1),
+        errorCount: mode === 'mixed' ? 15 : 0,
+        consecutiveErrors: mode === 'mixed' ? 5 : 0,
+        authType: 'basic',
+        authConfig: { type: 'basic', username: 'monitor_svc', password: '***' },
+        responseTimeHistory: mode === 'mixed' ? [5000] : [88, 94, 101, 97, 85, 90, 92],
+        timeout: 30
+      },
+      {
+        id: 'seed-4',
+        name: 'Inventory Sync',
+        url: 'http://inventory.xerox.local:7777/api/stock',
+        interval: 1,
+        status: 'success',
+        lastCheck: t(5),
+        errorCount: 0,
+        consecutiveErrors: 0,
+        authType: 'none',
+        authConfig: { type: 'none' },
+        responseTimeHistory: [310, 298, 322, 315],
+        timeout: 10
+      }
+    ]
+    seedEndpoints.forEach((ep) => this.saveEndpoint(ep))
   }
 }
 
