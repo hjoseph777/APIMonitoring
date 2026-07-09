@@ -8,7 +8,7 @@
 |---|---|
 | **Author** | Harry Joseph |
 | **Version** | 1.0.0 |
-| **Date** | July 8, 2026 |
+| **Date** | July 9, 2026 |
 | **Audience** | System Administrators, IT Operators, Integrators & Automation Engineers |
 
 Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to help system administrators, IT operators, integrators, and automation engineers configure, monitor, and maintain corporate ERP API connections using the desktop application.
@@ -58,8 +58,9 @@ To start monitoring a new URL:
    * **URL**: The API web address (e.g., `https://api.company.com/v1/sales`).
    * **Check Interval (Minutes)**: How often the background service tests this link (default is 5 minutes).
 4. Configure the required **Authentication Method** (see Section 4).
-5. Click **Test Connection** to execute a test before saving. If successful, you will see a green check banner.
-6. Click **+ Add Endpoint** to save and activate monitoring.
+5. *(For intranet/internal HTTPS endpoints only)* If your server uses a self-signed or internally-issued certificate, check **"Accept self-signed / internal TLS certificates"**. Leave this unchecked for all public or externally-trusted HTTPS endpoints — SSL validation is enforced by default.
+6. Click **Test Connection** to execute a test before saving. If successful, you will see a green check banner.
+7. Click **+ Add Endpoint** to save and activate monitoring.
 
 ![Endpoint Settings View](Pictures/image2.png)
 *(The Settings Panel showing the endpoint configuration inputs and the pre-save Test Connection option)*

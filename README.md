@@ -8,7 +8,7 @@
 |---|---|
 | **Author** | Harry Joseph |
 | **Version** | 1.0.0 |
-| **Date** | July 8, 2026 |
+| **Date** | July 9, 2026 |
 | **Platform** | Windows (Electron Desktop App) |
 
 A lightweight, enterprise-ready desktop application dedicated exclusively to **HTTP/HTTPS API endpoint monitoring**, built using **Electron**, **React**, **Vite**, **TypeScript**, and **Zustand**.
@@ -30,7 +30,7 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
   * Dynamically updates tooltips showing outage warnings (e.g. `Xerox API Monitor - Outages: 2 offline`).
   * Features a tray context menu for focusing the app, triggering manual checks, or quitting.
 * **Direct Intranet Access**: Bypasses browser sandboxes and CORS limitations, allowing direct HTTP monitoring of local network addresses (`192.168.x.x`), loopbacks (`127.0.0.1`), and intranet servers.
-* **Enterprise Authentication Suite**: Full active support for static API Keys (header/query), authentic Windows Auth (NTLM challenges via `axios-ntlm`), client certificates (mTLS), session cookies (automated cookie jar-based multi-step login flows), and OAuth2 Client Credentials (with token caching).
+* **Enterprise Authentication Suite**: Full active support for static API Keys (header/query), authentic Windows Auth (NTLM challenges via `axios-ntlm`), client certificates (mTLS), session cookies (automated cookie jar-based multi-step login flows), and OAuth2 Client Credentials (with token caching). Each endpoint independently controls whether to accept self-signed/internal TLS certificates via a dedicated per-endpoint toggle, defaulting to **verified SSL** (secure by default).
 * **Pre-Save Connection Test**: Direct credential validation option inside the Add Endpoint form to verify settings before storing.
 * **Self-Scheduling timeout loops**: Eliminates polling race conditions and request accumulation by using recursively queued timeouts rather than overlapping intervals.
 * **Demonstration Tools**: Embedded 1-click seeding utilities inside the Settings tab to inject live mock endpoints (healthy or mixed) to instantly test the UI and SMTP/Webhook alert dispatchers.
@@ -44,9 +44,10 @@ The application implements several advanced architectural patterns to ensure ent
 
 * **Strict Single-Instance Singleton**: Enforces a global OS-level single-instance lock to ensure only one background monitor runs at a time. This prevents duplicated tray icons, duplicated alerts, and concurrent SQLite database file corruption, even during local development.
 * **Overlapping Check Mitigation (Race-Condition Free)**: Instead of using strict interval loops (`setInterval`) which stack outstanding requests when pings lag or time out, the monitoring engine uses a recursive, self-scheduling `setTimeout` pattern. A subsequent check is queued only *after* the previous request's lifecycle has completely settled, ensuring highly accurate latency logs and preventing server overload.
+* **Secure-by-Default TLS Verification**: SSL certificate validation is **enabled by default** for all endpoints. Endpoints that monitor intranet servers with self-signed certificates can individually opt-in to accepting unverified certificates via the "Accept self-signed / internal TLS certificates" checkbox in the endpoint form. This prevents global SSL bypass while still supporting all common enterprise network topologies.
 * **Stateful Enterprise Authentication**:
   * **OAuth2 Client Credentials**: Automatically handles bearer token retrieval, caching, and auto-refresh mechanisms before expiry.
-  * **Session Cookie Authentication**: Features a cookie jar-based client that runs login flows, captures cookies, and persists session states across checks.
+  * **Session Cookie Authentication**: Cookie jar-based client with persistent session caching — the login flow is only re-executed when the session expires (30-minute TTL) or when a 401/403 response invalidates the current session, preventing redundant auth traffic.
   * **Windows Auth (NTLM)**: Implements authentic challenge-response handshakes via `axios-ntlm`.
 * **On-the-fly Verification (Pre-Save Connection Test)**: Users can validate endpoint connectivity and authentication credentials inside the creation form before committing changes to the local database, facilitating faster troubleshooting.
 * **Universal Email Notifications Engine**: Native `nodemailer` integration allows real SMTP alert dispatches using any enterprise mail server (Gmail, Outlook, custom domains) with custom ports, credentials, and live UI configuration testing.
