@@ -30,6 +30,9 @@ Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to 
 ## 1. Overview
 The Xerox API Monitor ERP is a lightweight desktop utility designed to monitor internal and external ERP service links. The application runs a background service that continuously verifies connection uptime, response latencies, and service integrity.
 
+### Performance Architecture
+Under the hood, the user interface relies on a **Zustand Atomic Store**. This architectural choice ensures that the application remains extremely responsive and consumes minimal CPU. By using an atomic store rather than traditional React Context, the high-frequency latency updates arriving from the background engine only re-render the specific charts and text fields that need to change, rather than redrawing the entire application every 3 seconds.
+
 ---
 
 ## 2. Dashboard Navigation
