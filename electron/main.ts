@@ -66,10 +66,19 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Initialize auto-updater
-  autoUpdater.checkForUpdatesAndNotify().catch(() => {
-    // Ignore update errors silently in development or if unconfigured
-  })
+  if (process.platform === 'win32') {
+    app.setAppUserModelId(app.name)
+  }
+
+  const Store = require('electron-store')
+  const store = new Store()
+  if (store.get('autoUpdatesEnabled', false)) {
+    try {
+      autoUpdater.checkForUpdatesAndNotify()
+    } catch (e) {
+      console.error('Failed to check for updates:', e)
+    }
+  }
 
   // Start background monitoring service
   MonitoringService.start()
@@ -256,7 +265,8 @@ app.whenReady().then(() => {
       runAtStartup: store.get('runAtStartup', false),
       maintenanceMode: store.get('maintenanceMode', false),
       autoExportLogs: store.get('autoExportLogs', false),
-      exportPath: store.get('exportPath', '')
+      exportPath: store.get('exportPath', ''),
+      autoUpdatesEnabled: store.get('autoUpdatesEnabled', false)
     }
   })
 
@@ -275,6 +285,7 @@ app.whenReady().then(() => {
     store.set('maintenanceMode', settings.maintenanceMode)
     store.set('autoExportLogs', settings.autoExportLogs)
     store.set('exportPath', settings.exportPath)
+    store.set('autoUpdatesEnabled', settings.autoUpdatesEnabled)
 
     if (app.setLoginItemSettings) {
       app.setLoginItemSettings({
