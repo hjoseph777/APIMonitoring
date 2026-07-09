@@ -58,7 +58,7 @@ To start monitoring a new URL:
 5. Click **Test Connection** to execute a test before saving. If successful, you will see a green check banner.
 6. Click **+ Add Endpoint** to save and activate monitoring.
 
-![Endpoint Settings View](Pictures/image1.png)
+![Endpoint Settings View](Pictures/image2.png)
 *(The Settings Panel showing the endpoint configuration inputs and the pre-save Test Connection option)*
 
 ---
@@ -66,7 +66,7 @@ To start monitoring a new URL:
 ## 4. Authentication Guide
 The application supports multiple security layers. Under the **Authentication Method** dropdown, select the protocol required by your target server:
 
-![Authentication Dropdown Menu](Pictures/image2.png)
+![Authentication Dropdown Menu](Pictures/image3.png)
 *(Supported enterprise authentication methods dropdown list)*
 
 ### A. None (Public Endpoint)
@@ -162,15 +162,12 @@ The application is designed to run 24/7 in the background without cluttering you
 ### Visual Guide:
 
 #### System Tray Caret location:
-![Windows Notification Caret](Pictures/image3.png)
+![Windows Notification Caret](Pictures/image4.png)
 
 #### Expanded Notification Icons:
-![System Tray Expanded List](Pictures/image4.png)
+![System Tray Expanded List](Pictures/image5.png)
 
 #### Right-Click Context Menu controls:
-![Tray Right-Click Options](Pictures/image5.png)
-
-#### Active Tray Context Menu:
-![Active Tray Context Menu](Pictures/image6.png)
+![Tray Right-Click Options](Pictures/image6.png)
 
 ---

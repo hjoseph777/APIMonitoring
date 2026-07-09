@@ -120,41 +120,41 @@ API_Monitor/
 
 The following screenshots illustrate the layout and tray behavior options of the application:
 
+### Taskbar Navigation & Default Electron Frame
+
+![Windows Taskbar Jump List](Pictures/image1.png)
+
+*Shows the standard Windows OS Jump list for the active taskbar window button.*
+
 ### Active Application Settings View
 
-![Active Application Settings View](Pictures/image1.png)
+![Active Application Settings View](Pictures/image2.png)
 
 *The main application interface displaying the settings tab with endpoint registration, check interval settings, notifications, and the Test Connection button.*
 
 ### Endpoint Authentication Configuration
 
-![Endpoint Authentication Configuration](Pictures/image2.png)
+![Endpoint Authentication Configuration](Pictures/image3.png)
 
 *The settings panel showing the dropdown list of supported enterprise authentication methods, including API Key, Windows NTLM, mTLS Client Certificate, OAuth2, and Session Cookies.*
 
 ### System Tray Icons Caret
 
-![System Tray Icons Caret](Pictures/image3.png)
+![System Tray Icons Caret](Pictures/image4.png)
 
 *The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
 
 ### Expanded Tray Applications Pop-up
 
-![Tray Applications Pop-up](Pictures/image4.png)
+![Tray Applications Pop-up](Pictures/image5.png)
 
 *The expanded Windows notification tray displaying all active background items.*
 
 ### Tray Context Menu Controls
 
-![Tray Context Menu Controls](Pictures/image5.png)
+![Tray Context Menu Controls](Pictures/image6.png)
 
 *The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
-
-### Active Tray Context Menu
-
-![Active Tray Context Menu](Pictures/image6.png)
-
-*The interactive context menu launched directly from the system tray.*
 
 ---
 
