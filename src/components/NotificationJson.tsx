@@ -387,7 +387,7 @@ export function NotificationJson() {
                   onChange={(e) => setAutoUpdatesEnabled(e.target.checked)}
                   className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
                 />
-                <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Seamless Auto-Updates</span>
+                <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Electron Seamless Auto-Updates</span>
               </label>
 
               <label className="flex items-center gap-2 cursor-pointer">
