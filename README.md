@@ -101,7 +101,7 @@ The background monitoring engine actively catches, categorizes, and logs over 30
 * **HTTP Client**: `axios`, `axios-ntlm`, `axios-cookiejar-support`
 
 ### Why Zustand?
-Zustand is utilized as our global atomic store to completely decouple state updates from the React component tree hierarchy. Since our background monitoring engine fetches API ping latencies every 3 seconds, using a traditional React Context provider would cause the entire application to constantly re-render, creating noticeable UI lag. Zustand allows our latency charts and status badges to subscribe specifically to atomic state slices, maintaining a lightning-fast UI regardless of background polling volume.
+Zustand is utilized as our global atomic store to completely decouple state updates from the React component tree hierarchy. Since our UI rapidly syncs with the background monitoring engine via IPC (Inter-Process Communication) to capture real-time latency changes, using a traditional React Context provider would cause the entire application to constantly re-render, creating noticeable UI lag. Zustand allows our latency charts and status badges to subscribe specifically to atomic state slices, maintaining a lightning-fast UI regardless of the configured ping intervals or background polling volume.
 
 ---
 
