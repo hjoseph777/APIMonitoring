@@ -74,6 +74,9 @@ To test the application without real endpoints, you can manually inject mock end
 ### Launch at System Startup
 To ensure 24/7 background monitoring without manual intervention, go to **Notification & JSON** settings and enable **Launch at System Startup**. The application will automatically boot directly to the system tray when Windows or macOS starts.
 
+### Enable Electron Seamless Auto-Updates
+When this is enabled, the background service will periodically check GitHub for new versions of the application. If a new release is found, it will automatically download and install it in the background to ensure your team is always running the latest patches.
+
 ### Maintenance Mode (Global Pause)
 During planned ERP downtime or network upgrades, you can toggle **Enable Maintenance Mode** in the settings. This instantly pauses all outbound HTTP requests and alert notifications while keeping the application running. The system tray icon will turn grey to indicate it is sleeping.
 
