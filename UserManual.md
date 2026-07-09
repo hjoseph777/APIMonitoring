@@ -150,6 +150,13 @@ If you simply want to export your log history for reporting purposes:
 1. Go to the **Dashboard** tab and scroll down to **Xerox Logs**.
 2. Click **[ Download CSV ]** or **[ Download JSON ]** to instantly save the formatted logs straight to your Desktop or Documents folder.
 
+### D. Automated Log Exporting
+If your organization requires weekly compliance logs:
+1. Go to the **Notification & JSON** tab.
+2. Check the box for **Enable Weekly Auto-Export (CSV)**.
+3. Provide a valid folder path (e.g., `C:\Logs` or `\\Server\Shared\Logs`).
+4. The background service will automatically drop a new CSV file containing the week's logs into that folder every 7 days. This feature is disabled by default to prevent clutter.
+
 ### D. Demo Data Testing
 If you would like to test the application interface without configuring real endpoints:
 1. Go to the **Notification & JSON** tab and locate the **Backup & Data Controls** section.
@@ -162,6 +169,8 @@ If you would like to test the application interface without configuring real end
 The application is designed to run 24/7 in the background without cluttering your desktop space.
 
 * **Minimize on Close**: Clicking the `X` (close window) button automatically hides the app into your Windows system tray.
+* **Launch at Startup**: You can enable **Launch at System Startup** in the **Notification & JSON** settings so the monitor starts immediately upon boot.
+* **Maintenance Mode**: If your company is performing scheduled network upgrades, enable **Maintenance Mode** in the settings. This turns the tray icon grey and pauses all outbound network checks and email alerts until disabled.
 * **Outage Tooltips**: Hovering over the Xerox system tray icon displays the current number of offline outages.
 * **Tray Context Menu**: Right-clicking the tray icon exposes options to focus the window, run an on-demand check, or quit.
 

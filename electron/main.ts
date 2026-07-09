@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, clipboard, Tray, Menu, nativeImage } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
+import * as fs from 'fs'
 import DatabaseService from './database'
 import MonitoringService from './monitoring'
 import { Endpoint, Log } from '../src/types'
@@ -64,8 +66,50 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Initialize auto-updater
+  autoUpdater.checkForUpdatesAndNotify().catch(() => {
+    // Ignore update errors silently in development or if unconfigured
+  })
+
   // Start background monitoring service
   MonitoringService.start()
+
+  // Start background log exporter
+  setInterval(() => {
+    try {
+      const Store = require('electron-store')
+      const store = new Store()
+      if (store.get('autoExportLogs', false)) {
+        const exportPath = store.get('exportPath', '')
+        if (exportPath && fs.existsSync(exportPath)) {
+          const lastExportTime = store.get('lastExportTime', 0)
+          // 7 days = 604800000 ms
+          if (Date.now() - lastExportTime > 604800000) {
+            const logs = DatabaseService.getLogs()
+            if (logs.length > 0) {
+              const headers = ['Timestamp', 'Type', 'Status', 'Message', 'Endpoint']
+              const csv = [
+                headers.join(','),
+                ...logs.map(l => [
+                  `"${l.timestamp}"`,
+                  `"${l.type}"`,
+                  `"${l.success ? 'Success' : 'Error'}"`,
+                  `"${(l.message || '').replace(/"/g, '""')}"`,
+                  `"${(l.endpointName || '').replace(/"/g, '""')}"`
+                ].join(','))
+              ].join('\n')
+              
+              const filename = `api_monitor_logs_${new Date().toISOString().split('T')[0]}.csv`
+              fs.writeFileSync(join(exportPath, filename), csv)
+              store.set('lastExportTime', Date.now())
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to auto-export logs:', err)
+    }
+  }, 1000 * 60 * 60) // Check every hour
 
   // Register IPC handlers
   ipcMain.handle('get-endpoints', () => DatabaseService.getEndpoints())
@@ -208,7 +252,11 @@ app.whenReady().then(() => {
       smtpPass: store.get('smtpPass', ''),
       notifyEmail: store.get('notifyEmail', 'admin@company.com'),
       globalWebhook: store.get('globalWebhook', ''),
-      globalWebhookChannel: store.get('globalWebhookChannel', 'msteams')
+      globalWebhookChannel: store.get('globalWebhookChannel', 'msteams'),
+      runAtStartup: store.get('runAtStartup', false),
+      maintenanceMode: store.get('maintenanceMode', false),
+      autoExportLogs: store.get('autoExportLogs', false),
+      exportPath: store.get('exportPath', '')
     }
   })
 
@@ -223,6 +271,17 @@ app.whenReady().then(() => {
     store.set('notifyEmail', settings.notifyEmail)
     store.set('globalWebhook', settings.globalWebhook)
     store.set('globalWebhookChannel', settings.globalWebhookChannel)
+    store.set('runAtStartup', settings.runAtStartup)
+    store.set('maintenanceMode', settings.maintenanceMode)
+    store.set('autoExportLogs', settings.autoExportLogs)
+    store.set('exportPath', settings.exportPath)
+
+    if (app.setLoginItemSettings) {
+      app.setLoginItemSettings({
+        openAtLogin: settings.runAtStartup === true
+      })
+    }
+    
     return { success: true }
   })
 
@@ -307,11 +366,15 @@ app.whenReady().then(() => {
   tray = new Tray(appIcon)
   
   const updateTrayMenu = () => {
+    const Store = require('electron-store')
+    const store = new Store()
+    const maintenanceMode = store.get('maintenanceMode', false)
+
     const endpoints = DatabaseService.getEndpoints()
     const offlineCount = endpoints.filter(e => e.status === 'error').length
     const totalCount = endpoints.length
-    const onlineCount = endpoints.filter(e => e.status === 'success').length
-    const currentStatus = totalCount === 0 
+    
+    let currentStatus: 'idle' | 'offline' | 'warning' | 'online' = totalCount === 0 
       ? 'idle' 
       : offlineCount === totalCount 
       ? 'offline' 
@@ -319,13 +382,18 @@ app.whenReady().then(() => {
       ? 'warning' 
       : 'online'
       
-    const statusText = totalCount === 0
+    let statusText = totalCount === 0
       ? 'Xerox API Monitor - No Endpoints Registered'
       : currentStatus === 'offline'
       ? `Xerox API Monitor - CRITICAL: All ${totalCount} Offline`
       : currentStatus === 'warning'
       ? `Xerox API Monitor - Warning: ${offlineCount} of ${totalCount} Offline`
       : 'Xerox API Monitor - All Systems Online'
+
+    if (maintenanceMode) {
+      currentStatus = 'idle'
+      statusText = 'Xerox API Monitor - MAINTENANCE MODE (Paused)'
+    }
 
     const newIcon = getIcon(currentStatus)
     tray?.setImage(newIcon)

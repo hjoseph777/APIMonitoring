@@ -61,8 +61,21 @@ Because this application runs securely on your machine, no external databases ar
 
 You can back up these files directly, or use the **Export Backup JSON** button inside the GUI to download everything instantly.
 
+### Automated Log Exporting
+For compliance purposes, you can enable **Weekly Auto-Export** in the settings. When enabled, the background service will automatically export a CSV file of all transaction logs to your specified directory every 7 days. This feature is fully disabled by default.
+
 ### Demo Data Injection
 To test the application without real endpoints, you can manually inject mock endpoints by navigating to the Settings tab and using the **Seed Demo Data** button. This demo data is strictly manual and will not automatically reappear on startup once cleared.
+
+---
+
+## 🛠️ Enterprise Operations
+
+### Launch at System Startup
+To ensure 24/7 background monitoring without manual intervention, go to **Notification & JSON** settings and enable **Launch at System Startup**. The application will automatically boot directly to the system tray when Windows or macOS starts.
+
+### Maintenance Mode (Global Pause)
+During planned ERP downtime or network upgrades, you can toggle **Enable Maintenance Mode** in the settings. This instantly pauses all outbound HTTP requests and alert notifications while keeping the application running. The system tray icon will turn grey to indicate it is sleeping.
 
 ---
 

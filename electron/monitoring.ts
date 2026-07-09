@@ -11,6 +11,9 @@ import { CookieJar } from 'tough-cookie'
 // Map of active timers per endpoint id
 const activeTimers = new Map<string, NodeJS.Timeout>()
 
+// Cache for deduplicating identical overlapping HTTP requests
+const activeRequests = new Map<string, Promise<any>>()
+
 // Caches for OAuth2 tokens and Cookie Jars
 const oauth2Cache = new Map<string, { token: string; expiresAt: number }>()
 const cookieJars = new Map<string, CookieJar>()
@@ -88,7 +91,12 @@ export const MonitoringService = {
 
   async runCheckLoop(id: string) {
     try {
-      await this.checkEndpoint(id)
+      const Store = require('electron-store')
+      const store = new Store()
+      
+      if (!store.get('maintenanceMode', false)) {
+        await this.checkEndpoint(id)
+      }
     } catch (err) {
       console.error(`Error in check loop for endpoint ${id}:`, err)
     }
@@ -153,50 +161,64 @@ export const MonitoringService = {
 
         let response: any
 
-        if (endpoint.authType === 'ntlm') {
-          const auth = endpoint.authConfig
-          response = await axiosNtlm({
-            method: 'GET',
-            url: endpoint.url,
-            timeout: requestTimeout,
-            httpsAgent: config.httpsAgent,
-            ntlm: {
-              username: (auth as any).username,
-              password: (auth as any).password,
-              domain: (auth as any).domain,
-              workstation: (auth as any).workstation || ''
-            },
-            withCredentials: true
-          })
+        const cacheKey = `${endpoint.url}|${endpoint.authType}|${JSON.stringify(endpoint.authConfig || {})}`
+        if (activeRequests.has(cacheKey)) {
+          response = await activeRequests.get(cacheKey)
         } else {
-          // Standard Axios config setup
-          if (endpoint.authType === 'apiKey') {
-            const auth = endpoint.authConfig as any
-            if (auth.location === 'header') {
-              config.headers[auth.key] = auth.value
-            } else if (auth.location === 'query') {
-              const urlObj = new URL(endpoint.url)
-              urlObj.searchParams.append(auth.key, auth.value)
-              config.url = urlObj.toString()
-            }
-          } else if (endpoint.authType === 'basic') {
-            const auth = endpoint.authConfig as any
-            const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64')
-            config.headers.Authorization = `Basic ${token}`
-          } else if (endpoint.authType === 'oauth2') {
+          let reqPromise: Promise<any>
+          
+          if (endpoint.authType === 'ntlm') {
             const auth = endpoint.authConfig
-            const token = await getOAuth2Token(id, auth)
-            config.headers.Authorization = `Bearer ${token}`
+            reqPromise = axiosNtlm({
+              method: 'GET',
+              url: endpoint.url,
+              timeout: requestTimeout,
+              httpsAgent: config.httpsAgent,
+              ntlm: {
+                username: (auth as any).username,
+                password: (auth as any).password,
+                domain: (auth as any).domain,
+                workstation: (auth as any).workstation || ''
+              },
+              withCredentials: true
+            })
+          } else {
+            // Standard Axios config setup
+            if (endpoint.authType === 'apiKey') {
+              const auth = endpoint.authConfig as any
+              if (auth.location === 'header') {
+                config.headers[auth.key] = auth.value
+              } else if (auth.location === 'query') {
+                const urlObj = new URL(endpoint.url)
+                urlObj.searchParams.append(auth.key, auth.value)
+                config.url = urlObj.toString()
+              }
+            } else if (endpoint.authType === 'basic') {
+              const auth = endpoint.authConfig as any
+              const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64')
+              config.headers.Authorization = `Basic ${token}`
+            } else if (endpoint.authType === 'oauth2') {
+              const auth = endpoint.authConfig
+              const token = await getOAuth2Token(id, auth)
+              config.headers.Authorization = `Bearer ${token}`
+            }
+
+            if (endpoint.authType === 'cookie') {
+              const auth = endpoint.authConfig
+              const client = getCookieJarClient(id)
+              // Run login first to seed cookies
+              await performCookieLogin(id, auth)
+              reqPromise = client.request(config)
+            } else {
+              reqPromise = axios(config)
+            }
           }
 
-          if (endpoint.authType === 'cookie') {
-            const auth = endpoint.authConfig
-            const client = getCookieJarClient(id)
-            // Run login first to seed cookies
-            await performCookieLogin(id, auth)
-            response = await client.request(config)
-          } else {
-            response = await axios(config)
+          activeRequests.set(cacheKey, reqPromise)
+          try {
+            response = await reqPromise
+          } finally {
+            activeRequests.delete(cacheKey)
           }
         }
 

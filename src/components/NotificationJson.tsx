@@ -16,6 +16,11 @@ export function NotificationJson() {
   const [notifyEmail, setNotifyEmail] = useState('admin@company.com')
   const [globalWebhook, setGlobalWebhook] = useState('')
   const [globalWebhookChannel, setGlobalWebhookChannel] = useState('msteams')
+
+  const [runAtStartup, setRunAtStartup] = useState(false)
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
+  const [autoExportLogs, setAutoExportLogs] = useState(false)
+  const [exportPath, setExportPath] = useState('')
   const [isWipeModalOpen, setIsWipeModalOpen] = useState(false)
   const [wipeConfirmInput, setWipeConfirmInput] = useState('')
   
@@ -38,6 +43,10 @@ export function NotificationJson() {
           setNotifyEmail(settings.notifyEmail)
           setGlobalWebhook(settings.globalWebhook)
           setGlobalWebhookChannel(settings.globalWebhookChannel || 'msteams')
+          setRunAtStartup(settings.runAtStartup || false)
+          setMaintenanceMode(settings.maintenanceMode || false)
+          setAutoExportLogs(settings.autoExportLogs || false)
+          setExportPath(settings.exportPath || '')
         } catch (err: any) {
           console.error('Failed to load settings', err)
         }
@@ -59,7 +68,11 @@ export function NotificationJson() {
         smtpPass,
         notifyEmail,
         globalWebhook,
-        globalWebhookChannel
+        globalWebhookChannel,
+        runAtStartup,
+        maintenanceMode,
+        autoExportLogs,
+        exportPath
       })
       addToast('System settings saved successfully.', 'success')
     } catch (err: any) {
@@ -343,15 +356,37 @@ export function NotificationJson() {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={nativeNotify}
-                onChange={(e) => setNativeNotify(e.target.checked)}
-                className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
-              />
-              <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable native OS toast notifications</span>
-            </label>
+            <div className="flex flex-col gap-3 mt-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={nativeNotify}
+                  onChange={(e) => setNativeNotify(e.target.checked)}
+                  className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                />
+                <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable native OS toast notifications</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={runAtStartup}
+                  onChange={(e) => setRunAtStartup(e.target.checked)}
+                  className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                />
+                <span className="text-slate-650 dark:text-slate-350 font-semibold">Launch at System Startup (Windows/macOS)</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={maintenanceMode}
+                  onChange={(e) => setMaintenanceMode(e.target.checked)}
+                  className="rounded border-slate-350 text-rose-500 focus:ring-rose-500 dark:bg-slate-950 dark:border-slate-800"
+                />
+                <span className="text-rose-600 dark:text-rose-400 font-bold">Enable Maintenance Mode (Pauses all monitoring loops)</span>
+              </label>
+            </div>
 
             <button
               onClick={handleSaveSettings}
@@ -380,6 +415,33 @@ export function NotificationJson() {
             Import Backup JSON
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
           </label>
+        </div>
+
+        <div className="border-t border-slate-200 dark:border-slate-800/60 pt-4 mt-2">
+          <h4 className="text-slate-300 font-semibold mb-2 uppercase tracking-wider text-[9px]">Automated Log Exporting</h4>
+          <div className="flex flex-col gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoExportLogs}
+                onChange={(e) => setAutoExportLogs(e.target.checked)}
+                className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+              />
+              <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Weekly Auto-Export (CSV)</span>
+            </label>
+            {autoExportLogs && (
+              <div className="flex items-center gap-2 mt-1">
+                <input
+                  type="text"
+                  value={exportPath}
+                  onChange={(e) => setExportPath(e.target.value)}
+                  placeholder="e.g. C:\Users\Admin\Documents\API_Reports"
+                  className="w-full md:w-1/2 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+                />
+                <span className="text-slate-500 text-[10px]">Must be a valid local or network path</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="border-t border-slate-200 dark:border-slate-800/60 pt-3">
