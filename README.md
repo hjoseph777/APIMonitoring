@@ -61,6 +61,9 @@ Because this application runs securely on your machine, no external databases ar
 
 You can back up these files directly, or use the **Export Backup JSON** button inside the GUI to download everything instantly.
 
+### Demo Data Injection
+To test the application without real endpoints, you can manually inject mock endpoints by navigating to the Settings tab and using the **Seed Demo Data** button. This demo data is strictly manual and will not automatically reappear on startup once cleared.
+
 ---
 
 ## 🔍 Monitored Connection & API Errors

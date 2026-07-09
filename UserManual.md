@@ -150,6 +150,12 @@ If you simply want to export your log history for reporting purposes:
 1. Go to the **Dashboard** tab and scroll down to **Xerox Logs**.
 2. Click **[ Download CSV ]** or **[ Download JSON ]** to instantly save the formatted logs straight to your Desktop or Documents folder.
 
+### D. Demo Data Testing
+If you would like to test the application interface without configuring real endpoints:
+1. Go to the **Notification & JSON** tab and locate the **Backup & Data Controls** section.
+2. Click **[ Seed Demo Data ]** to populate the dashboard with test configurations. 
+3. *Note: Demo data injection is strictly manual. It will not be restored automatically upon application restart if you choose to clear it using the UI.*
+
 ---
 
 ## 8. System Tray & Background Operations
