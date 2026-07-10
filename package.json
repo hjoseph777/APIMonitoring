@@ -1,9 +1,9 @@
 {
   "name": "api-monitor-erp",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Desktop API Monitoring ERP using Electron + React + TypeScript",
   "main": "out/main/main.js",
-  "author": "Xerox Owner",
+  "author": "Harry Joseph",
   "license": "MIT",
   "scripts": {
     "dev": "electron-vite dev",

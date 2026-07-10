@@ -1,20 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Plus, Loader2, Play } from 'lucide-react'
+import { Plus, Loader2, Play, Pencil, X } from 'lucide-react'
 import { AuthConfigurator } from './auth/AuthConfigurator'
 import type { Endpoint } from '../types'
 
 interface AddEndpointFormProps {
-  onAdd: (endpoint: { name: string; url: string; interval: number; authType: string; authConfig: any; timeout?: number; allowSelfSigned?: boolean }) => Promise<void>
+  mode?: 'add' | 'edit'
+  initialEndpoint?: Endpoint
+  onSubmit: (endpoint: { name: string; url: string; interval: number; authType: string; authConfig: any; timeout?: number; allowSelfSigned?: boolean }) => Promise<void>
+  onCancel?: () => void
 }
 
-export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
-  const [name, setName] = useState('')
-  const [url, setUrl] = useState('')
-  const [interval, setInterval] = useState(5)
-  const [timeoutVal, setTimeoutVal] = useState(10)
-  const [authType, setAuthType] = useState('none')
-  const [authConfig, setAuthConfig] = useState<any>({ type: 'none' })
-  const [allowSelfSigned, setAllowSelfSigned] = useState(false)
+export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCancel }: AddEndpointFormProps) {
+  const [name, setName] = useState(initialEndpoint?.name ?? '')
+  const [url, setUrl] = useState(initialEndpoint?.url ?? '')
+  const [interval, setInterval] = useState(initialEndpoint?.interval ?? 5)
+  const [timeoutVal, setTimeoutVal] = useState(initialEndpoint?.timeout ?? 10)
+  const [authType, setAuthType] = useState(initialEndpoint?.authType ?? 'none')
+  const [authConfig, setAuthConfig] = useState<any>(initialEndpoint?.authConfig ?? { type: 'none' })
+  const [allowSelfSigned, setAllowSelfSigned] = useState(initialEndpoint?.allowSelfSigned === true)
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
@@ -90,7 +93,7 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
 
     setLoading(true)
     try {
-      await onAdd({
+      await onSubmit({
         name,
         url,
         interval,
@@ -99,17 +102,21 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
         timeout: timeoutVal,
         allowSelfSigned
       })
-      // Clear form
-      setName('')
-      setUrl('')
-      setInterval(5)
-      setTimeoutVal(10)
-      setAuthType('none')
-      setAuthConfig({ type: 'none' })
-      setAllowSelfSigned(false)
-      nameInputRef.current?.focus()
+      if (mode === 'edit') {
+        onCancel?.()
+      } else {
+        // Clear form for the next add
+        setName('')
+        setUrl('')
+        setInterval(5)
+        setTimeoutVal(10)
+        setAuthType('none')
+        setAuthConfig({ type: 'none' })
+        setAllowSelfSigned(false)
+        nameInputRef.current?.focus()
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to add endpoint')
+      setError(err.message || `Failed to ${mode === 'edit' ? 'save changes' : 'add endpoint'}`)
     } finally {
       setLoading(false)
     }
@@ -117,14 +124,28 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="glass-panel p-6 rounded-2xl space-y-6">
-      <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
-        <Plus className="w-5 h-5 text-blue-500" />
-        <h2 className="text-md font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add New Endpoint</h2>
+      <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+        <div className="flex items-center gap-2">
+          {mode === 'edit' ? <Pencil className="w-5 h-5 text-blue-500" /> : <Plus className="w-5 h-5 text-blue-500" />}
+          <h2 className="text-md font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+            {mode === 'edit' ? `Edit ${initialEndpoint?.name ?? 'Endpoint'}` : 'Add New Endpoint'}
+          </h2>
+        </div>
+        {mode === 'edit' && onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition-colors cursor-pointer"
+            title="Cancel edit"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Two Column Layout Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Column 1: Endpoint Parameters */}
         <div className="space-y-4">
           <div>
@@ -206,8 +227,8 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
 
       {testResult && (
         <div className={`p-3 rounded-xl border text-xs font-semibold ${
-          testResult.success 
-            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300' 
+          testResult.success
+            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
             : 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
         }`}>
           {testResult.message}
@@ -260,12 +281,12 @@ export function AddEndpointForm({ onAdd }: AddEndpointFormProps) {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Saving...
+              {mode === 'edit' ? 'Saving...' : 'Saving...'}
             </>
           ) : (
             <>
-              <Plus className="w-4 h-4" />
-              Add Endpoint
+              {mode === 'edit' ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {mode === 'edit' ? 'Save Changes' : 'Add Endpoint'}
             </>
           )}
         </button>

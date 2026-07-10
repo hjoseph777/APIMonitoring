@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Logs API
   getLogs: () => ipcRenderer.invoke('get-logs'),
+  exportLogsCsv: () => ipcRenderer.invoke('export-logs-csv'),
   clearLogs: () => ipcRenderer.invoke('clear-logs'),
 
   // Utility Operations
@@ -33,6 +34,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendTestAlert: (args: { webhookUrl: string; channelType: string }) => ipcRenderer.invoke('send-test-alert', args),
   sendTestEmail: () => ipcRenderer.invoke('send-test-email'),
   seedDemoData: (mode: 'green' | 'mixed') => ipcRenderer.invoke('seed-demo-data', mode),
-  clearDemoData: () => ipcRenderer.invoke('clear-demo-data')
+  clearDemoData: () => ipcRenderer.invoke('clear-demo-data'),
+  // P16-14: IPC push so renderer refreshes on state change instead of polling
+  onStateChanged: (callback: () => void) => ipcRenderer.on('state-changed', (_event) => callback()),
+  offStateChanged: () => ipcRenderer.removeAllListeners('state-changed')
 })
 export {}

@@ -9,7 +9,6 @@ export interface Endpoint {
   consecutiveErrors: number;
   authType: 'none' | 'apiKey' | 'ntlm' | 'certificate' | 'oauth2' | 'basic' | 'cookie';
   authConfig: AuthConfig;
-  authStatus?: 'valid' | 'expired' | 'failed' | 'none';
   responseTimeHistory?: number[]; // history of last response times in ms
   timeout?: number; // in seconds
   allowSelfSigned?: boolean; // allow self-signed / internal TLS certificates (default: false)
@@ -39,8 +38,8 @@ export interface Log {
   endpointName?: string;
   message: string;
   timestamp: string; // ISO timestamp
-  type: 'info' | 'error' | 'xerox';
-  success?: boolean; // specifically for xerox copy events
+  type: 'info' | 'error' | 'clipboard';
+  success?: boolean; // specifically for clipboard copy events
 }
 
 declare global {
@@ -56,6 +55,7 @@ declare global {
       markAlertAsRead: (id: string) => Promise<{ success: boolean }>;
       archiveAlerts: () => Promise<{ success: boolean }>;
       getLogs: () => Promise<Log[]>;
+      exportLogsCsv: () => Promise<string>;
       clearLogs: () => Promise<{ success: boolean }>;
       copyToClipboard: (text: string, endpointName?: string) => Promise<{ success: boolean }>;
       validateCertificate: (path: string, passphrase?: string) => Promise<boolean>;
@@ -64,12 +64,14 @@ declare global {
       exportBackup: () => Promise<string>;
       importBackup: (jsonString: string) => Promise<{ success: boolean }>;
       resetAllData: () => Promise<{ success: boolean }>;
-      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean }>;
-      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean }) => Promise<{ success: boolean }>;
+      getSettings: () => Promise<{ nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean; alertThreshold: number; smtpAllowSelfSigned: boolean; minimizeTray: boolean }>;
+      saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean; alertThreshold: number; smtpAllowSelfSigned: boolean; minimizeTray: boolean }) => Promise<{ success: boolean }>;
       sendTestAlert: (args: { webhookUrl: string; channelType: string }) => Promise<{ success: boolean; message?: string }>;
       sendTestEmail: () => Promise<{ success: boolean; message?: string }>;
       seedDemoData: (mode: 'green' | 'mixed') => Promise<{ success: boolean; message?: string }>;
       clearDemoData: () => Promise<{ success: boolean; message?: string }>;
+      onStateChanged: (callback: () => void) => void;
+      offStateChanged: () => void;
     }
   }
 }

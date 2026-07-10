@@ -65,7 +65,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                 placeholder="e.g., COMPANY.local"
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400"
               />
-              <p className="text-[10px] text-slate-400 mt-1">Your Windows AD Domain.</p>
+              <p className="text-xs text-slate-400 mt-1">Your Windows AD Domain.</p>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Username</label>
@@ -129,7 +129,7 @@ export function AuthConfigurator({ type, value, onChange }: AuthConfiguratorProp
                   </span>
                 )}
               </div>
-              {validationError && <p className="text-rose-500 text-[10px] mt-1">{validationError}</p>}
+              {validationError && <p className="text-rose-500 text-xs mt-1">{validationError}</p>}
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">Passphrase (optional)</label>

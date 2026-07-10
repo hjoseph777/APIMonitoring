@@ -1,17 +1,19 @@
-import { ShieldCheck, Heart } from 'lucide-react'
+import React from 'react'
+import { ShieldCheck, ShieldX, ShieldQuestion } from 'lucide-react'
+import { Pill } from './Pill'
 
 interface UptimeChartProps {
   latencyHistory?: number[]
   status: 'success' | 'error' | 'idle'
+  intervalMinutes?: number
 }
 
-export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
+export function UptimeChart({ latencyHistory = [], status, intervalMinutes }: UptimeChartProps) {
 
-  // Draw SVG sparkline path
   const drawChart = () => {
     if (latencyHistory.length === 0) {
       return (
-        <div className="flex h-36 items-center justify-center text-slate-600 italic text-xs">
+        <div className="flex h-36 items-center justify-center text-slate-500 dark:text-slate-400 italic text-xs">
           No latency history recorded
         </div>
       )
@@ -33,78 +35,66 @@ export function UptimeChart({ latencyHistory = [], status }: UptimeChartProps) {
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase">
+        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">
           <span>Latency Trace</span>
-          <span className="text-blue-400">Peak: {maxVal}ms</span>
+          <span style={{ color: 'var(--color-blue)' }}>Peak: {maxVal}ms</span>
         </div>
-        
+
         <div className="relative">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-32 overflow-visible">
             {/* Grid Lines */}
-            <line x1={padding} y1={padding} x2={width - padding} y2={padding} stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" />
-            <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" />
-            <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,0.05)" />
+            <line x1={padding} y1={padding} x2={width - padding} y2={padding} stroke="var(--border-color)" strokeOpacity="0.5" strokeDasharray="3 3" />
+            <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="var(--border-color)" strokeOpacity="0.5" strokeDasharray="3 3" />
+            <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="var(--border-color)" />
 
             {/* Trace Path */}
             <path
               d={pathD}
               fill="none"
-              stroke="#3b82f6"
+              stroke="var(--color-blue)"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="drop-shadow-[0_2px_8px_rgba(59,130,246,0.35)]"
             />
 
             {/* Nodes */}
             {points.map((p, idx) => (
-              <g key={idx} className="group">
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r="3.5"
-                  fill="#ffffff"
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                />
-              </g>
+              <circle key={idx} cx={p.x} cy={p.y} r="3.5" fill="var(--bg-card)" stroke="var(--color-blue)" strokeWidth="2" />
             ))}
           </svg>
         </div>
+
+        {intervalMinutes !== undefined && (
+          <div className="text-xs text-slate-400 dark:text-slate-500 italic">
+            {latencyHistory.length} checks &middot; ~{intervalMinutes} min interval &middot; last ~{intervalMinutes * latencyHistory.length} min
+          </div>
+        )}
       </div>
     )
   }
 
+  const statusMeta = status === 'success'
+    ? { tone: 'ok' as const, label: 'Reachable', Icon: ShieldCheck }
+    : status === 'error'
+    ? { tone: 'crit' as const, label: 'Unreachable', Icon: ShieldX }
+    : { tone: 'neutral' as const, label: 'Awaiting first check', Icon: ShieldQuestion }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
       {/* Sparkline Latency Trace */}
-      <div className="md:col-span-2 bg-slate-900/30 p-5 rounded-2xl border border-slate-800">
+      <div className="md:col-span-2 p-5 rounded-2xl border" style={{ background: 'var(--well)', borderColor: 'var(--border-color)' }}>
         {drawChart()}
       </div>
 
-      {/* Health / Uptime Summary */}
-      <div className="bg-slate-900/30 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
-        <div className="space-y-1">
-          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider block">Health Quotient</span>
-          <div className="flex items-center gap-2">
-            <Heart className={`w-5 h-5 ${status === 'success' ? 'text-red-500 fill-red-500' : 'text-slate-600'}`} />
-            <span className="text-xl font-black text-white">{status === 'success' ? '100%' : status === 'error' ? '0%' : 'N/A'}</span>
-          </div>
+      {/* Current status — reflects the most recent check only; there is no time-bounded
+          success ratio stored yet, so this deliberately doesn't invent a fake percentage */}
+      <div className="p-5 rounded-2xl border flex flex-col justify-center gap-3" style={{ background: 'var(--well)', borderColor: 'var(--border-color)' }}>
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Current Status</span>
+        <div className="flex items-center gap-2">
+          <statusMeta.Icon className="w-5 h-5 shrink-0" style={{ color: `var(${statusMeta.tone === 'ok' ? '--color-green' : statusMeta.tone === 'crit' ? '--color-red' : '--text-secondary'})` }} />
+          <Pill tone={statusMeta.tone}>{statusMeta.label}</Pill>
         </div>
-
-        <div className="space-y-1">
-          <span className="text-[10px] text-slate-400 dark:text-slate-300 font-bold uppercase tracking-wider block">Service Status</span>
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className={`w-4 h-4 ${status === 'success' ? 'text-emerald-400' : 'text-rose-400'}`} />
-            <span className="text-xs font-semibold text-slate-300">
-              {status === 'success' ? 'Fully Functional' : status === 'error' ? 'Operational Failure' : 'Awaiting Check'}
-            </span>
-          </div>
-        </div>
-
-        <div className="text-[9px] text-slate-400">
-          Uptime ratio calculated over the last 10 execution loops.
-        </div>
+        <p className="text-xs text-slate-400 dark:text-slate-500">Based on the most recent check.</p>
       </div>
     </div>
   )

@@ -2,12 +2,13 @@ import axios from 'axios'
 import https from 'https'
 import fs from 'fs'
 import { randomUUID } from 'crypto'
-import { Notification } from 'electron'
+import { Notification, safeStorage } from 'electron'
 import DatabaseService from './database'
 import { Endpoint, Alert, Log } from '../src/types'
 import axiosNtlm from 'axios-ntlm'
 import { wrapper } from 'axios-cookiejar-support'
 import { CookieJar } from 'tough-cookie'
+import nodemailer from 'nodemailer' // P16-13: top-level import — module is cached once, not re-required on every alert flush
 
 // Map of active timers per endpoint id
 const activeTimers = new Map<string, NodeJS.Timeout>()
@@ -22,6 +23,15 @@ const cookieJars = new Map<string, CookieJar>()
 // Cookie session validity tracking — only re-login when session has expired
 const cookieSessionExpiry = new Map<string, number>()
 const COOKIE_SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
+
+// --- Alert burst protection (P16-4) ---
+// Outage events that arrive within ALERT_DEBOUNCE_MS of the first call are
+// batched together and dispatched as a single notification.
+const ALERT_DEBOUNCE_MS = 60 * 1000 // 60-second accumulation window
+let webhookOutageBuffer: string[] = []
+let webhookFlushTimer: NodeJS.Timeout | null = null
+let emailOutageBuffer: string[] = []
+let emailFlushTimer: NodeJS.Timeout | null = null
 
 // Module-level electron-store singleton (avoids repeated construction per loop)
 const Store = require('electron-store')
@@ -176,7 +186,7 @@ export const MonitoringService = {
             agentOptions.pfx = cert
             agentOptions.passphrase = auth.passphrase || ''
             // For mTLS, respect the per-cert setting; fall back to the endpoint's allowSelfSigned flag
-            agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? !defaultRejectUnauthorized
+            agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? defaultRejectUnauthorized
           }
         }
 
@@ -276,8 +286,9 @@ export const MonitoringService = {
       consecutiveErrors += 1
       errorCount += 1
       
-      // Save Alert log when threshold is reached (e.g. 2 consecutive errors)
-      if (consecutiveErrors === 2 || consecutiveErrors % 5 === 0) {
+      // Read the configured threshold from settings (P16-5); default to 2 if not set
+      const threshold = parseInt(String(monitorStore.get('alertThreshold', 2)), 10) || 2
+      if (consecutiveErrors === threshold || (consecutiveErrors > threshold && consecutiveErrors % 5 === 0)) {
         const alert: Alert = {
           id: randomUUID(),
           endpointId: currentEp.id,
@@ -331,75 +342,121 @@ export const MonitoringService = {
     }
   },
 
-  async triggerWebhook(endpointName: string, message: string) {
-    const webhookUrl = monitorStore.get('globalWebhook')
-    const channelType = monitorStore.get('globalWebhookChannel') || 'msteams'
-    if (!webhookUrl || typeof webhookUrl !== 'string') return
-
-    try {
-      const alertText = `🚨 **[API Monitor Alert]** \`${endpointName}\` is offline!\nMessage: ${message}`
-      let payload: any = {}
-      
-      if (channelType === 'discord') {
-        payload = { content: alertText }
-      } else {
-        payload = { text: alertText }
-      }
-
-      await axios.post(webhookUrl, payload)
-      console.log('Webhook alert notification dispatched.')
-    } catch (err: any) {
-      console.error('Failed dispatching webhook alert', err.message)
+  triggerWebhook(endpointName: string, _message: string) {
+    // P16-4: Accumulate into buffer; arm a single flush timer for the whole batch window
+    if (!webhookOutageBuffer.includes(endpointName)) {
+      webhookOutageBuffer.push(endpointName)
     }
+    if (webhookFlushTimer !== null) return // flush already scheduled — buffer will drain then
+
+    webhookFlushTimer = setTimeout(async () => {
+      const batch = [...webhookOutageBuffer]
+      webhookOutageBuffer = []
+      webhookFlushTimer = null
+      if (batch.length === 0) return
+
+      const webhookUrl = monitorStore.get('globalWebhook')
+      const channelType = monitorStore.get('globalWebhookChannel') || 'msteams'
+      if (!webhookUrl || typeof webhookUrl !== 'string') return
+
+      try {
+        const count = batch.length
+        const nameList = batch.map(n => `\`${n}\``).join(', ')
+        const alertText = count === 1
+          ? `🚨 **[API Monitor Alert]** \`${batch[0]}\` is offline!`
+          : `🚨 **[API Monitor Alert]** ${count} endpoints are offline: ${nameList}`
+
+        const payload: any = channelType === 'discord'
+          ? { content: alertText }
+          : { text: alertText }
+
+        await axios.post(webhookUrl as string, payload)
+        console.log(`Webhook alert dispatched (${count} endpoint(s)).`)
+      } catch (err: any) {
+        console.error('Failed dispatching webhook alert', err.message)
+      }
+    }, ALERT_DEBOUNCE_MS)
   },
 
-  async triggerEmail(endpointName: string, message: string) {
-    const smtpServer = monitorStore.get('smtpServer', '')
-    const smtpPort = monitorStore.get('smtpPort', '587')
-    const smtpUser = monitorStore.get('smtpUser', '')
-    const smtpPass = monitorStore.get('smtpPass', '')
-    const notifyEmail = monitorStore.get('notifyEmail', '')
-
-    if (!smtpServer || !notifyEmail) return
-
-    try {
-      const nodemailer = require('nodemailer')
-      const transporter = nodemailer.createTransport({
-        host: smtpServer,
-        port: parseInt(smtpPort, 10),
-        secure: parseInt(smtpPort, 10) === 465,
-        auth: (smtpUser && smtpPass) ? {
-          user: smtpUser,
-          pass: smtpPass
-        } : undefined
-      })
-
-      const emails = notifyEmail.split(',').map((e: string) => e.trim()).filter(Boolean)
-      
-      await transporter.sendMail({
-        from: `"Xerox API Monitor" <${smtpUser || 'noreply@xerox-monitor.local'}>`,
-        to: emails.join(', '),
-        subject: `🚨 Alert: ${endpointName} is offline!`,
-        text: `The endpoint ${endpointName} is currently offline. Error: ${message}`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-            <div style="background-color: #ef4444; padding: 16px; color: white;">
-              <h2 style="margin: 0; font-size: 18px;">🚨 API Monitor Alert</h2>
-            </div>
-            <div style="padding: 24px; background-color: #f8fafc; color: #334155;">
-              <p style="font-size: 16px; margin-top: 0;"><strong>${endpointName}</strong> is offline!</p>
-              <p style="color: #64748b; font-size: 14px; background: #f1f5f9; padding: 12px; border-radius: 6px; border-left: 4px solid #ef4444;">${message}</p>
-              <p>Please check the endpoint server or VPN connection immediately.</p>
-              <hr style="border: none; border-top: 1px solid #cbd5e1; margin: 24px 0;" />
-              <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">Sent automatically by your local Xerox API Monitor background service.</p>
-            </div>
-          </div>
-        `
-      })
-      console.log('SMTP alert notification dispatched.')
-    } catch (err: any) {
-      console.error('Failed dispatching SMTP alert', err.message)
+  triggerEmail(endpointName: string, _message: string) {
+    // P16-4: Accumulate into buffer; arm a single flush timer for the whole batch window
+    if (!emailOutageBuffer.includes(endpointName)) {
+      emailOutageBuffer.push(endpointName)
     }
+    if (emailFlushTimer !== null) return // flush already scheduled — buffer will drain then
+
+    emailFlushTimer = setTimeout(async () => {
+      const batch = [...emailOutageBuffer]
+      emailOutageBuffer = []
+      emailFlushTimer = null
+      if (batch.length === 0) return
+
+      const smtpServer = monitorStore.get('smtpServer', '')
+      const smtpPort = monitorStore.get('smtpPort', '587')
+      const smtpUser = monitorStore.get('smtpUser', '')
+      const smtpPassEncryptedB64 = monitorStore.get('smtpPassEncrypted', '') as string
+      let smtpPass = ''
+      if (smtpPassEncryptedB64) {
+        try {
+          smtpPass = safeStorage.decryptString(Buffer.from(smtpPassEncryptedB64, 'base64'))
+        } catch {
+          smtpPass = ''
+        }
+      }
+      const notifyEmail = monitorStore.get('notifyEmail', '')
+      if (!smtpServer || !notifyEmail) return
+
+      try {
+        const smtpAllowSelfSigned = monitorStore.get('smtpAllowSelfSigned', false) === true
+        const transporter = nodemailer.createTransport({
+          host: smtpServer,
+          port: parseInt(smtpPort, 10),
+          secure: parseInt(smtpPort, 10) === 465,
+          auth: (smtpUser && smtpPass) ? { user: smtpUser, pass: smtpPass } : undefined,
+          tls: { rejectUnauthorized: !smtpAllowSelfSigned }
+        })
+
+        const emails = notifyEmail.split(',').map((e: string) => e.trim()).filter(Boolean)
+        const count = batch.length
+        const isSingle = count === 1
+
+        const subject = isSingle
+          ? `🚨 Alert: ${batch[0]} is offline!`
+          : `🚨 Alert: ${count} endpoints are offline`
+
+        const textBody = isSingle
+          ? `The endpoint "${batch[0]}" is currently offline. Please investigate immediately.`
+          : `${count} endpoints are currently offline:\n${batch.map(n => `  • ${n}`).join('\n')}\n\nPlease investigate immediately.`
+
+        const htmlEndpoints = isSingle
+          ? `<p style="font-size:16px;margin-top:0;"><strong>${batch[0]}</strong> is offline!</p>`
+          : `<p style="font-size:16px;margin-top:0;"><strong>${count} endpoints</strong> are currently offline:</p>
+             <ul style="padding-left:20px;">${batch.map(n => `<li><strong>${n}</strong></li>`).join('')}</ul>`
+
+        await transporter.sendMail({
+          from: `"Xerox API Monitor" <${smtpUser || 'noreply@xerox-monitor.local'}>`,
+          to: emails.join(', '),
+          subject,
+          text: textBody,
+          html: `
+            <div style="font-family:sans-serif;max-width:600px;margin:0 auto;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+              <div style="background-color:#ef4444;padding:16px;color:white;">
+                <h2 style="margin:0;font-size:18px;">🚨 API Monitor Alert</h2>
+              </div>
+              <div style="padding:24px;background-color:#f8fafc;color:#334155;">
+                ${htmlEndpoints}
+                <p>Please check the affected endpoint(s) and server connections immediately.</p>
+                <hr style="border:none;border-top:1px solid #cbd5e1;margin:24px 0;" />
+                <p style="font-size:12px;color:#64748b;margin-bottom:0;">Sent automatically by your local Xerox API Monitor background service.</p>
+              </div>
+            </div>
+          `
+        })
+        console.log(`SMTP alert dispatched (${count} endpoint(s)).`)
+      } catch (err: any) {
+        console.error('Failed dispatching SMTP alert', err.message)
+      }
+    }, ALERT_DEBOUNCE_MS)
   },
 
   async testConnection(endpoint: Partial<Endpoint>): Promise<{ success: boolean; status?: number; message?: string }> {
@@ -420,7 +477,7 @@ export const MonitoringService = {
           const cert = fs.readFileSync(auth.certPath)
           agentOptions.pfx = cert
           agentOptions.passphrase = auth.passphrase || ''
-          agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? !defaultRejectUnauthorized
+          agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? defaultRejectUnauthorized
         }
       }
       config.httpsAgent = new https.Agent(agentOptions)
@@ -479,6 +536,10 @@ export const MonitoringService = {
       }
     } catch (err: any) {
       return { success: false, message: err.message || 'Connection failed' }
+    } finally {
+      // P16-3: Always remove test-temp entries — prevents indefinite Map growth on repeated test clicks
+      oauth2Cache.delete('test-temp')
+      cookieJars.delete('test-temp')
     }
   }
 }

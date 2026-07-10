@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, clipboard, Tray, Menu, nativeImage } from 'electron'
+import { app, BrowserWindow, ipcMain, clipboard, Tray, Menu, nativeImage, safeStorage } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
 import axios from 'axios'
 import * as fs from 'fs'
+import * as tls from 'tls'
 import DatabaseService from './database'
 import MonitoringService from './monitoring'
 import { Endpoint, Log } from '../src/types'
@@ -42,6 +43,82 @@ if (!gotTheLock) {
   })
 }
 
+// --- Security helpers (P16-6: SMTP password encryption, P16-7: Webhook SSRF guard) ---
+
+/**
+ * SSRF guard: validates that a webhook URL is safe to POST to.
+ * Blocks non-HTTPS protocols and loopback / RFC-1918 private addresses.
+ */
+function validateWebhookUrl(url: string): { valid: boolean; reason?: string } {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return { valid: false, reason: 'Invalid URL format' }
+  }
+  if (parsed.protocol !== 'https:') {
+    return { valid: false, reason: 'Only HTTPS webhook URLs are permitted' }
+  }
+  const h = parsed.hostname
+  if (h === 'localhost' || h === '127.0.0.1' || h === '::1') {
+    return { valid: false, reason: 'Loopback addresses are not permitted' }
+  }
+  const ipv4 = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
+  if (ipv4) {
+    const [, a, b] = ipv4.map(Number)
+    if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) {
+      return { valid: false, reason: 'Private network addresses are not permitted' }
+    }
+  }
+  return { valid: true }
+}
+
+/**
+ * Reads and decrypts the SMTP password from the settings store.
+ * Transparently migrates legacy plaintext entries to encrypted on first access.
+ */
+function getDecryptedSmtpPass(): string {
+  const encryptedB64 = mainStore.get('smtpPassEncrypted', '') as string
+  if (encryptedB64) {
+    try {
+      return safeStorage.decryptString(Buffer.from(encryptedB64, 'base64'))
+    } catch {
+      return ''
+    }
+  }
+  // Legacy migration: if a plaintext smtpPass exists, encrypt it on the fly
+  const legacy = mainStore.get('smtpPass', '') as string
+  if (legacy && safeStorage.isEncryptionAvailable()) {
+    try {
+      mainStore.set('smtpPassEncrypted', safeStorage.encryptString(legacy).toString('base64'))
+      mainStore.delete('smtpPass')
+    } catch { /* migration failed — will be cleared on next explicit save */ }
+    return legacy
+  }
+  return legacy
+}
+
+/**
+ * Encrypts and persists the SMTP password.
+ * Always removes any legacy plaintext entry regardless of outcome.
+ */
+function setEncryptedSmtpPass(plaintext: string): void {
+  mainStore.delete('smtpPass') // always remove legacy plaintext key
+  if (!plaintext) {
+    mainStore.delete('smtpPassEncrypted')
+    return
+  }
+  if (!safeStorage.isEncryptionAvailable()) {
+    console.error('[security] safeStorage unavailable — SMTP password not persisted')
+    return
+  }
+  try {
+    mainStore.set('smtpPassEncrypted', safeStorage.encryptString(plaintext).toString('base64'))
+  } catch (e) {
+    console.error('[security] Failed to encrypt SMTP password:', e)
+  }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 750,
@@ -58,7 +135,7 @@ function createWindow() {
   mainWindow.setMenuBarVisibility(false)
 
   mainWindow.on('close', (event) => {
-    if (!isQuitting) {
+    if (!isQuitting && mainStore.get('minimizeTray', true)) {
       event.preventDefault()
       mainWindow.hide()
     }
@@ -69,6 +146,22 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+}
+
+// Shared by the scheduled weekly auto-export and the on-demand "Export CSV" button on Reports
+function buildLogsCsv(): string {
+  const logs = DatabaseService.getLogs()
+  const headers = ['Timestamp', 'Type', 'Status', 'Message', 'Endpoint']
+  return [
+    headers.join(','),
+    ...logs.map(l => [
+      `"${l.timestamp}"`,
+      `"${l.type}"`,
+      `"${l.success ? 'Success' : 'Error'}"`,
+      `"${(l.message || '').replace(/"/g, '""')}"`,
+      `"${(l.endpointName || '').replace(/"/g, '""')}"`
+    ].join(','))
+  ].join('\n')
 }
 
 app.whenReady().then(() => {
@@ -98,18 +191,7 @@ app.whenReady().then(() => {
           if (Date.now() - lastExportTime > 604800000) {
             const logs = DatabaseService.getLogs()
             if (logs.length > 0) {
-              const headers = ['Timestamp', 'Type', 'Status', 'Message', 'Endpoint']
-              const csv = [
-                headers.join(','),
-                ...logs.map(l => [
-                  `"${l.timestamp}"`,
-                  `"${l.type}"`,
-                  `"${l.success ? 'Success' : 'Error'}"`,
-                  `"${(l.message || '').replace(/"/g, '""')}"`,
-                  `"${(l.endpointName || '').replace(/"/g, '""')}"`
-                ].join(','))
-              ].join('\n')
-              
+              const csv = buildLogsCsv()
               const filename = `api_monitor_logs_${new Date().toISOString().split('T')[0]}.csv`
               fs.writeFileSync(join(exportPath, filename), csv)
               mainStore.set('lastExportTime', Date.now())
@@ -164,6 +246,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('get-logs', () => DatabaseService.getLogs())
+  ipcMain.handle('export-logs-csv', () => buildLogsCsv())
   ipcMain.handle('clear-logs', () => {
     DatabaseService.clearLogs()
     return { success: true }
@@ -181,17 +264,16 @@ app.whenReady().then(() => {
     return { success }
   })
 
-  // Certificate validator
+  // Certificate validator — P16-8: actually parses the PFX with the provided passphrase
   ipcMain.handle('validate-certificate', (_, { path, passphrase }) => {
     try {
-      const fs = require('fs')
-      if (fs.existsSync(path)) {
-        return true
-      }
+      if (!fs.existsSync(path)) return false
+      const pfxData = fs.readFileSync(path)
+      tls.createSecureContext({ pfx: pfxData, passphrase: passphrase || '' })
+      return true
     } catch {
       return false
     }
-    return false
   })
 
   // Auth tester
@@ -249,7 +331,7 @@ app.whenReady().then(() => {
       smtpServer: mainStore.get('smtpServer', 'smtp.company.com'),
       smtpPort: mainStore.get('smtpPort', '587'),
       smtpUser: mainStore.get('smtpUser', ''),
-      smtpPass: mainStore.get('smtpPass', ''),
+      smtpPass: getDecryptedSmtpPass(),
       notifyEmail: mainStore.get('notifyEmail', 'admin@company.com'),
       globalWebhook: mainStore.get('globalWebhook', ''),
       globalWebhookChannel: mainStore.get('globalWebhookChannel', 'msteams'),
@@ -257,16 +339,27 @@ app.whenReady().then(() => {
       maintenanceMode: mainStore.get('maintenanceMode', false),
       autoExportLogs: mainStore.get('autoExportLogs', false),
       exportPath: mainStore.get('exportPath', ''),
-      autoUpdatesEnabled: mainStore.get('autoUpdatesEnabled', false)
+      autoUpdatesEnabled: mainStore.get('autoUpdatesEnabled', false),
+      alertThreshold: mainStore.get('alertThreshold', 2),
+      smtpAllowSelfSigned: mainStore.get('smtpAllowSelfSigned', false),
+      minimizeTray: mainStore.get('minimizeTray', true)
     }
   })
 
   ipcMain.handle('save-settings', (_, settings: any) => {
+    // P16-7: Validate webhook URL before persisting (SSRF guard)
+    if (settings.globalWebhook) {
+      const webhookCheck = validateWebhookUrl(settings.globalWebhook)
+      if (!webhookCheck.valid) {
+        return { success: false, message: `Webhook URL rejected: ${webhookCheck.reason}` }
+      }
+    }
+
     mainStore.set('nativeNotify', settings.nativeNotify)
     mainStore.set('smtpServer', settings.smtpServer)
     mainStore.set('smtpPort', settings.smtpPort)
     mainStore.set('smtpUser', settings.smtpUser)
-    mainStore.set('smtpPass', settings.smtpPass)
+    setEncryptedSmtpPass(settings.smtpPass ?? '')
     mainStore.set('notifyEmail', settings.notifyEmail)
     mainStore.set('globalWebhook', settings.globalWebhook)
     mainStore.set('globalWebhookChannel', settings.globalWebhookChannel)
@@ -275,6 +368,9 @@ app.whenReady().then(() => {
     mainStore.set('autoExportLogs', settings.autoExportLogs)
     mainStore.set('exportPath', settings.exportPath)
     mainStore.set('autoUpdatesEnabled', settings.autoUpdatesEnabled)
+    mainStore.set('alertThreshold', parseInt(String(settings.alertThreshold), 10) || 2)
+    mainStore.set('smtpAllowSelfSigned', settings.smtpAllowSelfSigned === true)
+    mainStore.set('minimizeTray', settings.minimizeTray !== false) // default true
 
     if (app.setLoginItemSettings) {
       app.setLoginItemSettings({
@@ -287,6 +383,11 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('send-test-alert', async (_, { webhookUrl, channelType }) => {
+    // P16-7: Validate before any outbound request — primary SSRF guard
+    const urlCheck = validateWebhookUrl(webhookUrl)
+    if (!urlCheck.valid) {
+      return { success: false, message: `Webhook URL rejected: ${urlCheck.reason}` }
+    }
     try {
       let payload: any = {}
       const testMsg = `🧪 **[API Monitor Test Alert]** This is a simulated alert connection test.`
@@ -309,13 +410,14 @@ app.whenReady().then(() => {
       const smtpServer = mainStore.get('smtpServer', '')
       const smtpPort = mainStore.get('smtpPort', '587')
       const smtpUser = mainStore.get('smtpUser', '')
-      const smtpPass = mainStore.get('smtpPass', '')
+      const smtpPass = getDecryptedSmtpPass()
       const notifyEmail = mainStore.get('notifyEmail', '')
 
       if (!smtpServer || !notifyEmail) {
         throw new Error('SMTP Server and Recipient Email are required.')
       }
 
+      const smtpAllowSelfSigned = mainStore.get('smtpAllowSelfSigned', false) === true
       const nodemailer = require('nodemailer')
       const transporter = nodemailer.createTransport({
         host: smtpServer,
@@ -324,7 +426,8 @@ app.whenReady().then(() => {
         auth: (smtpUser && smtpPass) ? {
           user: smtpUser,
           pass: smtpPass
-        } : undefined
+        } : undefined,
+        tls: { rejectUnauthorized: !smtpAllowSelfSigned }
       })
 
       const emails = notifyEmail.split(',').map((e: string) => e.trim()).filter(Boolean)
@@ -417,11 +520,10 @@ app.whenReady().then(() => {
           }
         } 
       },
-      { label: 'Check All Endpoints Now', click: async () => {
+      { label: 'Check All Endpoints Now', click: () => {
+          // P16-15: run all checks in parallel instead of sequentially
           const endpointsList = DatabaseService.getEndpoints()
-          for (const ep of endpointsList) {
-            await MonitoringService.checkEndpoint(ep.id)
-          }
+          Promise.all(endpointsList.map(ep => MonitoringService.checkEndpoint(ep.id))).catch(console.error)
         }
       },
       { type: 'separator' },
@@ -437,7 +539,13 @@ app.whenReady().then(() => {
   }
   
   updateTrayMenu()
-  MonitoringService.onStateChange = updateTrayMenu
+  MonitoringService.onStateChange = () => {
+    updateTrayMenu()
+    // P16-14: push state-changed event to renderer so UI refreshes without polling
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('state-changed')
+    }
+  }
 
   createWindow()
 

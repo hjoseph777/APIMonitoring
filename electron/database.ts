@@ -263,10 +263,9 @@ export const DatabaseService = {
 
   clearLogs() {
     if (useSqlite) {
-      dbInstance.prepare('DELETE FROM logs WHERE type = "xerox"').run()
+      dbInstance.prepare('DELETE FROM logs').run()
     } else {
-      const logs = this.getLogs().filter((l) => l.type !== 'xerox')
-      store.set('logs', logs)
+      store.set('logs', [])
     }
   },
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Download, Upload, Mail, Webhook, Cpu, Send, AlertTriangle, Play, Trash2, ShieldAlert } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
 import { useMonitoringStore } from '../store/monitoringStore'
+import { Panel } from './ui/Panel'
 
 export function NotificationJson() {
   const { addToast } = useToast()
@@ -22,9 +23,13 @@ export function NotificationJson() {
   const [autoExportLogs, setAutoExportLogs] = useState(false)
   const [exportPath, setExportPath] = useState('')
   const [autoUpdatesEnabled, setAutoUpdatesEnabled] = useState(false)
+  const [smtpAllowSelfSigned, setSmtpAllowSelfSigned] = useState(false)
+  // Preserve alertThreshold across saves (NotificationJson doesn’t own that setting)
+  const alertThresholdRef = React.useRef(2)
+  const minimizeTrayRef = React.useRef(true) // preserved across saves — NotificationJson doesn’t own this setting
   const [isWipeModalOpen, setIsWipeModalOpen] = useState(false)
   const [wipeConfirmInput, setWipeConfirmInput] = useState('')
-  
+
   // Loading/testing states
   const [saving, setSaving] = useState(false)
   const [testingWebhook, setTestingWebhook] = useState(false)
@@ -49,6 +54,9 @@ export function NotificationJson() {
           setAutoExportLogs(settings.autoExportLogs || false)
           setExportPath(settings.exportPath || '')
           setAutoUpdatesEnabled(settings.autoUpdatesEnabled || false)
+          setSmtpAllowSelfSigned(settings.smtpAllowSelfSigned || false)
+          alertThresholdRef.current = settings.alertThreshold ?? 2
+          minimizeTrayRef.current = settings.minimizeTray ?? true
         } catch (err: any) {
           console.error('Failed to load settings', err)
         }
@@ -75,7 +83,10 @@ export function NotificationJson() {
         maintenanceMode,
         autoExportLogs,
         exportPath,
-        autoUpdatesEnabled
+        autoUpdatesEnabled,
+        smtpAllowSelfSigned,
+        alertThreshold: alertThresholdRef.current,
+        minimizeTray: minimizeTrayRef.current
       })
       addToast('System settings saved successfully.', 'success')
     } catch (err: any) {
@@ -136,7 +147,10 @@ export function NotificationJson() {
           maintenanceMode,
           autoExportLogs,
           exportPath,
-          autoUpdatesEnabled
+          autoUpdatesEnabled,
+          smtpAllowSelfSigned,
+          alertThreshold: alertThresholdRef.current,
+          minimizeTray: minimizeTrayRef.current
         })
 
         const res = await window.electronAPI.sendTestEmail()
@@ -246,202 +260,219 @@ export function NotificationJson() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 text-xs">
-      
-      {/* Notifications */}
-      <SettingsSection title="System Notifications">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-3">
-              <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">SMTP Server Host</label>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={smtpServer}
-                  onChange={(e) => setSmtpServer(e.target.value)}
-                  placeholder="smtp.gmail.com"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
-                />
-              </div>
-            </div>
-            <div className="md:col-span-1">
-              <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">Port</label>
-              <input
-                type="text"
-                value={smtpPort}
-                onChange={(e) => setSmtpPort(e.target.value)}
-                placeholder="587"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">SMTP Username</label>
-              <input
-                type="text"
-                value={smtpUser}
-                onChange={(e) => setSmtpUser(e.target.value)}
-                placeholder="user@example.com"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
-              />
-            </div>
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">SMTP Password / App Password</label>
-              <input
-                type="password"
-                value={smtpPass}
-                onChange={(e) => setSmtpPass(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">Recipient Alert Emails</label>
+      {/* Alert Delivery */}
+      <Panel title="Alert Delivery" bodyClassName="p-5 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="md:col-span-3">
+            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">SMTP Server Host</label>
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-slate-400 shrink-0" />
               <input
                 type="text"
-                value={notifyEmail}
-                onChange={(e) => setNotifyEmail(e.target.value)}
-                placeholder="admin@company.com, alerts@company.com"
+                value={smtpServer}
+                onChange={(e) => setSmtpServer(e.target.value)}
+                placeholder="smtp.gmail.com"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+              />
+            </div>
+          </div>
+          <div className="md:col-span-1">
+            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">Port</label>
+            <input
+              type="text"
+              value={smtpPort}
+              onChange={(e) => setSmtpPort(e.target.value)}
+              placeholder="587"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">SMTP Username</label>
+            <input
+              type="text"
+              value={smtpUser}
+              onChange={(e) => setSmtpUser(e.target.value)}
+              placeholder="user@example.com"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">SMTP Password / App Password</label>
+            <input
+              type="password"
+              value={smtpPass}
+              onChange={(e) => setSmtpPass(e.target.value)}
+              placeholder="••••••••"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+            />
+          </div>
+        </div>
+
+        {/* P16-9: Allow self-signed / untrusted SMTP certificates for internal mail relays */}
+        <div className="flex flex-wrap items-center gap-2.5 py-1.5 px-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={smtpAllowSelfSigned}
+              onChange={(e) => setSmtpAllowSelfSigned(e.target.checked)}
+              className="rounded border-slate-400 text-amber-500 focus:ring-amber-500 dark:bg-slate-950 dark:border-slate-800"
+            />
+            <span className="text-slate-500 dark:text-amber-300/80 font-semibold text-xs">
+              Allow self-signed / untrusted SMTP certificates
+            </span>
+          </label>
+          <span className="text-xs text-slate-400 italic ml-auto hidden sm:block">
+            Enable for internal corporate mail relays with private-CA certificates
+          </span>
+        </div>
+
+        <div>
+          <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">Recipient Alert Emails</label>
+          <div className="flex items-center gap-2">
+            <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              value={notifyEmail}
+              onChange={(e) => setNotifyEmail(e.target.value)}
+              placeholder="admin@company.com, alerts@company.com"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+            />
+            <button
+              type="button"
+              onClick={handleTestEmail}
+              disabled={testingEmail || !smtpServer || !notifyEmail}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-primary)] hover:opacity-80 disabled:opacity-50 border border-[var(--border-color)] text-slate-700 dark:text-slate-200 rounded-lg font-bold transition-all shrink-0 cursor-pointer"
+              title="Send test email"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Test
+            </button>
+          </div>
+          <span className="text-xs text-slate-400 mt-1 block">Separate multiple addresses with commas &middot; Test saves your current settings first</span>
+        </div>
+
+        <div className="border-t border-[var(--border-color)] pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">Channel Type</label>
+            <select
+              value={globalWebhookChannel}
+              onChange={(e) => setGlobalWebhookChannel(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400 cursor-pointer"
+            >
+              <option value="msteams">MS Teams / Office 365</option>
+              <option value="discord">Discord Webhook</option>
+              <option value="slack">Slack Incoming</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-xs">Chat Webhook URL</label>
+            <div className="flex items-center gap-2">
+              <Webhook className="w-4 h-4 text-slate-400 shrink-0" />
+              <input
+                type="text"
+                value={globalWebhook}
+                onChange={(e) => setGlobalWebhook(e.target.value)}
+                placeholder="https://outlook.office.com/webhook/..."
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
               />
               <button
                 type="button"
-                onClick={handleTestEmail}
-                disabled={testingEmail || !smtpServer || !notifyEmail}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-primary)] hover:opacity-80 disabled:opacity-50 border border-[var(--border-color)] text-slate-700 dark:text-slate-200 rounded-lg font-bold transition-all shrink-0 cursor-pointer"
-                title="Send test email"
+                onClick={handleTestWebhook}
+                disabled={testingWebhook || !globalWebhook}
+                className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-primary)] hover:opacity-80 disabled:opacity-50 border border-[var(--border-color)] text-slate-700 dark:text-slate-200 rounded-lg font-bold transition-all shrink-0 cursor-pointer"
+                title="Send simulated test warning"
               >
                 <Send className="w-3.5 h-3.5" />
                 Test
               </button>
             </div>
-            <span className="text-[8px] text-slate-400 mt-1 block">Separate multiple addresses with commas</span>
-          </div>
-
-          <div className="border-t border-[var(--border-color)] pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div>
-              <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">Channel Type</label>
-              <select
-                value={globalWebhookChannel}
-                onChange={(e) => setGlobalWebhookChannel(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400 cursor-pointer"
-              >
-                <option value="msteams">MS Teams / Office 365</option>
-                <option value="discord">Discord Webhook</option>
-                <option value="slack">Slack Incoming</option>
-              </select>
-            </div>
-            
-            <div className="md:col-span-2">
-              <label className="block text-slate-300 font-semibold mb-1.5 uppercase tracking-wider text-[9px]">Chat Webhook URL</label>
-              <div className="flex items-center gap-2">
-                <Webhook className="w-4 h-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={globalWebhook}
-                  onChange={(e) => setGlobalWebhook(e.target.value)}
-                  placeholder="https://outlook.office.com/webhook/..."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
-                />
-                <button
-                  type="button"
-                  onClick={handleTestWebhook}
-                  disabled={testingWebhook || !globalWebhook}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-[var(--bg-primary)] hover:opacity-80 disabled:opacity-50 border border-[var(--border-color)] text-slate-700 dark:text-slate-200 rounded-lg font-bold transition-all shrink-0 cursor-pointer"
-                  title="Send simulated test warning"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  Test
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <div className="flex flex-col gap-3 mt-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={nativeNotify}
-                  onChange={(e) => setNativeNotify(e.target.checked)}
-                  className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
-                />
-                <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable native OS toast notifications</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={runAtStartup}
-                  onChange={(e) => setRunAtStartup(e.target.checked)}
-                  className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
-                />
-                <span className="text-slate-650 dark:text-slate-350 font-semibold">Launch at System Startup (Windows/macOS)</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoUpdatesEnabled}
-                  onChange={(e) => setAutoUpdatesEnabled(e.target.checked)}
-                  className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
-                />
-                <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Electron Seamless Auto-Updates</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={maintenanceMode}
-                  onChange={(e) => setMaintenanceMode(e.target.checked)}
-                  className="rounded border-slate-350 text-rose-500 focus:ring-rose-500 dark:bg-slate-950 dark:border-slate-800"
-                />
-                <span className="text-rose-600 dark:text-rose-400 font-bold">Enable Maintenance Mode (Pauses all monitoring loops)</span>
-              </label>
-              
-              <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 mt-1">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={autoExportLogs}
-                    onChange={(e) => setAutoExportLogs(e.target.checked)}
-                    className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
-                  />
-                  <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Weekly Auto-Export (CSV)</span>
-                </label>
-                {autoExportLogs && (
-                  <div className="flex items-center gap-2 mt-2 ml-5">
-                    <input
-                      type="text"
-                      value={exportPath}
-                      onChange={(e) => setExportPath(e.target.value)}
-                      placeholder="e.g. C:\Users\Admin\Documents\API_Reports"
-                      className="w-full md:w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <button
-              onClick={handleSaveSettings}
-              disabled={saving}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-sm cursor-pointer disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save Settings'}
-            </button>
+            <span className="text-xs text-slate-400 mt-1 block">Test saves your current settings first, then sends a simulated alert</span>
           </div>
         </div>
-      </SettingsSection>
 
-      {/* Data Management */}
-      <SettingsSection title="Backup & Data Controls">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex flex-col gap-3 mt-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={nativeNotify}
+                onChange={(e) => setNativeNotify(e.target.checked)}
+                className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+              />
+              <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable native OS toast notifications</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={runAtStartup}
+                onChange={(e) => setRunAtStartup(e.target.checked)}
+                className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+              />
+              <span className="text-slate-650 dark:text-slate-350 font-semibold">Launch at System Startup (Windows/macOS)</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoUpdatesEnabled}
+                onChange={(e) => setAutoUpdatesEnabled(e.target.checked)}
+                className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+              />
+              <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Electron Seamless Auto-Updates</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={maintenanceMode}
+                onChange={(e) => setMaintenanceMode(e.target.checked)}
+                className="rounded border-slate-350 text-rose-500 focus:ring-rose-500 dark:bg-slate-950 dark:border-slate-800"
+              />
+              <span className="text-rose-600 dark:text-rose-400 font-bold">Enable Maintenance Mode (Pauses all monitoring loops)</span>
+            </label>
+
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800/60 mt-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoExportLogs}
+                  onChange={(e) => setAutoExportLogs(e.target.checked)}
+                  className="rounded border-slate-350 text-blue-600 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800"
+                />
+                <span className="text-slate-650 dark:text-slate-350 font-semibold">Enable Weekly Auto-Export (CSV)</span>
+              </label>
+              {autoExportLogs && (
+                <div className="flex items-center gap-2 mt-2 ml-5">
+                  <input
+                    type="text"
+                    value={exportPath}
+                    onChange={(e) => setExportPath(e.target.value)}
+                    placeholder="e.g. C:\Users\Admin\Documents\API_Reports"
+                    className="w-full md:w-3/4 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white focus:outline-none focus:border-blue-400"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <button
+            onClick={handleSaveSettings}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-sm cursor-pointer disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+      </Panel>
+
+      {/* Backup & Data */}
+      <Panel title="Backup & Data" bodyClassName="p-5">
         <div className="flex flex-wrap gap-2.5">
           <button
             onClick={handleExport}
@@ -457,53 +488,62 @@ export function NotificationJson() {
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
           </label>
         </div>
+      </Panel>
 
-        <div className="border-t border-slate-200 dark:border-slate-800/60 pt-3">
+      {/* Danger Zone — demo/synthetic tooling and the one irreversible action, kept visually apart from routine settings */}
+      <Panel danger title="Danger Zone" bodyClassName="p-5 space-y-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="font-bold text-slate-700 dark:text-slate-200">Demo &amp; Test Data</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
+              not for production endpoints
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 mb-2.5">Injects synthetic endpoints to preview alerting &mdash; does not touch your real monitors.</p>
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              onClick={() => handleSeedDemo('green')}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg font-semibold transition-all cursor-pointer"
+              title="Injects 4 100% online endpoints"
+            >
+              <Play className="w-3.5 h-3.5" />
+              Seed Healthy (4)
+            </button>
+            <button
+              onClick={() => handleSeedDemo('mixed')}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg font-semibold transition-all cursor-pointer"
+              title="Injects 2 online and 2 offline endpoints to trigger SMTP emails"
+            >
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Seed Mixed (2 Good, 2 Err)
+            </button>
+            <button
+              onClick={handleClearDemo}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-lg font-semibold transition-all cursor-pointer"
+              title="Remove all seed- prefixed demo data"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear Seed Data
+            </button>
+          </div>
+        </div>
+
+        <div className="border-t border-rose-500/20 pt-4 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="font-bold text-slate-700 dark:text-slate-200">Wipe Database Records</div>
+            <p className="text-xs text-slate-400">Permanently deletes all registered endpoints, alerts, and audit logs. This cannot be undone.</p>
+          </div>
           <button
             onClick={() => setIsWipeModalOpen(true)}
-            className="px-3 py-1.5 border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 rounded-lg font-semibold transition-all cursor-pointer"
+            className="px-3 py-1.5 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg font-bold transition-all cursor-pointer shrink-0"
           >
-            Wipe Database Records
+            Wipe Database&hellip;
           </button>
         </div>
-      </SettingsSection>
-
-      {/* Demonstration Tools */}
-      <SettingsSection title="Demonstration Tools">
-        <div className="flex flex-wrap gap-2.5">
-          <button
-            onClick={() => handleSeedDemo('green')}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg font-semibold transition-all cursor-pointer"
-            title="Injects 4 100% online endpoints"
-          >
-            <Play className="w-3.5 h-3.5" />
-            Seed Healthy (4)
-          </button>
-
-          <button
-            onClick={() => handleSeedDemo('mixed')}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-lg font-semibold transition-all cursor-pointer"
-            title="Injects 2 online and 2 offline endpoints to trigger SMTP emails"
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            Seed Mixed (2 Good, 2 Err)
-          </button>
-        </div>
-
-        <div className="border-t border-slate-200 dark:border-slate-800/60 pt-3 mt-4">
-          <button
-            onClick={handleClearDemo}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-lg font-semibold transition-all cursor-pointer"
-            title="Remove all seed- prefixed demo data"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Clear Seed Data
-          </button>
-        </div>
-      </SettingsSection>
+      </Panel>
 
       {/* About */}
-      <SettingsSection title="System Info">
+      <Panel title="System Info" bodyClassName="p-5">
         <div className="flex items-center gap-4 text-slate-400 dark:text-slate-300 font-medium">
           <div className="flex items-center gap-1">
             <Cpu className="w-3.5 h-3.5 text-slate-400" />
@@ -512,7 +552,7 @@ export function NotificationJson() {
           <span>•</span>
           <span>Engine: Electron + React + SQLite</span>
         </div>
-      </SettingsSection>
+      </Panel>
 
       {/* Safety Wiping Modal */}
       {isWipeModalOpen && (
@@ -522,13 +562,13 @@ export function NotificationJson() {
               <AlertTriangle className="w-5 h-5 shrink-0" />
               <h4 className="font-extrabold text-sm uppercase tracking-wider">Destructive Operation</h4>
             </div>
-            
-            <p className="text-slate-400 dark:text-slate-300 leading-relaxed text-[11px] select-text">
+
+            <p className="text-slate-400 dark:text-slate-300 leading-relaxed text-xs select-text">
               This action will permanently wipe all registered endpoints, stored alerts, and audit logs. This cannot be undone.
             </p>
 
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase font-bold text-slate-300">
+              <label className="block text-xs uppercase font-bold text-slate-300">
                 Type <span className="font-mono text-rose-500">DELETE</span> to confirm:
               </label>
               <input
@@ -562,22 +602,6 @@ export function NotificationJson() {
         </div>
       )}
 
-    </div>
-  )
-}
-
-/* Helper settings wrapper section widget */
-interface SettingsSectionProps {
-  title: string
-  children: React.ReactNode
-}
-function SettingsSection({ title, children }: SettingsSectionProps) {
-  return (
-    <div className="glass-panel p-5 rounded-2xl border space-y-3.5 bg-white/20 dark:bg-slate-900/10 border-slate-200 dark:border-slate-800 shadow-sm">
-      <h3 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800 pb-1.5">
-        {title}
-      </h3>
-      {children}
     </div>
   )
 }

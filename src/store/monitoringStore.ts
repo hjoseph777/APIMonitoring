@@ -1,20 +1,27 @@
 import { create } from 'zustand'
 import { Endpoint, Alert, Log } from '../types'
+import { computeFleetStats } from '../lib/fleetStats'
+
+export interface FleetSnapshot {
+  total: number
+  online: number
+  down: number
+  degraded: number
+  capturedAt: number
+}
+
+const SNAPSHOT_KEY = 'fleet-snapshot'
+const SNAPSHOT_STALE_MS = 15 * 60 * 1000
 
 interface MonitoringState {
   endpoints: Endpoint[]
   alerts: Alert[]
   logs: Log[]
-  loading: boolean
-
-  // Actions
-  setEndpoints: (endpoints: Endpoint[]) => void
-  setAlerts: (alerts: Alert[]) => void
-  setLogs: (logs: Log[]) => void
-  setLoading: (loading: boolean) => void
+  snapshot: FleetSnapshot | null
 
   // Async Methods
   addEndpoint: (newEp: any) => Promise<void>
+  updateEndpoint: (id: string, changes: any) => Promise<void>
   deleteEndpoint: (id: string) => Promise<void>
   refreshEndpoint: (id: string) => Promise<void>
   clearAllAlerts: () => Promise<void>
@@ -22,26 +29,22 @@ interface MonitoringState {
   markAlertAsRead: (id: string) => Promise<void>
   archiveAlerts: () => Promise<void>
   clearLogs: () => Promise<void>
-  copyText: (text: string, endpointName?: string) => Promise<boolean>
   refetchData: () => Promise<void>
+  // Rolls the KPI trend baseline forward once SNAPSHOT_STALE_MS has elapsed; a no-op otherwise
+  maybeRefreshSnapshot: () => void
 }
 
 export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   endpoints: [],
   alerts: [],
   logs: [],
-  loading: true,
-
-  setEndpoints: (endpoints) => set({ endpoints, loading: false }),
-  setAlerts: (alerts) => set({ alerts }),
-  setLogs: (logs) => set({ logs }),
-  setLoading: (loading) => set({ loading }),
+  snapshot: null,
 
   refetchData: async () => {
     if (window.electronAPI) {
       try {
         const endpointsData = await window.electronAPI.getEndpoints()
-        set({ endpoints: endpointsData || [], loading: false })
+        set({ endpoints: endpointsData || [] })
 
         const alertsData = await window.electronAPI.getAlerts()
         set({ alerts: alertsData || [] })
@@ -71,6 +74,27 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
     if (window.electronAPI) {
       await window.electronAPI.saveEndpoint(created)
+      await get().refetchData()
+    }
+  },
+
+  // saveEndpoint is INSERT OR REPLACE keyed by id, so editing just re-saves the same id
+  // with changed fields — no new IPC channel needed.
+  updateEndpoint: async (id: string, changes: any) => {
+    const existing = get().endpoints.find(e => e.id === id)
+    if (!existing) return
+    const updated: Endpoint = {
+      ...existing,
+      name: changes.name ?? existing.name,
+      url: changes.url ?? existing.url,
+      interval: changes.interval ?? existing.interval,
+      authType: changes.authType ?? existing.authType,
+      authConfig: changes.authConfig ?? existing.authConfig,
+      timeout: changes.timeout ?? existing.timeout,
+      allowSelfSigned: changes.allowSelfSigned ?? existing.allowSelfSigned
+    }
+    if (window.electronAPI) {
+      await window.electronAPI.saveEndpoint(updated)
       await get().refetchData()
     }
   },
@@ -124,12 +148,21 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
   },
 
-  copyText: async (text: string, endpointName?: string): Promise<boolean> => {
-    if (window.electronAPI) {
-      const res = await window.electronAPI.copyToClipboard(text, endpointName)
-      await get().refetchData()
-      return res.success
+  maybeRefreshSnapshot: () => {
+    const now = Date.now()
+    let snap: FleetSnapshot | null = null
+    try {
+      const raw = localStorage.getItem(SNAPSHOT_KEY)
+      snap = raw ? JSON.parse(raw) : null
+    } catch {
+      snap = null
     }
-    return false
+
+    if (!snap || now - snap.capturedAt > SNAPSHOT_STALE_MS) {
+      const stats = computeFleetStats(get().endpoints)
+      snap = { total: stats.total, online: stats.online, down: stats.down, degraded: stats.degraded, capturedAt: now }
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap))
+    }
+    set({ snapshot: snap })
   }
 }))

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Bell, ShieldCheck, Terminal, Monitor, Cpu, Sun, Moon, BarChart3, Settings, Database } from 'lucide-react'
+import { Bell, ShieldCheck, ShieldAlert, Terminal, Monitor, Cpu, Sun, Moon, BarChart3, Settings, Database, CheckCircle2 } from 'lucide-react'
+import { useMonitoringStore } from '../store/monitoringStore'
+import { Pill } from './ui/Pill'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -7,13 +9,20 @@ interface LayoutProps {
   setActiveTab: (tab: string) => void
   alertCount: number
   systemStatus: 'online' | 'warning' | 'offline'
+  lastSync?: string
+  tlsSummary: { total: number; selfSigned: number }
 }
 
-export function Layout({ children, activeTab, setActiveTab, alertCount, systemStatus }: LayoutProps) {
+export function Layout({ children, activeTab, setActiveTab, alertCount, systemStatus, lastSync, tlsSummary }: LayoutProps) {
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('theme')
     return saved !== 'light' // Default to dark mode
   })
+  const [bellOpen, setBellOpen] = useState(false)
+
+  const alerts = useMonitoringStore(state => state.alerts)
+  const markAlertAsRead = useMonitoringStore(state => state.markAlertAsRead)
+  const unreadAlerts = alerts.filter(a => !a.read).slice(0, 5)
 
   const toggleTheme = () => {
     setIsDark(prev => {
@@ -54,7 +63,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
 
   return (
     <div className="flex min-h-screen bg-[var(--bg-primary)] text-slate-800 dark:text-slate-100 transition-colors duration-305 select-none">
-      
+
       {/* Static Left Sidebar */}
       <aside className="w-56 bg-[var(--bg-secondary)] border-r border-[var(--border-color)] flex flex-col justify-between shrink-0 transition-colors duration-300">
         <div className="flex flex-col">
@@ -69,7 +78,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
             </div>
             <div className="flex items-baseline">
               <span className="font-extrabold text-sm tracking-tighter text-[#e51937] lowercase">xerox</span>
-              <span className="text-[9px] text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider ml-1">Monitor</span>
+              <span className="text-xs text-slate-500 dark:text-slate-300 font-bold uppercase tracking-wider ml-1">Monitor</span>
             </div>
           </div>
 
@@ -97,7 +106,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         </div>
 
         {/* Footer/Version Info in Sidebar */}
-        <div className="p-4 border-t border-[var(--border-color)] flex items-center gap-1.5 text-[9px] text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wider">
+        <div className="p-4 border-t border-[var(--border-color)] flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wider">
           <Cpu className="w-3.5 h-3.5" />
           <span>v1.0.0 (GUI v2.0)</span>
         </div>
@@ -105,33 +114,47 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
 
       {/* Right-Side Content Wrapper */}
       <div className="flex-1 flex flex-col min-w-0">
-        
+
         {/* Top Header Bar */}
         <header className="h-14 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/95 backdrop-blur-md px-6 flex items-center justify-between transition-colors duration-300">
-          
+
           {/* Status Indicators */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
               <Terminal className="w-3.5 h-3.5 text-blue-500" />
               Status:
             </span>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--bg-primary)] rounded-lg">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[var(--bg-primary)] rounded-lg shrink-0">
               <span className={`h-2 w-2 rounded-full ${getStatusColor()}`}></span>
-              <span className="text-[10px] font-extrabold uppercase text-slate-600 dark:text-slate-350">
+              <span className="text-xs font-extrabold uppercase text-slate-600 dark:text-slate-350">
                 {systemStatus === 'online' ? 'All Systems Online' : `${systemStatus === 'warning' ? 'Minor Issues' : 'Critical Outages'}`}
               </span>
             </div>
-            
-            <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-blue-500/5 border border-blue-500/10 rounded-lg text-blue-500 text-[10px] font-bold uppercase tracking-wider">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Shield Active (mTLS Bypass)
-            </div>
+
+            {lastSync && (
+              <span className="hidden md:inline text-xs text-slate-400 dark:text-slate-500 font-mono truncate">
+                &middot; Last sync {lastSync}
+              </span>
+            )}
+
+            {tlsSummary.total > 0 && (
+              <Pill tone={tlsSummary.selfSigned === 0 ? 'ok' : 'warn'} className="hidden sm:inline-flex">
+                {tlsSummary.selfSigned === 0 ? (
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                ) : (
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                )}
+                {tlsSummary.selfSigned === 0
+                  ? 'TLS Verified'
+                  : `${tlsSummary.selfSigned} of ${tlsSummary.total} allow self-signed`}
+              </Pill>
+            )}
           </div>
 
           {/* Action Tools */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Theme Toggle */}
-            <button 
+            <button
               onClick={toggleTheme}
               className="p-2 text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl transition-all duration-200 cursor-pointer"
               title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -140,14 +163,51 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
             </button>
 
             {/* Notification Bell */}
-            <button className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl transition-all duration-200 cursor-pointer">
-              <Bell className="w-3.5 h-3.5" />
-              {alertCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
-                  {alertCount}
-                </span>
+            <div className="relative">
+              <button
+                onClick={() => setBellOpen(prev => !prev)}
+                className="relative p-2 text-slate-600 hover:text-slate-900 dark:text-slate-200 dark:hover:text-white bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl transition-all duration-200 cursor-pointer"
+                title="Alerts"
+              >
+                <Bell className="w-3.5 h-3.5" />
+                {alertCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
+                    {alertCount}
+                  </span>
+                )}
+              </button>
+
+              {bellOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setBellOpen(false)} />
+                  <div className="absolute right-0 top-11 w-72 z-50 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xl overflow-hidden">
+                    <div className="px-3.5 py-2.5 border-b border-[var(--border-color)] text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      {unreadAlerts.length > 0 ? `${unreadAlerts.length} unread alert${unreadAlerts.length > 1 ? 's' : ''}` : 'Alerts'}
+                    </div>
+                    <div className="max-h-72 overflow-y-auto">
+                      {unreadAlerts.length === 0 ? (
+                        <div className="px-3.5 py-6 flex flex-col items-center gap-1.5 text-center">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs text-slate-500 dark:text-slate-400">No new alerts</span>
+                        </div>
+                      ) : (
+                        unreadAlerts.map(alert => (
+                          <button
+                            key={alert.id}
+                            onClick={() => markAlertAsRead(alert.id)}
+                            className="w-full text-left px-3.5 py-2.5 border-b border-[var(--border-color)] last:border-b-0 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
+                            title="Click to mark as read"
+                          >
+                            <div className="text-xs font-bold text-slate-700 dark:text-slate-200">{alert.endpointName}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{alert.message}</div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
-            </button>
+            </div>
           </div>
         </header>
 
@@ -157,9 +217,9 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         </main>
 
         {/* Footer */}
-        <footer className="h-8 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-6 flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400">
+        <footer className="h-8 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-6 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>Xerox API Engine Running</span>
-          <span className="font-mono uppercase tracking-wider text-[8px]">Auto-polling active</span>
+          <span className="font-mono uppercase tracking-wider text-xs">Auto-polling active</span>
         </footer>
 
       </div>
