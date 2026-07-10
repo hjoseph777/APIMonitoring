@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Download, Upload, Mail, Webhook, Cpu, Send, AlertTriangle, Play, Trash2, ShieldAlert } from 'lucide-react'
+import { Download, Upload, Mail, Webhook, Cpu, Send, AlertTriangle, Play, Trash2, ShieldAlert, Lock } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
 import { useMonitoringStore } from '../store/monitoringStore'
 import { Panel } from './ui/Panel'
@@ -210,12 +210,13 @@ export function NotificationJson() {
   }
 
   // Demonstration operations
-  const handleSeedDemo = async (mode: 'green' | 'mixed') => {
+  const handleSeedDemo = async (mode: 'green' | 'mixed' | 'lockout') => {
     if (window.electronAPI && window.electronAPI.seedDemoData) {
       try {
         const res = await window.electronAPI.seedDemoData(mode)
         if (res.success) {
-          addToast(`Seeded ${mode === 'mixed' ? 'mixed' : 'healthy'} demo endpoints. Pinging started!`, 'success')
+          const label = mode === 'mixed' ? 'mixed' : mode === 'lockout' ? 'auth lockout' : 'healthy'
+          addToast(`Seeded ${label} demo endpoints. Pinging started!`, 'success')
           refetchData()
         } else {
           addToast('Failed to seed demo data: ' + res.message, 'error')
@@ -516,6 +517,14 @@ export function NotificationJson() {
             >
               <ShieldAlert className="w-3.5 h-3.5" />
               Seed Mixed (2 Good, 2 Err)
+            </button>
+            <button
+              onClick={() => handleSeedDemo('lockout')}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-lg font-semibold transition-all cursor-pointer"
+              title="Injects an NTLM and a Basic-auth endpoint in the Paused — Auth Lockout state, plus an OAuth2 endpoint shown as a plain Down for contrast"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Seed Auth Lockout
             </button>
             <button
               onClick={handleClearDemo}

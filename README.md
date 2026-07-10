@@ -96,6 +96,7 @@ v1.2.0 completes a full server-hardening audit covering every background code pa
 | **Credential-Leak Fix (electron-store fallback path)** | Saving or deleting one endpoint on the non-SQLite fallback path was re-persisting every *other* endpoint's credentials as decrypted plaintext. Fixed by reading/writing the raw stored array instead of round-tripping through the decrypting read path. |
 | **NTLM Requests Fixed** | `axios-ntlm` returns a configured axios instance from `NtlmClient(credentials, config)`, not a single callable request dispatcher — the previous usage pattern very likely threw at runtime on every NTLM check. Both call sites corrected. |
 | **IPv6 Loopback SSRF Check Fixed** | The webhook guard compared `URL.hostname` against a bare `'::1'`, but IPv6 literals keep their brackets (`'[::1]'`) per the URL spec — the comparison never matched. Fixed. |
+| **Resource Usage Verified Against Live Process Data** | Checked actual running `electron.exe` processes (not just architecture) after a report of sustained CPU use — found and fixed an infinite `animate-bounce` CSS animation keeping the GPU/compositor process busy indefinitely, and demo/seed endpoints that were silently on the same live recurring check loop as real endpoints, burning CPU and overwriting their own seeded state every cycle. Seed data is now a static, non-monitored snapshot. |
 
 ---
 

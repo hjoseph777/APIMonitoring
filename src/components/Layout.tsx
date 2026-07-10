@@ -171,7 +171,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
               >
                 <Bell className="w-3.5 h-3.5" />
                 {alertCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white dark:ring-slate-900 animate-bounce">
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white dark:ring-slate-900">
                     {alertCount}
                   </span>
                 )}

@@ -114,6 +114,14 @@ export const MonitoringService = {
     // Clear existing timer if any
     this.unschedule(endpoint.id)
 
+    // Demo/seed endpoints are a static snapshot for exploring the UI, not real
+    // monitors — putting them on the live recurring loop meant their mocked check
+    // silently overwrote the very state (e.g. Paused — Auth Lockout) they were
+    // seeded to demonstrate, on a resource-consuming schedule, forever.
+    if (endpoint.id.startsWith('seed-')) {
+      return
+    }
+
     // Schedule immediate/initial run loop
     const timer = setTimeout(() => this.runCheckLoop(endpoint.id), 1000)
     activeTimers.set(endpoint.id, timer)

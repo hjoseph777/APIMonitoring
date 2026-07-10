@@ -294,7 +294,7 @@ app.whenReady().then(() => {
   })
 
   // Demonstration / Seeding operations
-  ipcMain.handle('seed-demo-data', (_, mode: 'green' | 'mixed') => {
+  ipcMain.handle('seed-demo-data', (_, mode: 'green' | 'mixed' | 'lockout') => {
     try {
       DatabaseService.seedDemoData(mode)
       MonitoringService.scheduleAll()

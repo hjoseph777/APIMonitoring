@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
   sendTestAlert: (args: { webhookUrl: string; channelType: string }) => ipcRenderer.invoke('send-test-alert', args),
   sendTestEmail: () => ipcRenderer.invoke('send-test-email'),
-  seedDemoData: (mode: 'green' | 'mixed') => ipcRenderer.invoke('seed-demo-data', mode),
+  seedDemoData: (mode: 'green' | 'mixed' | 'lockout') => ipcRenderer.invoke('seed-demo-data', mode),
   clearDemoData: () => ipcRenderer.invoke('clear-demo-data'),
   // P16-14: IPC push so renderer refreshes on state change instead of polling
   onStateChanged: (callback: () => void) => ipcRenderer.on('state-changed', (_event) => callback()),

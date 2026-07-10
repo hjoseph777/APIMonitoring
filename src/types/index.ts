@@ -69,7 +69,7 @@ declare global {
       saveSettings: (settings: { nativeNotify: boolean; smtpServer: string; smtpPort: string; smtpUser: string; smtpPass: string; notifyEmail: string; globalWebhook: string; globalWebhookChannel: string; runAtStartup: boolean; maintenanceMode: boolean; autoExportLogs: boolean; exportPath: string; autoUpdatesEnabled: boolean; alertThreshold: number; smtpAllowSelfSigned: boolean; minimizeTray: boolean }) => Promise<{ success: boolean }>;
       sendTestAlert: (args: { webhookUrl: string; channelType: string }) => Promise<{ success: boolean; message?: string }>;
       sendTestEmail: () => Promise<{ success: boolean; message?: string }>;
-      seedDemoData: (mode: 'green' | 'mixed') => Promise<{ success: boolean; message?: string }>;
+      seedDemoData: (mode: 'green' | 'mixed' | 'lockout') => Promise<{ success: boolean; message?: string }>;
       clearDemoData: () => Promise<{ success: boolean; message?: string }>;
       onStateChanged: (callback: () => void) => void;
       offStateChanged: () => void;

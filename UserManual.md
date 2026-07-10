@@ -190,10 +190,15 @@ If your organization requires weekly compliance logs:
 4. The background service will automatically drop a new CSV file containing the week's logs into that folder every 7 days. This feature is disabled by default to prevent clutter.
 
 ### D. Demo Data Testing
-If you would like to test the application interface without configuring real endpoints:
-1. Go to the **Notification & JSON** tab and locate the **Backup & Data Controls** section.
-2. Click **[ Seed Demo Data ]** to populate the dashboard with test configurations. 
-3. *Note: Demo data injection is strictly manual. It will not be restored automatically upon application restart if you choose to clear it using the UI.*
+If you would like to test the application interface without configuring real endpoints, go to **Notification & JSON → Danger Zone** and choose one of three seed options:
+
+| Button | What it shows |
+|---|---|
+| **Seed Healthy (4)** | All 4 demo endpoints online. |
+| **Seed Mixed (2 Good, 2 Err)** | 2 online, 2 down — also triggers your configured SMTP/webhook alerts. |
+| **Seed Auth Lockout** | Demonstrates AD Lockout Protection: an NTLM and a Basic-auth endpoint shown in the purple **Paused — Auth Lockout** state, plus an OAuth2 endpoint shown as a plain **Down** for contrast (OAuth2 isn't covered by that protection). |
+
+*Notes:* Demo data injection is strictly manual — it will not reappear automatically after an application restart if you clear it via **Clear Seed Data**. Seed/demo endpoints are a **static snapshot**: unlike real endpoints, they are not placed on the live recurring check schedule, so the state you seed is the state you'll see until you clear or reseed it.
 
 ---
 
