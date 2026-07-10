@@ -1,8 +1,8 @@
-import { app } from 'electron'
+import { app, safeStorage } from 'electron'
 import { join } from 'path'
-import fs from 'fs'
 import Store from 'electron-store'
 import { Endpoint, Alert, Log } from '../src/types'
+import { validateBackupPayload } from './lib/backupValidation'
 
 // We will attempt to use better-sqlite3, but fallback to electron-store if native compilation is missing or fails.
 let dbInstance: any = null
@@ -10,6 +10,9 @@ let useSqlite = false
 const store = new Store()
 
 try {
+  // require(), not import — this must be inside a try/catch so a missing/failed
+  // native build falls back to electron-store, which a hoisted static import can't do.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Database = require('better-sqlite3')
   const dbPath = join(app.getPath('userData'), 'api_monitor.db')
   dbInstance = new Database(dbPath)
@@ -30,7 +33,8 @@ try {
       authConfig TEXT NOT NULL,
       responseTimeHistory TEXT,
       timeout INTEGER,
-      allow_self_signed INTEGER DEFAULT 0
+      allow_self_signed INTEGER DEFAULT 0,
+      monitoring_paused INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS alerts (
@@ -56,13 +60,19 @@ try {
   // Run migration for existing databases
   try {
     dbInstance.exec('ALTER TABLE endpoints ADD COLUMN timeout INTEGER;')
-  } catch (err) {
+  } catch {
     // Column already exists, ignore
   }
 
   try {
     dbInstance.exec('ALTER TABLE endpoints ADD COLUMN allow_self_signed INTEGER DEFAULT 0;')
-  } catch (err) {
+  } catch {
+    // Column already exists, ignore
+  }
+
+  try {
+    dbInstance.exec('ALTER TABLE endpoints ADD COLUMN monitoring_paused INTEGER DEFAULT 0;')
+  } catch {
     // Column already exists, ignore
   }
 
@@ -106,24 +116,59 @@ export const DatabaseService = {
 
   // Endpoints CRUD
   getEndpoints(): Endpoint[] {
+    const parseAuthConfig = (configStr: string) => {
+      try {
+        if (configStr.startsWith('enc:')) {
+          if (safeStorage.isEncryptionAvailable()) {
+            return JSON.parse(safeStorage.decryptString(Buffer.from(configStr.substring(4), 'base64')))
+          } else {
+            console.warn('[security] Cannot decrypt authConfig, encryption unavailable')
+            return {}
+          }
+        }
+        return JSON.parse(configStr) // Legacy plaintext fallback
+      } catch (err) {
+        console.error('[security] Failed to parse authConfig:', err)
+        return {}
+      }
+    }
+
     if (useSqlite) {
       const rows = dbInstance.prepare('SELECT * FROM endpoints').all()
       return rows.map((row: any) => ({
         ...row,
         allowSelfSigned: row.allow_self_signed === 1,
+        monitoringPaused: row.monitoring_paused === 1,
         responseTimeHistory: row.responseTimeHistory ? JSON.parse(row.responseTimeHistory) : [],
-        authConfig: JSON.parse(row.authConfig)
+        authConfig: parseAuthConfig(row.authConfig)
       }))
     } else {
-      return (store.get('endpoints') as Endpoint[]) || []
+      const endpoints = (store.get('endpoints') as Endpoint[]) || []
+      // Parse electron-store authConfigs if we were to encrypt them there too, 
+      // but in this codebase, electron-store fallback is just for testing.
+      // However, we apply the same parsing to be safe if they ever get encrypted there.
+      return endpoints.map(ep => {
+        if (typeof ep.authConfig === 'string') {
+           ep.authConfig = parseAuthConfig(ep.authConfig)
+        }
+        return ep
+      })
     }
   },
 
   saveEndpoint(endpoint: Endpoint) {
+    const serializeAuthConfig = (config: any) => {
+      const plainStr = JSON.stringify(config)
+      if (safeStorage.isEncryptionAvailable()) {
+        return 'enc:' + safeStorage.encryptString(plainStr).toString('base64')
+      }
+      return plainStr
+    }
+
     if (useSqlite) {
       const stmt = dbInstance.prepare(`
-        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout, allow_self_signed)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout, allow_self_signed, monitoring_paused)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       stmt.run(
         endpoint.id,
@@ -135,20 +180,28 @@ export const DatabaseService = {
         endpoint.errorCount,
         endpoint.consecutiveErrors,
         endpoint.authType,
-        JSON.stringify(endpoint.authConfig),
+        serializeAuthConfig(endpoint.authConfig),
         JSON.stringify(endpoint.responseTimeHistory || []),
         endpoint.timeout !== undefined ? endpoint.timeout : null,
-        endpoint.allowSelfSigned ? 1 : 0
+        endpoint.allowSelfSigned ? 1 : 0,
+        endpoint.monitoringPaused ? 1 : 0
       )
     } else {
-      const endpoints = this.getEndpoints()
-      const index = endpoints.findIndex((e) => e.id === endpoint.id)
+      // For electron-store, we can keep the object as is since store handles it,
+      // or stringify/encrypt it. Let's encrypt it to be consistent with enterprise requirements.
+      // IMPORTANT: read/write the raw stored array here, not this.getEndpoints() — that
+      // method decrypts every entry's authConfig back into a plaintext object, and
+      // persisting that result would silently re-write every sibling endpoint's
+      // credentials as decrypted plaintext on every single save.
+      const epToSave = { ...endpoint, authConfig: serializeAuthConfig(endpoint.authConfig) }
+      const rawEndpoints = (store.get('endpoints') as any[]) || []
+      const index = rawEndpoints.findIndex((e) => e.id === epToSave.id)
       if (index > -1) {
-        endpoints[index] = endpoint
+        rawEndpoints[index] = epToSave
       } else {
-        endpoints.push(endpoint)
+        rawEndpoints.push(epToSave)
       }
-      store.set('endpoints', endpoints)
+      store.set('endpoints', rawEndpoints)
     }
   },
 
@@ -158,8 +211,11 @@ export const DatabaseService = {
       dbInstance.prepare('DELETE FROM alerts WHERE endpointId = ?').run(id)
       dbInstance.prepare('DELETE FROM logs WHERE endpointId = ?').run(id)
     } else {
-      const endpoints = this.getEndpoints().filter((e) => e.id !== id)
-      store.set('endpoints', endpoints)
+      // Filter the raw stored array, not this.getEndpoints() — see saveEndpoint for why:
+      // that method decrypts authConfig for every entry, and persisting the result would
+      // re-write every surviving endpoint's credentials as decrypted plaintext.
+      const rawEndpoints = ((store.get('endpoints') as any[]) || []).filter((e) => e.id !== id)
+      store.set('endpoints', rawEndpoints)
       this.deleteAlertsForEndpoint(id)
     }
   },
@@ -281,16 +337,12 @@ export const DatabaseService = {
   importBackup(jsonString: string): boolean {
     try {
       const parsed = JSON.parse(jsonString)
-      if (!parsed.endpoints || !Array.isArray(parsed.endpoints)) return false
-
-      // Validate each endpoint has required fields and a well-formed URL
-      for (const ep of parsed.endpoints) {
-        if (!ep.id || typeof ep.id !== 'string') return false
-        if (!ep.name || typeof ep.name !== 'string') return false
-        if (!ep.url || typeof ep.url !== 'string') return false
-        try { new URL(ep.url) } catch { return false }
-        if (!['none','apiKey','ntlm','certificate','oauth2','basic','cookie'].includes(ep.authType)) return false
+      const result = validateBackupPayload(parsed)
+      if (!result.valid) {
+        console.warn('[import] Rejected backup payload:', result.reason)
+        return false
       }
+      const { endpoints, alerts, logs } = result.value
 
       if (useSqlite) {
         dbInstance.prepare('DELETE FROM endpoints').run()
@@ -302,12 +354,12 @@ export const DatabaseService = {
         store.set('logs', [])
       }
 
-      parsed.endpoints.forEach((ep: Endpoint) => this.saveEndpoint(ep))
-      if (parsed.alerts && Array.isArray(parsed.alerts)) {
-        parsed.alerts.forEach((al: Alert) => this.saveAlert(al))
+      endpoints.forEach((ep: Endpoint) => this.saveEndpoint(ep))
+      if (alerts) {
+        alerts.forEach((al: Alert) => this.saveAlert(al))
       }
-      if (parsed.logs && Array.isArray(parsed.logs)) {
-        parsed.logs.forEach((lo: Log) => this.saveLog(lo))
+      if (logs) {
+        logs.forEach((lo: Log) => this.saveLog(lo))
       }
       return true
     } catch {

@@ -1,4 +1,3 @@
-import React from 'react'
 import { BarChart3, Download } from 'lucide-react'
 import { UptimeChart } from './ui/UptimeChart'
 import { Pill } from './ui/Pill'
@@ -56,7 +55,9 @@ export function Reports() {
       </div>
 
       {endpoints.map((ep) => {
-        const borderClass = ep.status === 'error'
+        const borderClass = ep.monitoringPaused
+          ? 'border-l-4 border-l-purple-500'
+          : ep.status === 'error'
           ? 'border-l-4 border-l-rose-500'
           : ep.status === 'success'
           ? 'border-l-4 border-l-emerald-500'
@@ -71,8 +72,8 @@ export function Reports() {
                 </div>
                 <p className="text-xs text-slate-400 dark:text-slate-300 font-mono select-text truncate">{ep.url}</p>
               </div>
-              <Pill tone={ep.status === 'error' ? 'crit' : ep.status === 'success' ? 'ok' : 'neutral'}>
-                {ep.status === 'error' ? 'Down' : ep.status === 'success' ? 'Online' : 'Idle'}
+              <Pill tone={ep.monitoringPaused ? 'purple' : ep.status === 'error' ? 'crit' : ep.status === 'success' ? 'ok' : 'neutral'}>
+                {ep.monitoringPaused ? 'Paused — Auth Lockout' : ep.status === 'error' ? 'Down' : ep.status === 'success' ? 'Online' : 'Idle'}
               </Pill>
             </div>
 

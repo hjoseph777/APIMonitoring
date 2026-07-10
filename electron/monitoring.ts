@@ -5,11 +5,12 @@ import { randomUUID } from 'crypto'
 import { Notification, safeStorage } from 'electron'
 import DatabaseService from './database'
 import { Endpoint, Alert, Log } from '../src/types'
-import axiosNtlm from 'axios-ntlm'
+import { NtlmClient } from 'axios-ntlm'
 import { wrapper } from 'axios-cookiejar-support'
 import { CookieJar } from 'tough-cookie'
 import nodemailer from 'nodemailer' // P16-13: top-level import — module is cached once, not re-required on every alert flush
-import { validateWebhookUrl } from './main'
+import { validateWebhookUrl } from './lib/webhookGuard'
+import Store from 'electron-store'
 
 // Map of active timers per endpoint id
 const activeTimers = new Map<string, NodeJS.Timeout>()
@@ -35,8 +36,8 @@ let emailOutageBuffer: string[] = []
 let emailFlushTimer: NodeJS.Timeout | null = null
 
 // Module-level electron-store singleton (avoids repeated construction per loop)
-const Store = require('electron-store')
-const monitorStore = new Store()
+// See main.ts's mainStore for why Record<string, any> instead of a stricter shape.
+const monitorStore = new Store<Record<string, any>>()
 
 async function getOAuth2Token(endpointId: string, authConfig: any): Promise<string> {
   const cached = oauth2Cache.get(endpointId)
@@ -227,20 +228,19 @@ export const MonitoringService = {
           let reqPromise: Promise<any>
           
           if (endpoint.authType === 'ntlm') {
-            const auth = endpoint.authConfig
-            reqPromise = axiosNtlm({
-              method: 'GET',
-              url: endpoint.url,
-              timeout: requestTimeout,
-              httpsAgent: config.httpsAgent,
-              ntlm: {
-                username: (auth as any).username,
-                password: (auth as any).password,
-                domain: (auth as any).domain,
-                workstation: (auth as any).workstation || ''
+            // NtlmClient(credentials, axiosConfig) returns a configured axios instance —
+            // it is not itself a request dispatcher, so requests go through .get() on it.
+            const auth = endpoint.authConfig as any
+            const ntlmClient = NtlmClient(
+              {
+                username: auth.username,
+                password: auth.password,
+                domain: auth.domain,
+                workstation: auth.workstation || ''
               },
-              withCredentials: true
-            })
+              { httpsAgent: config.httpsAgent, timeout: requestTimeout }
+            )
+            reqPromise = ntlmClient.get(endpoint.url)
           } else {
             // Standard Axios config setup
             if (endpoint.authType === 'apiKey') {
@@ -351,7 +351,10 @@ export const MonitoringService = {
       lastCheck: new Date().toISOString(),
       consecutiveErrors,
       errorCount,
-      responseTimeHistory: updatedLatencyHistory
+      responseTimeHistory: updatedLatencyHistory,
+      // True only while actively halted by AD Lockout Protection; a subsequent
+      // check (manual recheck or resumed schedule) clears it back to false.
+      monitoringPaused: adLockoutHalt
     }
 
     DatabaseService.saveEndpoint(updatedEndpoint)
@@ -507,6 +510,9 @@ export const MonitoringService = {
   },
 
   async testConnection(endpoint: Partial<Endpoint>): Promise<{ success: boolean; status?: number; message?: string }> {
+    if (!endpoint.url) {
+      return { success: false, message: 'URL is required' }
+    }
     try {
       const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 10000
       const config: any = {
@@ -532,20 +538,17 @@ export const MonitoringService = {
       let response: any
 
       if (endpoint.authType === 'ntlm') {
-        const auth = endpoint.authConfig
-        response = await axiosNtlm({
-          method: 'GET',
-          url: endpoint.url,
-          timeout: requestTimeout,
-          httpsAgent: config.httpsAgent,
-          ntlm: {
-            username: (auth as any).username,
-            password: (auth as any).password,
-            domain: (auth as any).domain,
-            workstation: (auth as any).workstation || ''
+        const auth = endpoint.authConfig as any
+        const ntlmClient = NtlmClient(
+          {
+            username: auth.username,
+            password: auth.password,
+            domain: auth.domain,
+            workstation: auth.workstation || ''
           },
-          withCredentials: true
-        })
+          { httpsAgent: config.httpsAgent, timeout: requestTimeout }
+        )
+        response = await ntlmClient.get(endpoint.url)
       } else {
         if (endpoint.authType === 'apiKey') {
           const auth = endpoint.authConfig as any

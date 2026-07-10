@@ -1,4 +1,3 @@
-import React from 'react'
 import type { Endpoint } from '../../types'
 
 const LABELS: Record<Endpoint['authType'], string> = {

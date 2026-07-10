@@ -8,7 +8,7 @@
 |---|---|
 | **Author** | Harry Joseph |
 | **Version** | 1.2.0 |
-| **Date** | July 9, 2026 |
+| **Date** | July 10, 2026 |
 | **Platform** | Windows (Electron Desktop App) |
 
 A lightweight, enterprise-ready desktop application dedicated exclusively to **HTTP/HTTPS API endpoint monitoring**, built using **Electron**, **React**, **Vite**, **TypeScript**, and **Zustand**.
@@ -90,6 +90,27 @@ v1.2.0 completes a full server-hardening audit covering every background code pa
 | **Dashboard Monitor Feed** | Real-time API monitoring events (`success`/`error`) surface in the Dashboard quick-feed. |
 | **Full Settings Persistence** | `minimizeTray`, `autoStart`, `alertThreshold`, `smtpAllowSelfSigned` all load from and persist to the backend on every save. |
 | **Clean Type System** | `Log.type` renamed from `'xerox'` to `'clipboard'`; dead `authStatus` field removed from `Endpoint` type. |
+| **Renderer Sandbox** | `sandbox: true` enabled alongside the existing `contextIsolation: true` / `nodeIntegration: false` — the full Electron hardening trio. |
+| **Typed Settings IPC Boundary** | `save-settings` takes `unknown`, not `any` — parsed and validated field-by-field (coerced booleans, clamped port/threshold, constrained webhook-channel enum) before anything is persisted; invalid payloads are rejected with a clear message instead of silently written. |
+| **AD Lockout Protection, Made Visible** | NTLM/Basic endpoints that return 401/403 halt their own recurring check loop to avoid hammering a domain controller — and now that halt fires a real alert and shows a distinct **Paused — Auth Lockout** status in the GUI, instead of the endpoint silently going dark with no signal. A successful manual recheck resumes monitoring automatically. |
+| **Credential-Leak Fix (electron-store fallback path)** | Saving or deleting one endpoint on the non-SQLite fallback path was re-persisting every *other* endpoint's credentials as decrypted plaintext. Fixed by reading/writing the raw stored array instead of round-tripping through the decrypting read path. |
+| **NTLM Requests Fixed** | `axios-ntlm` returns a configured axios instance from `NtlmClient(credentials, config)`, not a single callable request dispatcher — the previous usage pattern very likely threw at runtime on every NTLM check. Both call sites corrected. |
+| **IPv6 Loopback SSRF Check Fixed** | The webhook guard compared `URL.hostname` against a bare `'::1'`, but IPv6 literals keep their brackets (`'[::1]'`) per the URL spec — the comparison never matched. Fixed. |
+
+---
+
+## ✅ Quality Gates
+
+```bash
+npm run lint        # ESLint (typescript-eslint) — 0 findings
+npm run typecheck    # tsc --noEmit — clean across src/ and electron/
+npm run test         # Vitest — 40 unit tests covering settings validation,
+                      # the webhook SSRF guard, and backup-payload validation
+npm run compile      # electron-vite build
+npm run ci           # all four, in order — the same script GitHub Actions runs
+```
+
+`.github/workflows/ci.yml` runs `npm run ci` on every push and pull request to `main`. The three modules under test (`electron/lib/settingsSchema.ts`, `electron/lib/webhookGuard.ts`, `electron/lib/backupValidation.ts`) are deliberately pure — no Electron import — so they run in plain Node without a running Electron process. Test files live under `tests/`, kept separate from the shipped `electron/` and `src/` source.
 
 ---
 
@@ -149,11 +170,19 @@ Zustand is utilized as our global atomic store to completely decouple state upda
 
 ```text
 API_Monitor/
+├── .github/workflows/
+│   └── ci.yml               # lint + typecheck + test + compile on every push/PR
 ├── electron/
 │   ├── main.ts             # Main process entry, auto-updater, tray loop & IPC handlers
 │   ├── preload.ts          # Secure context bridge mapping exposed to the renderer
 │   ├── database.ts         # SQLite wrapper, log rotation & credential encryption
-│   └── monitoring.ts       # 24/7 background engine, deduplication cache & alerts
+│   ├── monitoring.ts       # 24/7 background engine, deduplication cache & alerts
+│   └── lib/                # Pure, Electron-free modules — unit tested directly
+│       ├── settingsSchema.ts    # AppSettings type, defaults, validation/coercion
+│       ├── webhookGuard.ts      # SSRF guard for outbound webhook URLs
+│       └── backupValidation.ts  # Backup/import payload shape validation
+├── tests/
+│   └── lib/                 # Vitest suites for electron/lib/* — kept out of shipped code
 ├── src/
 │   ├── components/
 │   │   ├── ui/

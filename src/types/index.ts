@@ -12,6 +12,7 @@ export interface Endpoint {
   responseTimeHistory?: number[]; // history of last response times in ms
   timeout?: number; // in seconds
   allowSelfSigned?: boolean; // allow self-signed / internal TLS certificates (default: false)
+  monitoringPaused?: boolean; // true while AD Lockout Protection has halted this endpoint's recurring checks
 }
 
 export type AuthConfig = 

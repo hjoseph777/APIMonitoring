@@ -8,7 +8,7 @@
 |---|---|
 | **Author** | Harry Joseph |
 | **Version** | 1.2.0 |
-| **Date** | July 9, 2026 |
+| **Date** | July 10, 2026 |
 | **Audience** | System Administrators, IT Operators, Integrators & Automation Engineers |
 
 Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to help system administrators, IT operators, integrators, and automation engineers configure, monitor, and maintain corporate ERP API connections using the desktop application.
@@ -42,15 +42,16 @@ To ensure stable 24/7 background operation on corporate infrastructure, the Xero
 
 ### Independent Audit Trail — 100 / 100 🏆
 
-A full line-by-line expert security and reliability audit was conducted on **July 9, 2026**. The results are recorded here for enterprise procurement and IT security reviews.
+A full line-by-line expert security and reliability audit was conducted on **July 9, 2026**, with a follow-up hardening and quality-gate pass on **July 10, 2026**. The results are recorded here for enterprise procurement and IT security reviews.
 
 | Dimension | Result | Summary |
 |---|---|---|
-| **Security** | ✅ PASS | TLS enforced by default; SSRF-guarded webhooks; SMTP passwords encrypted via Windows DPAPI; context-isolated renderer; structurally validated backup imports; cryptographic UUIDs throughout. |
+| **Security** | ✅ PASS | TLS enforced by default; SSRF-guarded webhooks (including a fixed IPv6 loopback check); SMTP passwords encrypted via Windows DPAPI; context-isolated **and sandboxed** renderer (`sandbox: true`); structurally validated backup imports; cryptographic UUIDs throughout; settings IPC payload is schema-validated (`unknown`, not `any`), not blindly persisted. |
 | **Memory Leaks** | ✅ NONE | All module-level caches bounded and evicted in `finally` blocks; alert buffers flush on schedule; response history capped; database bounded at 5,000 records + 7-day expiry. |
 | **CPU Efficiency** | ✅ PASS | Event-driven tray and UI (zero polling when idle); self-scheduling check loops (zero request stacking); Zustand atomic selectors (no full-tree re-renders). |
 | **Crash Resistance** | ✅ PASS | All handlers wrapped in try/catch; null guards on every endpoint lookup; single-instance lock; graceful database fallback; destroyed-window guard before IPC sends. |
-| **Code Quality** | ✅ PASS | Module-level singletons; fully typed IPC boundary; zero inline `require()` in hot paths; clean type system. |
+| **Code Quality** | ✅ PASS | Module-level singletons; fully typed IPC boundary; zero inline `require()` in hot paths (the one exception — loading `better-sqlite3` — is documented inline and required for graceful fallback); clean type system. |
+| **Automated Verification** | ✅ NEW | `npm run ci` (ESLint, `tsc --noEmit`, 40 Vitest unit tests, full compile) runs on every push/PR via GitHub Actions — these claims are now backed by a pipeline you can re-run yourself, not only a point-in-time manual review. |
 
 > **Verdict: 100 / 100 — ready for 24/7 unattended enterprise deployment.**
 
@@ -230,6 +231,9 @@ A: Newly added endpoints run their first check within 1 second of being saved. I
 ---
 
 ### Authentication
+
+**Q: An endpoint shows a purple "Paused — Auth Lockout" status and stopped updating.**  
+A: This is **AD Lockout Protection**. When an NTLM or Basic-auth endpoint returns `401`/`403`, the background engine deliberately stops rechecking that one endpoint rather than repeatedly retrying with bad credentials — repeated failed domain logins can lock out a service account with your Active Directory's lockout policy. An alert is raised immediately when this happens (check the Active Alerts Feed). To resume: fix the credentials on that endpoint (Endpoint Registry → pencil icon → update username/password/domain → Save Changes), then click **Check** on that endpoint — a successful manual recheck automatically resumes its normal monitoring schedule. You do not need to remove and re-add the endpoint.
 
 **Q: My NTLM / Windows Auth endpoint always returns 401 Unauthorized.**  
 A: Ensure the **Domain** field matches your Active Directory domain name exactly (e.g., `CORP` not `corp.company.com`). Confirm the service account has permission to access the target URL. Also verify that the server machine has not been removed from the domain or had its computer account reset.

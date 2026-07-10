@@ -8,7 +8,7 @@
 |---|---|
 | **Author** | Harry Joseph |
 | **App Version** | 1.2.0 (GUI v2.0) |
-| **Date** | July 9, 2026 |
+| **Date** | July 10, 2026 |
 | **Scope** | A practical, screen-by-screen walkthrough of the current GUI |
 
 This guide walks through the four tabs of the app exactly as they exist today, control by control. For authentication method setup, SMTP/webhook configuration details, and troubleshooting, see [UserManual.md](UserManual.md) — this document is the quick "what does this button do" reference.
@@ -66,6 +66,7 @@ Just below the cards: **Fleet health** (percentage of endpoints currently online
 * **Filter box** — type any part of a name, URL, or auth method (e.g. `ntlm`, `sap`, `10.0.0`) to narrow the list instantly.
 * **Sort order** — failing endpoints always sort to the top, then idle, then healthy — the ones needing attention are never buried below a long list of healthy ones.
 * Each row shows: status dot, name, **auth-method tag** (API Key / NTLM / Certificate / OAuth2 / Basic / Cookie), full URL, a small **sparkline** of recent response times colored by current status, last-check time, the latest latency (colored green/amber/red by the same thresholds as the fleet strip), and a **Check** button to trigger an immediate re-check outside the normal schedule.
+* **Purple "Paused — Auth Lockout" tag** — an NTLM or Basic-auth endpoint that returned 401/403 stops its own recurring checks rather than repeatedly retrying bad credentials against your domain controller. Fix the credentials (Endpoint Registry → pencil icon) and click **Check** — a successful recheck resumes normal monitoring automatically.
 
 ### Active Alerts Feed
 Every unread alert shows the endpoint name, a **Critical** severity chip, the failure message, and a timestamp. Click **Acknowledge** to mark it read — it disappears from this feed and from the header bell's unread count.
@@ -223,8 +224,8 @@ Use **Seed Healthy** to confirm the dashboard renders a fully green fleet correc
 ### Per-endpoint cards
 Each registered endpoint gets its own card:
 
-* Left border colored by current status (green online / red down / grey idle)
-* Name, URL, auth tag, and a status pill (**Online** / **Down** / **Idle**)
+* Left border colored by current status (green online / red down / grey idle / purple paused)
+* Name, URL, auth tag, and a status pill (**Online** / **Down** / **Idle** / **Paused — Auth Lockout**)
 * A latency trace chart with peak value, plus a caption stating exactly how much time the trace covers (check count × interval), instead of an unlabeled "10-point trace"
 * A **Current Status** panel describing the most recent check result — this intentionally does not show a fabricated uptime percentage, since only the last 10 response times are stored, not a time-bounded success history
 

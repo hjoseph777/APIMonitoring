@@ -166,7 +166,9 @@ export function Dashboard() {
                 <div className="flex items-center gap-3 min-w-0">
                   <span
                     className={`h-2.5 w-2.5 rounded-full shrink-0 ${
-                      isSuccess
+                      ep.monitoringPaused
+                        ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.4)]'
+                        : isSuccess
                         ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]'
                         : isError
                         ? 'bg-rose-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]'
@@ -177,6 +179,7 @@ export function Dashboard() {
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-xs text-slate-800 dark:text-slate-300">{ep.name}</span>
                       <AuthTag authType={ep.authType} />
+                      {ep.monitoringPaused && <Pill tone="purple">Paused — Auth Lockout</Pill>}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-white font-mono select-text truncate max-w-[280px]">
                       {ep.url}

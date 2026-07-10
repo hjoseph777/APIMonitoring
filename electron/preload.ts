@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Endpoint, AuthConfig } from '../src/types'
+import { Endpoint } from '../src/types'
 
 // Expose safe, protected APIs to the React renderer process
 contextBridge.exposeInMainWorld('electronAPI', {

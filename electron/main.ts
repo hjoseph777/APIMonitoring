@@ -1,61 +1,28 @@
 import { app, BrowserWindow, ipcMain, clipboard, Tray, Menu, nativeImage, safeStorage } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { join } from 'path'
-import { randomUUID } from 'crypto'
 import axios from 'axios'
 import * as fs from 'fs'
 import * as tls from 'tls'
+import Store from 'electron-store'
+import nodemailer from 'nodemailer'
 import DatabaseService from './database'
 import MonitoringService from './monitoring'
-import { Endpoint, Log } from '../src/types'
+import { Endpoint } from '../src/types'
+import { DEFAULT_SETTINGS, parseAndValidateSettings } from './lib/settingsSchema'
+import { validateWebhookUrl } from './lib/webhookGuard'
 
 let isQuitting = false
 
 // Module-level electron-store singleton
-const Store = require('electron-store')
-const mainStore = new Store()
+// electron-store's Conf<T> defaults T to Record<string, unknown>, which makes every
+// .get() call return `unknown` and forces a cast at each call site. This store holds
+// a loose mix of AppSettings fields plus internal bookkeeping keys (lastExportTime,
+// smtpPassEncrypted, etc.), so Record<string, any> is the honest shape here — not
+// every key is worth its own generic.
+const mainStore = new Store<Record<string, any>>()
 
 import { ICON_IDLE, ICON_ONLINE, ICON_WARNING, ICON_OFFLINE } from './icons_b64'
-
-type WebhookChannel = 'msteams' | 'discord' | 'slack'
-
-interface AppSettings {
-  nativeNotify: boolean
-  smtpServer: string
-  smtpPort: string
-  smtpUser: string
-  smtpPass: string
-  notifyEmail: string
-  globalWebhook: string
-  globalWebhookChannel: WebhookChannel
-  runAtStartup: boolean
-  maintenanceMode: boolean
-  autoExportLogs: boolean
-  exportPath: string
-  autoUpdatesEnabled: boolean
-  alertThreshold: number
-  smtpAllowSelfSigned: boolean
-  minimizeTray: boolean
-}
-
-const DEFAULT_SETTINGS: AppSettings = {
-  nativeNotify: true,
-  smtpServer: 'smtp.company.com',
-  smtpPort: '587',
-  smtpUser: '',
-  smtpPass: '',
-  notifyEmail: 'admin@company.com',
-  globalWebhook: '',
-  globalWebhookChannel: 'msteams',
-  runAtStartup: false,
-  maintenanceMode: false,
-  autoExportLogs: false,
-  exportPath: '',
-  autoUpdatesEnabled: false,
-  alertThreshold: 2,
-  smtpAllowSelfSigned: false,
-  minimizeTray: true
-}
 
 const getIcon = (status: 'online' | 'warning' | 'offline' | 'idle') => {
   let dataUrl = ICON_IDLE
@@ -84,34 +51,8 @@ if (!gotTheLock) {
 }
 
 // --- Security helpers (P16-6: SMTP password encryption, P16-7: Webhook SSRF guard) ---
-
-/**
- * SSRF guard: validates that a webhook URL is safe to POST to.
- * Blocks non-HTTPS protocols and loopback / RFC-1918 private addresses.
- */
-export function validateWebhookUrl(url: string): { valid: boolean; reason?: string } {
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    return { valid: false, reason: 'Invalid URL format' }
-  }
-  if (parsed.protocol !== 'https:') {
-    return { valid: false, reason: 'Only HTTPS webhook URLs are permitted' }
-  }
-  const h = parsed.hostname
-  if (h === 'localhost' || h === '127.0.0.1' || h === '::1') {
-    return { valid: false, reason: 'Loopback addresses are not permitted' }
-  }
-  const ipv4 = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
-  if (ipv4) {
-    const [, a, b] = ipv4.map(Number)
-    if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)) {
-      return { valid: false, reason: 'Private network addresses are not permitted' }
-    }
-  }
-  return { valid: true }
-}
+// Note: validateWebhookUrl lives in ./lib/webhookGuard.ts (pure, unit-tested);
+// AppSettings/DEFAULT_SETTINGS/parseAndValidateSettings live in ./lib/settingsSchema.ts.
 
 /**
  * Reads and decrypts the SMTP password from the settings store.
@@ -159,66 +100,6 @@ function setEncryptedSmtpPass(plaintext: string): void {
   }
 }
 
-function asString(value: unknown, fallback = ''): string {
-  return typeof value === 'string' ? value : fallback
-}
-
-function asBool(value: unknown, fallback: boolean): boolean {
-  return typeof value === 'boolean' ? value : fallback
-}
-
-function asPortString(value: unknown, fallback: string): string {
-  const parsed = parseInt(String(value), 10)
-  if (Number.isNaN(parsed) || parsed < 1 || parsed > 65535) return fallback
-  return String(parsed)
-}
-
-function asThreshold(value: unknown, fallback: number): number {
-  const parsed = parseInt(String(value), 10)
-  if (Number.isNaN(parsed)) return fallback
-  return Math.min(20, Math.max(1, parsed))
-}
-
-function asWebhookChannel(value: unknown, fallback: WebhookChannel): WebhookChannel {
-  return value === 'discord' || value === 'slack' || value === 'msteams' ? value : fallback
-}
-
-function parseAndValidateSettings(input: unknown): { ok: true; value: AppSettings } | { ok: false; message: string } {
-  if (!input || typeof input !== 'object') {
-    return { ok: false, message: 'Invalid settings payload' }
-  }
-
-  const source = input as Record<string, unknown>
-  const parsed: AppSettings = {
-    nativeNotify: asBool(source.nativeNotify, DEFAULT_SETTINGS.nativeNotify),
-    smtpServer: asString(source.smtpServer, DEFAULT_SETTINGS.smtpServer).trim(),
-    smtpPort: asPortString(source.smtpPort, DEFAULT_SETTINGS.smtpPort),
-    smtpUser: asString(source.smtpUser, DEFAULT_SETTINGS.smtpUser).trim(),
-    smtpPass: asString(source.smtpPass, DEFAULT_SETTINGS.smtpPass),
-    notifyEmail: asString(source.notifyEmail, DEFAULT_SETTINGS.notifyEmail).trim(),
-    globalWebhook: asString(source.globalWebhook, DEFAULT_SETTINGS.globalWebhook).trim(),
-    globalWebhookChannel: asWebhookChannel(source.globalWebhookChannel, DEFAULT_SETTINGS.globalWebhookChannel),
-    runAtStartup: asBool(source.runAtStartup, DEFAULT_SETTINGS.runAtStartup),
-    maintenanceMode: asBool(source.maintenanceMode, DEFAULT_SETTINGS.maintenanceMode),
-    autoExportLogs: asBool(source.autoExportLogs, DEFAULT_SETTINGS.autoExportLogs),
-    exportPath: asString(source.exportPath, DEFAULT_SETTINGS.exportPath).trim(),
-    autoUpdatesEnabled: asBool(source.autoUpdatesEnabled, DEFAULT_SETTINGS.autoUpdatesEnabled),
-    alertThreshold: asThreshold(source.alertThreshold, DEFAULT_SETTINGS.alertThreshold),
-    smtpAllowSelfSigned: asBool(source.smtpAllowSelfSigned, DEFAULT_SETTINGS.smtpAllowSelfSigned),
-    minimizeTray: asBool(source.minimizeTray, DEFAULT_SETTINGS.minimizeTray)
-  }
-
-  if (parsed.notifyEmail.length > 0) {
-    const recipients = parsed.notifyEmail.split(',').map(e => e.trim()).filter(Boolean)
-    const invalid = recipients.find(e => !e.includes('@') || e.startsWith('@') || e.endsWith('@'))
-    if (invalid) {
-      return { ok: false, message: `Invalid recipient email: ${invalid}` }
-    }
-  }
-
-  return { ok: true, value: parsed }
-}
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 750,
@@ -232,12 +113,13 @@ function createWindow() {
     }
   })
 
-  mainWindow.setMenuBarVisibility(false)
+  const win = mainWindow
+  win.setMenuBarVisibility(false)
 
-  mainWindow.on('close', (event) => {
+  win.on('close', (event) => {
     if (!isQuitting && mainStore.get('minimizeTray', true)) {
       event.preventDefault()
-      mainWindow.hide()
+      win.hide()
     }
   })
 
@@ -361,12 +243,12 @@ app.whenReady().then(() => {
   })
 
   // Clipboard copy
-  ipcMain.handle('copy-to-clipboard', (_, { text, endpointName }) => {
+  ipcMain.handle('copy-to-clipboard', (_, { text }) => {
     let success = false
     try {
       clipboard.writeText(text)
       success = true
-    } catch (err) {
+    } catch {
       success = false
     }
     return { success }
@@ -533,7 +415,6 @@ app.whenReady().then(() => {
       }
 
       const smtpAllowSelfSigned = mainStore.get('smtpAllowSelfSigned', false) === true
-      const nodemailer = require('nodemailer')
       const transporter = nodemailer.createTransport({
         host: smtpServer,
         port: parseInt(smtpPort, 10),
@@ -577,7 +458,7 @@ app.whenReady().then(() => {
   if (tray) {
     try {
       tray.destroy()
-    } catch (e) {}
+    } catch {}
   }
   tray = new Tray(appIcon)
   

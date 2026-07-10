@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Trash2, Pencil, ChevronRight, Plus, Check } from 'lucide-react'
 import AddEndpointForm from './AddEndpointForm'
 import { Panel } from './ui/Panel'

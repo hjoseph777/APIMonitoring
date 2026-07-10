@@ -1,4 +1,3 @@
-import React from 'react'
 import { ShieldCheck, ShieldX, ShieldQuestion } from 'lucide-react'
 import { Pill } from './Pill'
 
