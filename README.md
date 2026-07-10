@@ -183,25 +183,30 @@ API_Monitor/
 
 ### Dashboard — Status Cockpit
 
+![Dashboard Status Cockpit](Pictures/screenshot-dashboard.png)
 
 *Real-time monitoring dashboard showing stat cards (Total Monitored, Online Services, Offline Failures, Active Alerts), the Endpoint Status Cockpit with per-endpoint latency sparklines and individual Check buttons, the Active Alerts Feed with Acknowledge controls, and the Recent Monitor Activity log.*
 
 ### Endpoint Registry
 
+![Endpoint Registry](Pictures/screenshot-registry.png)
 
 *The Endpoint Registry tab listing all registered endpoints with their authentication badge (OAuth2, NTLM, Basic, None), last-check timestamps, and edit/delete controls. The Background Engine panel below configures the consecutive-failure alert threshold and tray/autostart behaviour.*
 
 ### Add New Endpoint — Authentication Method Selector
 
+![Add New Endpoint Form](Pictures/screenshot-add-endpoint.png)
 
 *The Add New Endpoint form with the Authentication Method dropdown expanded, showing all seven supported auth methods: None (Public Endpoint), API Key Header/Query, Windows Domain (NTLM), Client Certificate (mTLS), OAuth2 Client Credentials, Basic Credentials, and Session Cookie Authentication. The per-endpoint self-signed TLS toggle and Test Connection button are visible at the bottom.*
 
 ### Notification & JSON — Alert Delivery
 
+![Notification and JSON Settings](Pictures/screenshot-notifications.png)
 
 *The Notification & JSON tab configured with a live SMTP relay (host, port, username, masked password), the Allow self-signed SMTP certificates toggle for private-CA mail relays, recipient alert emails, a Teams/Office 365 webhook channel, native OS toast toggle, Maintenance Mode switch, Weekly Auto-Export, and the Backup & Data / Danger Zone panels below.*
 
 ### Reports — Per-Endpoint Latency Charts
 
+![Reports Latency Charts](Pictures/screenshot-reports.png)
 
 *The Reports tab displaying per-endpoint latency trace charts with 10-point sparklines (PEAK ms annotated), Current Status badges (Reachable / Unreachable), and an Export CSV button. Endpoints monitored with OAuth2, NTLM, and unauthenticated methods are shown side-by-side with live fleet health and average response statistics in the header.*
