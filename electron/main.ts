@@ -17,6 +17,46 @@ const mainStore = new Store()
 
 import { ICON_IDLE, ICON_ONLINE, ICON_WARNING, ICON_OFFLINE } from './icons_b64'
 
+type WebhookChannel = 'msteams' | 'discord' | 'slack'
+
+interface AppSettings {
+  nativeNotify: boolean
+  smtpServer: string
+  smtpPort: string
+  smtpUser: string
+  smtpPass: string
+  notifyEmail: string
+  globalWebhook: string
+  globalWebhookChannel: WebhookChannel
+  runAtStartup: boolean
+  maintenanceMode: boolean
+  autoExportLogs: boolean
+  exportPath: string
+  autoUpdatesEnabled: boolean
+  alertThreshold: number
+  smtpAllowSelfSigned: boolean
+  minimizeTray: boolean
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  nativeNotify: true,
+  smtpServer: 'smtp.company.com',
+  smtpPort: '587',
+  smtpUser: '',
+  smtpPass: '',
+  notifyEmail: 'admin@company.com',
+  globalWebhook: '',
+  globalWebhookChannel: 'msteams',
+  runAtStartup: false,
+  maintenanceMode: false,
+  autoExportLogs: false,
+  exportPath: '',
+  autoUpdatesEnabled: false,
+  alertThreshold: 2,
+  smtpAllowSelfSigned: false,
+  minimizeTray: true
+}
+
 const getIcon = (status: 'online' | 'warning' | 'offline' | 'idle') => {
   let dataUrl = ICON_IDLE
   if (status === 'online') dataUrl = ICON_ONLINE
@@ -119,6 +159,66 @@ function setEncryptedSmtpPass(plaintext: string): void {
   }
 }
 
+function asString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback
+}
+
+function asBool(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function asPortString(value: unknown, fallback: string): string {
+  const parsed = parseInt(String(value), 10)
+  if (Number.isNaN(parsed) || parsed < 1 || parsed > 65535) return fallback
+  return String(parsed)
+}
+
+function asThreshold(value: unknown, fallback: number): number {
+  const parsed = parseInt(String(value), 10)
+  if (Number.isNaN(parsed)) return fallback
+  return Math.min(20, Math.max(1, parsed))
+}
+
+function asWebhookChannel(value: unknown, fallback: WebhookChannel): WebhookChannel {
+  return value === 'discord' || value === 'slack' || value === 'msteams' ? value : fallback
+}
+
+function parseAndValidateSettings(input: unknown): { ok: true; value: AppSettings } | { ok: false; message: string } {
+  if (!input || typeof input !== 'object') {
+    return { ok: false, message: 'Invalid settings payload' }
+  }
+
+  const source = input as Record<string, unknown>
+  const parsed: AppSettings = {
+    nativeNotify: asBool(source.nativeNotify, DEFAULT_SETTINGS.nativeNotify),
+    smtpServer: asString(source.smtpServer, DEFAULT_SETTINGS.smtpServer).trim(),
+    smtpPort: asPortString(source.smtpPort, DEFAULT_SETTINGS.smtpPort),
+    smtpUser: asString(source.smtpUser, DEFAULT_SETTINGS.smtpUser).trim(),
+    smtpPass: asString(source.smtpPass, DEFAULT_SETTINGS.smtpPass),
+    notifyEmail: asString(source.notifyEmail, DEFAULT_SETTINGS.notifyEmail).trim(),
+    globalWebhook: asString(source.globalWebhook, DEFAULT_SETTINGS.globalWebhook).trim(),
+    globalWebhookChannel: asWebhookChannel(source.globalWebhookChannel, DEFAULT_SETTINGS.globalWebhookChannel),
+    runAtStartup: asBool(source.runAtStartup, DEFAULT_SETTINGS.runAtStartup),
+    maintenanceMode: asBool(source.maintenanceMode, DEFAULT_SETTINGS.maintenanceMode),
+    autoExportLogs: asBool(source.autoExportLogs, DEFAULT_SETTINGS.autoExportLogs),
+    exportPath: asString(source.exportPath, DEFAULT_SETTINGS.exportPath).trim(),
+    autoUpdatesEnabled: asBool(source.autoUpdatesEnabled, DEFAULT_SETTINGS.autoUpdatesEnabled),
+    alertThreshold: asThreshold(source.alertThreshold, DEFAULT_SETTINGS.alertThreshold),
+    smtpAllowSelfSigned: asBool(source.smtpAllowSelfSigned, DEFAULT_SETTINGS.smtpAllowSelfSigned),
+    minimizeTray: asBool(source.minimizeTray, DEFAULT_SETTINGS.minimizeTray)
+  }
+
+  if (parsed.notifyEmail.length > 0) {
+    const recipients = parsed.notifyEmail.split(',').map(e => e.trim()).filter(Boolean)
+    const invalid = recipients.find(e => !e.includes('@') || e.startsWith('@') || e.endsWith('@'))
+    if (invalid) {
+      return { ok: false, message: `Invalid recipient email: ${invalid}` }
+    }
+  }
+
+  return { ok: true, value: parsed }
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 750,
@@ -126,7 +226,7 @@ function createWindow() {
     icon: appIcon,
     webPreferences: {
       preload: join(__dirname, '../preload/preload.js'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -327,54 +427,61 @@ app.whenReady().then(() => {
   // Global settings
   ipcMain.handle('get-settings', () => {
     return {
-      nativeNotify: mainStore.get('nativeNotify', true),
-      smtpServer: mainStore.get('smtpServer', 'smtp.company.com'),
-      smtpPort: mainStore.get('smtpPort', '587'),
-      smtpUser: mainStore.get('smtpUser', ''),
+      nativeNotify: mainStore.get('nativeNotify', DEFAULT_SETTINGS.nativeNotify),
+      smtpServer: mainStore.get('smtpServer', DEFAULT_SETTINGS.smtpServer),
+      smtpPort: mainStore.get('smtpPort', DEFAULT_SETTINGS.smtpPort),
+      smtpUser: mainStore.get('smtpUser', DEFAULT_SETTINGS.smtpUser),
       smtpPass: getDecryptedSmtpPass(),
-      notifyEmail: mainStore.get('notifyEmail', 'admin@company.com'),
-      globalWebhook: mainStore.get('globalWebhook', ''),
-      globalWebhookChannel: mainStore.get('globalWebhookChannel', 'msteams'),
-      runAtStartup: mainStore.get('runAtStartup', false),
-      maintenanceMode: mainStore.get('maintenanceMode', false),
-      autoExportLogs: mainStore.get('autoExportLogs', false),
-      exportPath: mainStore.get('exportPath', ''),
-      autoUpdatesEnabled: mainStore.get('autoUpdatesEnabled', false),
-      alertThreshold: mainStore.get('alertThreshold', 2),
-      smtpAllowSelfSigned: mainStore.get('smtpAllowSelfSigned', false),
-      minimizeTray: mainStore.get('minimizeTray', true)
+      notifyEmail: mainStore.get('notifyEmail', DEFAULT_SETTINGS.notifyEmail),
+      globalWebhook: mainStore.get('globalWebhook', DEFAULT_SETTINGS.globalWebhook),
+      globalWebhookChannel: mainStore.get('globalWebhookChannel', DEFAULT_SETTINGS.globalWebhookChannel),
+      runAtStartup: mainStore.get('runAtStartup', DEFAULT_SETTINGS.runAtStartup),
+      maintenanceMode: mainStore.get('maintenanceMode', DEFAULT_SETTINGS.maintenanceMode),
+      autoExportLogs: mainStore.get('autoExportLogs', DEFAULT_SETTINGS.autoExportLogs),
+      exportPath: mainStore.get('exportPath', DEFAULT_SETTINGS.exportPath),
+      autoUpdatesEnabled: mainStore.get('autoUpdatesEnabled', DEFAULT_SETTINGS.autoUpdatesEnabled),
+      alertThreshold: mainStore.get('alertThreshold', DEFAULT_SETTINGS.alertThreshold),
+      smtpAllowSelfSigned: mainStore.get('smtpAllowSelfSigned', DEFAULT_SETTINGS.smtpAllowSelfSigned),
+      minimizeTray: mainStore.get('minimizeTray', DEFAULT_SETTINGS.minimizeTray)
     }
   })
 
-  ipcMain.handle('save-settings', (_, settings: any) => {
+  ipcMain.handle('save-settings', (_, settings: unknown) => {
+    const parsed = parseAndValidateSettings(settings)
+    if (!parsed.ok) {
+      return { success: false, message: parsed.message }
+    }
+
+    const safeSettings = parsed.value
+
     // P16-7: Validate webhook URL before persisting (SSRF guard)
-    if (settings.globalWebhook) {
-      const webhookCheck = validateWebhookUrl(settings.globalWebhook)
+    if (safeSettings.globalWebhook) {
+      const webhookCheck = validateWebhookUrl(safeSettings.globalWebhook)
       if (!webhookCheck.valid) {
         return { success: false, message: `Webhook URL rejected: ${webhookCheck.reason}` }
       }
     }
 
-    mainStore.set('nativeNotify', settings.nativeNotify)
-    mainStore.set('smtpServer', settings.smtpServer)
-    mainStore.set('smtpPort', settings.smtpPort)
-    mainStore.set('smtpUser', settings.smtpUser)
-    setEncryptedSmtpPass(settings.smtpPass ?? '')
-    mainStore.set('notifyEmail', settings.notifyEmail)
-    mainStore.set('globalWebhook', settings.globalWebhook)
-    mainStore.set('globalWebhookChannel', settings.globalWebhookChannel)
-    mainStore.set('runAtStartup', settings.runAtStartup)
-    mainStore.set('maintenanceMode', settings.maintenanceMode)
-    mainStore.set('autoExportLogs', settings.autoExportLogs)
-    mainStore.set('exportPath', settings.exportPath)
-    mainStore.set('autoUpdatesEnabled', settings.autoUpdatesEnabled)
-    mainStore.set('alertThreshold', parseInt(String(settings.alertThreshold), 10) || 2)
-    mainStore.set('smtpAllowSelfSigned', settings.smtpAllowSelfSigned === true)
-    mainStore.set('minimizeTray', settings.minimizeTray !== false) // default true
+    mainStore.set('nativeNotify', safeSettings.nativeNotify)
+    mainStore.set('smtpServer', safeSettings.smtpServer)
+    mainStore.set('smtpPort', safeSettings.smtpPort)
+    mainStore.set('smtpUser', safeSettings.smtpUser)
+    setEncryptedSmtpPass(safeSettings.smtpPass)
+    mainStore.set('notifyEmail', safeSettings.notifyEmail)
+    mainStore.set('globalWebhook', safeSettings.globalWebhook)
+    mainStore.set('globalWebhookChannel', safeSettings.globalWebhookChannel)
+    mainStore.set('runAtStartup', safeSettings.runAtStartup)
+    mainStore.set('maintenanceMode', safeSettings.maintenanceMode)
+    mainStore.set('autoExportLogs', safeSettings.autoExportLogs)
+    mainStore.set('exportPath', safeSettings.exportPath)
+    mainStore.set('autoUpdatesEnabled', safeSettings.autoUpdatesEnabled)
+    mainStore.set('alertThreshold', safeSettings.alertThreshold)
+    mainStore.set('smtpAllowSelfSigned', safeSettings.smtpAllowSelfSigned)
+    mainStore.set('minimizeTray', safeSettings.minimizeTray)
 
     if (app.setLoginItemSettings) {
       app.setLoginItemSettings({
-        openAtLogin: settings.runAtStartup === true
+        openAtLogin: safeSettings.runAtStartup
       })
     }
     
