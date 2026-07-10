@@ -9,6 +9,7 @@ import axiosNtlm from 'axios-ntlm'
 import { wrapper } from 'axios-cookiejar-support'
 import { CookieJar } from 'tough-cookie'
 import nodemailer from 'nodemailer' // P16-13: top-level import — module is cached once, not re-required on every alert flush
+import { validateWebhookUrl } from './main'
 
 // Map of active timers per endpoint id
 const activeTimers = new Map<string, NodeJS.Timeout>()
@@ -41,6 +42,10 @@ async function getOAuth2Token(endpointId: string, authConfig: any): Promise<stri
   const cached = oauth2Cache.get(endpointId)
   if (cached && cached.expiresAt > Date.now()) {
     return cached.token
+  }
+
+  if (!authConfig.tokenUrl || !authConfig.clientId) {
+    throw new Error('OAuth2 configuration is missing tokenUrl or clientId')
   }
 
   const response = await axios.post(authConfig.tokenUrl, new URLSearchParams({
@@ -118,15 +123,33 @@ export const MonitoringService = {
       clearTimeout(activeTimers.get(id)!)
       activeTimers.delete(id)
     }
+    // Evict cached auth sessions to prevent memory leaks when endpoints are deleted or unscheduled
+    oauth2Cache.delete(id)
+    cookieJars.delete(id)
+    cookieSessionExpiry.delete(id)
+  },
+
+  // True while an endpoint's recurring check loop is armed — false after AD Lockout
+  // Protection has halted it, until it's rescheduled (edit/save, or a manual recheck).
+  isScheduled(id: string): boolean {
+    return activeTimers.has(id)
   },
 
   async runCheckLoop(id: string) {
+    let halted = false
     try {
       if (!monitorStore.get('maintenanceMode', false)) {
-        await this.checkEndpoint(id)
+        halted = !!(await this.checkEndpoint(id))
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Error in check loop for endpoint ${id}:`, err)
+    }
+
+    if (halted) {
+      // AD Lockout Protection engaged — checkEndpoint already recorded the failure
+      // and fired an alert; don't reschedule until a manual recheck or edit/save
+      // resumes the loop (see isScheduled / refresh-endpoint).
+      return
     }
 
     const endpoints = DatabaseService.getEndpoints()
@@ -147,6 +170,9 @@ export const MonitoringService = {
     let status: 'success' | 'error' = 'success'
     let latency = 0
     let errorMessage = ''
+    // Set when AD Lockout Protection engages — signals runCheckLoop to stop
+    // rescheduling this endpoint, *after* the normal status/alert code below runs.
+    let adLockoutHalt = false
 
     try {
       if (id.startsWith('seed-')) {
@@ -257,15 +283,25 @@ export const MonitoringService = {
 
         latency = Date.now() - startTime
         status = response.status >= 200 && response.status < 400 ? 'success' : 'error'
+        
         // Invalidate cookie session cache on auth failures so the next check re-logs in
         if (endpoint.authType === 'cookie' && (response.status === 401 || response.status === 403)) {
           cookieSessionExpiry.delete(id)
+        }
+        
+        // AD Lockout Protection for NTLM and Basic — record the failure through the
+        // normal status/alert path below (so it's visible), and signal a halt instead
+        // of throwing, since throwing here would skip that path entirely.
+        if ((endpoint.authType === 'ntlm' || endpoint.authType === 'basic') && (response.status === 401 || response.status === 403)) {
+           errorMessage = 'Authentication rejected (401/403) — AD Lockout Protection engaged, automatic checks paused for this endpoint until it is rechecked or re-saved.'
+           adLockoutHalt = true
         }
       }
     } catch (err: any) {
       status = 'error'
       latency = Date.now() - startTime
       errorMessage = err.message || 'Network connection refused'
+
       // Invalidate cookie session on any network error so the next cycle attempts a fresh login
       if (endpoint.authType === 'cookie') {
         cookieSessionExpiry.delete(id)
@@ -286,9 +322,12 @@ export const MonitoringService = {
       consecutiveErrors += 1
       errorCount += 1
       
-      // Read the configured threshold from settings (P16-5); default to 2 if not set
+      // Read the configured threshold from settings (P16-5); default to 2 if not set.
+      // AD Lockout Protection always alerts immediately — the loop halts after this
+      // single check, so waiting for the normal consecutive-failure threshold would
+      // mean it never fires and the endpoint goes silently dark.
       const threshold = parseInt(String(monitorStore.get('alertThreshold', 2)), 10) || 2
-      if (consecutiveErrors === threshold || (consecutiveErrors > threshold && consecutiveErrors % 5 === 0)) {
+      if (adLockoutHalt || consecutiveErrors === threshold || (consecutiveErrors > threshold && consecutiveErrors % 5 === 0)) {
         const alert: Alert = {
           id: randomUUID(),
           endpointId: currentEp.id,
@@ -331,6 +370,8 @@ export const MonitoringService = {
     if (this.onStateChange) {
       this.onStateChange()
     }
+
+    return adLockoutHalt
   },
 
   dispatchNotification(title: string, message: string) {
@@ -358,6 +399,12 @@ export const MonitoringService = {
       const webhookUrl = monitorStore.get('globalWebhook')
       const channelType = monitorStore.get('globalWebhookChannel') || 'msteams'
       if (!webhookUrl || typeof webhookUrl !== 'string') return
+
+      const urlCheck = validateWebhookUrl(webhookUrl)
+      if (!urlCheck.valid) {
+        console.error(`[security] Webhook URL rejected during dispatch: ${urlCheck.reason}`)
+        return
+      }
 
       try {
         const count = batch.length

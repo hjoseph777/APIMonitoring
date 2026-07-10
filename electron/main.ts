@@ -89,7 +89,7 @@ if (!gotTheLock) {
  * SSRF guard: validates that a webhook URL is safe to POST to.
  * Blocks non-HTTPS protocols and loopback / RFC-1918 private addresses.
  */
-function validateWebhookUrl(url: string): { valid: boolean; reason?: string } {
+export function validateWebhookUrl(url: string): { valid: boolean; reason?: string } {
   let parsed: URL
   try {
     parsed = new URL(url)
@@ -322,7 +322,15 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('refresh-endpoint', async (_, id: string) => {
-    await MonitoringService.checkEndpoint(id)
+    const halted = await MonitoringService.checkEndpoint(id)
+    // If AD Lockout Protection had previously halted this endpoint's loop and this
+    // manual recheck didn't hit the same lockout, resume automatic monitoring —
+    // otherwise a fixed credential would leave the endpoint stuck unmonitored
+    // until it's edited and re-saved.
+    if (!halted && !MonitoringService.isScheduled(id)) {
+      const endpoint = DatabaseService.getEndpoints().find(e => e.id === id)
+      if (endpoint) MonitoringService.schedule(endpoint)
+    }
     updateTrayMenu()
     return { success: true }
   })
