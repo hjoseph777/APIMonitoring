@@ -43,35 +43,30 @@ Designed specifically to run 24/7 in the system tray, bypassing browser CORS iss
 * **Direct Intranet Access**: Bypasses browser sandboxes and CORS limitations, allowing direct HTTP monitoring of local network addresses (`192.168.x.x`), loopbacks (`127.0.0.1`), and intranet servers.
 * **Enterprise Authentication Suite**: Full active support for static API Keys (header/query), authentic Windows Auth (NTLM challenges via `axios-ntlm`), client certificates (mTLS), session cookies (automated cookie jar-based multi-step login flows), and OAuth2 Client Credentials (with token caching). Each endpoint independently controls whether to accept self-signed/internal TLS certificates via a dedicated per-endpoint toggle, defaulting to **verified SSL** (secure by default).
 * **Pre-Save Connection Test**: Direct credential validation option inside the Add Endpoint form to verify settings before storing.
-* **Event-Driven Zero-Poll UI**: The renderer process is synchronized via IPC push events from the monitoring engine — when nothing changes, the UI consumes zero polling overhead. When the window is minimized to the tray, idle CPU and disk I/O chatter drops to absolute zero.
-* **Self-Scheduling Timeout Loops**: Eliminates polling race conditions and request accumulation by using recursively queued timeouts rather than overlapping intervals. A subsequent check is queued only *after* the previous request has completely settled.
 * **Parallel Endpoint Execution**: The tray “Check All Endpoints Now” action runs all checks concurrently with `Promise.all` — network timeouts on faulty APIs never block other checks or stall the tray.
 * **Demonstration Tools**: Embedded 1-click seeding utilities inside the Settings tab to inject live mock endpoints (healthy or mixed) to instantly test the UI and SMTP/Webhook alert dispatchers.
 * **Automated Log Rotation**: In-database cleanup policy purging transaction histories and alerts older than 7 days on startup to limit SQLite disk space usage.
 
 ---
 
-## 🛡️ Reliability, Accuracy & Security Architecture
+## 🛡️ Reliability & Security Architecture
 
 The application implements several advanced architectural patterns to ensure enterprise-grade monitoring stability:
 
-* **Strict Single-Instance Singleton**: Enforces a global OS-level single-instance lock to ensure only one background monitor runs at a time. This prevents duplicated tray icons, duplicated alerts, and concurrent SQLite database file corruption, even during local development.
-* **Event-Driven Zero-Poll Tray**: System tray icon updates are strictly event-driven (triggered by monitoring state changes) rather than polled on an interval, eliminating idle CPU usage.
-* **Event-Driven Zero-Poll UI**: The renderer window synchronises with the monitoring engine via IPC push — when the window is minimised to tray, disk I/O and CPU chatter drops to absolute zero. No unconditional polling timers.
-* **Overlapping Check Mitigation (Race-Condition Free)**: The monitoring engine uses a recursive, self-scheduling `setTimeout` pattern. A subsequent check is queued only *after* the previous request’s lifecycle has completely settled, ensuring highly accurate latency logs and preventing server overload.
-* **Parallel Endpoint Execution**: Tray-triggered “Check All Endpoints” runs all checks concurrently with `Promise.all` — a 15-second timeout on one faulty endpoint never blocks the rest.
-* **Secure-by-Default TLS Verification**: SSL certificate validation is **enabled by default** for all endpoints. Endpoints that monitor intranet servers with self-signed certificates can individually opt-in to accepting unverified certificates via the "Accept self-signed / internal TLS certificates" checkbox in the endpoint form. This prevents global SSL bypass while still supporting all common enterprise network topologies.
+* **Strict Single-Instance Singleton**: Enforces a global OS-level single-instance lock to ensure only one background monitor runs at a time, preventing duplicated tray icons, duplicated alerts, and concurrent SQLite corruption.
+* **Event-Driven Zero-Poll (Tray + UI)**: Tray updates fire on `MonitoringService.onStateChange` events; the renderer synchronises via IPC push — when nothing changes, idle CPU and disk I/O drop to absolute zero.
+* **Race-Condition-Free Self-Scheduling Loop**: The monitoring engine uses a recursive `setTimeout` pattern — a subsequent check is only queued *after* the previous request fully settles, guaranteeing accurate latency logs and preventing server overload.
+* **Parallel Endpoint Execution**: Tray-triggered “Check All Endpoints” runs all checks concurrently with `Promise.all` — a timeout on one faulty endpoint never blocks the rest.
+* **Secure-by-Default TLS Verification**: SSL certificate validation is **enabled by default** for all endpoints. Intranet servers with self-signed certificates can individually opt-in via the per-endpoint “Accept self-signed / internal TLS certificates” toggle, preventing global SSL bypass.
 * **Stateful Enterprise Authentication**:
-  * **OAuth2 Client Credentials**: Automatically handles bearer token retrieval, caching, and auto-refresh mechanisms before expiry.
-  * **Session Cookie Authentication**: Cookie jar-based client with persistent session caching — the login flow is only re-executed when the session expires (30-minute TTL) or when a 401/403 response invalidates the current session, preventing redundant auth traffic.
-  * **Windows Auth (NTLM)**: Implements authentic challenge-response handshakes via `axios-ntlm`.
-* **On-the-fly Verification (Pre-Save Connection Test)**: Users can validate endpoint connectivity and authentication credentials inside the creation form before committing changes to the local database, facilitating faster troubleshooting.
-* **Universal Email Notifications Engine**: Native `nodemailer` integration allows real SMTP alert dispatches using any enterprise mail server (Gmail, Outlook, custom domains) with custom ports, credentials, and live UI configuration testing.
-* **Auto-Pruning Log Rotation**: On every application startup, a background cleanup sweep runs to purge logs and alert records older than 7 days, capping SQLite database growth and maintaining low resource overhead.
-* **Zero-Collision Cryptographic IDs**: Implements `crypto.randomUUID()` guaranteeing globally unique, secure identifiers across the frontend and backend architectures.
-* **In-Flight Request Deduplication**: Identical overlapping network requests are intelligently coalesced using an in-flight Promise cache, preventing redundant network chatter and SQLite locking.
-* **Strict Data Validation & Bounded Queries**: Backup imports undergo structural/URL validation, and database queries are hard-capped (e.g. `LIMIT 500`) to guarantee UI responsiveness regardless of the underlying dataset size.
-* **High-Performance Singletons**: Core background services (like the database store) are instantiated strictly once at the module level, completely eliminating garbage collection spikes during hot monitoring loops.
+  * **OAuth2 Client Credentials**: Automatic bearer token retrieval, caching, and pre-expiry refresh.
+  * **Session Cookie Authentication**: Cookie jar-based client with 30-minute session cache — login re-executes only on expiry or 401/403.
+  * **Windows Auth (NTLM)**: Authentic challenge-response handshakes via `axios-ntlm`.
+* **Universal Email Notifications**: Native `nodemailer` SMTP engine supports any mail server (Gmail, Outlook, corporate relay) with custom ports, credentials, and a live “Test Email” IPC trigger.
+* **In-Flight Request Deduplication**: Identical concurrent requests coalesced via a Promise cache, preventing redundant network traffic and SQLite contention.
+* **Zero-Collision Cryptographic IDs**: `crypto.randomUUID()` used throughout — no `Date.now()` identifiers.
+* **Strict Data Validation & Bounded Queries**: Backup imports structurally validated with URL parsing; database queries hard-capped at `LIMIT 500`.
+* **High-Performance Singletons**: Core services instantiated once at module level, eliminating GC spikes in hot monitoring loops.
 
 ---
 
@@ -93,26 +88,8 @@ v1.2.0 completes a full server-hardening audit covering every background code pa
 | **Configurable Alert Threshold** | Consecutive-failure threshold wired end-to-end from Settings to the monitoring engine — read from the store at runtime, no restart required. |
 | **SMTP TLS for Private-CA Relays** | *Allow self-signed / untrusted SMTP certificates* toggle — passes `tls: { rejectUnauthorized: false }` to nodemailer for corporate relays with internal CA certificates. Default is strict. |
 | **Dashboard Monitor Feed** | Real-time API monitoring events (`success`/`error`) surface in the Dashboard quick-feed. |
-| **Event-Driven UI Refresh** | Renderer synchronises via IPC push from `onStateChange` — zero unconditional polling; idle CPU and disk I/O when nothing changes. |
-| **Parallel Endpoint Checks** | Tray “Check All Endpoints Now” uses `Promise.all` — all checks run concurrently, no sequential N × timeout blocking. |
 | **Full Settings Persistence** | `minimizeTray`, `autoStart`, `alertThreshold`, `smtpAllowSelfSigned` all load from and persist to the backend on every save. |
 | **Clean Type System** | `Log.type` renamed from `'xerox'` to `'clipboard'`; dead `authStatus` field removed from `Endpoint` type. |
-
----
-
-## 🏆 Independent Audit Trail — 100 / 100
-
-A full line-by-line expert audit of every critical file was conducted on **July 9, 2026**. The results across all five audit dimensions are recorded below as a permanent reference for enterprise procurement and IT security reviews.
-
-| Audit Dimension | Result | Evidence |
-|---|---|---|
-| **Security** | ✅ PASS | TLS `rejectUnauthorized: true` by default on all auth paths; SSRF-guarded outbound webhook POSTs; SMTP credentials encrypted at rest via Windows DPAPI (`safeStorage`); `contextIsolation: true` + `nodeIntegration: false` on the renderer; backup imports structurally validated with URL parsing; `crypto.randomUUID()` everywhere — zero `Date.now()` IDs remaining. |
-| **Memory Leaks** | ✅ NONE | Every module-level `Map` (`activeRequests`, `activeTimers`, `oauth2Cache`, `cookieJars`, `cookieSessionExpiry`) is cleaned in `finally` blocks or naturally scoped to endpoint lifetime. Alert buffers flush on every 60-second cycle. Response history capped at 10 entries. Database permanently bounded at 5,000 records + 7-day expiry. |
-| **CPU Efficiency** | ✅ PASS | Event-driven System Tray (zero polling). Self-scheduling `setTimeout` loop (zero request stacking). Push-based IPC to renderer via `state-changed` event (no 3-second unconditional polling in production). Zustand atomic selectors (no full-tree re-renders). The only remaining `setInterval` is the hourly log-export guard — completely negligible. |
-| **Crash Resistance** | ✅ PASS | Every IPC handler and background task wrapped in `try/catch`. Null guards on all endpoint lookups. Wipe button correctly wired to `executeWipe` with consistent `'DELETE'` confirmation guard. Single-instance lock prevents duplicate monitors. Graceful SQLite → `electron-store` fallback. `mainWindow.isDestroyed()` guard before every IPC push send. |
-| **Code Quality** | ✅ PASS | Module-level singletons throughout. Type-safe IPC boundary covering all 16+ settings fields with full TypeScript declarations. Minimal, security-conscious preload bridge. Zero inline `require()` calls in hot paths. Dead type fields removed. Log type literals consistent and meaningful. |
-
-> **Verdict: 100 / 100 — Enterprise Gold Standard.** This application is certified ready for 24/7 unattended enterprise server deployment. No blocking issues, security gaps, memory hazards, or code quality concerns remain.
 
 ---
 
@@ -134,7 +111,7 @@ To test the application without real endpoints, you can manually inject mock end
 ## 🛠️ Enterprise Operations
 
 ### Launch at System Startup
-To ensure 24/7 background monitoring without manual intervention, go to **Notification & JSON** settings and enable **Launch at System Startup**. The application will automatically boot directly to the system tray when Windows or macOS starts.
+To ensure 24/7 background monitoring without manual intervention, go to **Notification & JSON** settings and enable **Launch at System Startup**. The application will automatically boot directly to the system tray when Windows starts.
 
 ### Enable Electron Seamless Auto-Updates
 When this is enabled, the background service will periodically check GitHub for new versions of the application. If a new release is found, it will automatically download and install it in the background to ensure your team is always running the latest patches.
@@ -157,10 +134,11 @@ The background monitoring engine actively catches, categorizes, and logs over 30
 ## 🛠️ Tech Stack
 
 * **Frontend**: React 18, TypeScript, TailwindCSS (Tokyo Night & Clear themes), Zustand (Atomic Store), Lucide Icons
-* **Runtime / Shell**: Electron 28+, `electron-store` (Preferences), `electron-safe-storage` (Credentials encryption)
-* **Build System**: `electron-vite`, `vite`
+* **Runtime / Shell**: Electron 28+, `electron-store` (Preferences), `safeStorage` / Windows DPAPI (Credential encryption), `electron-updater` (Auto-updates)
+* **Build System**: `electron-vite`, `electron-builder` (NSIS Windows installer)
 * **Local Database**: `better-sqlite3` (with `electron-store` fallback)
-* **HTTP Client**: `axios`, `axios-ntlm`, `axios-cookiejar-support`
+* **HTTP Client**: `axios`, `axios-ntlm`, `axios-cookiejar-support`, `tough-cookie`
+* **Notifications**: `nodemailer` (SMTP email), Webhook POST (Discord / Slack / custom HTTPS)
 
 ### Why Zustand?
 Zustand is utilized as our global atomic store to completely decouple state updates from the React component tree hierarchy. Since our UI rapidly syncs with the background monitoring engine via IPC (Inter-Process Communication) to capture real-time latency changes, using a traditional React Context provider would cause the entire application to constantly re-render, creating noticeable UI lag. Zustand allows our latency charts and status badges to subscribe specifically to atomic state slices, maintaining a lightning-fast UI regardless of the configured ping intervals or background polling volume.
@@ -201,43 +179,29 @@ API_Monitor/
 
 ---
 
-## 📷 Visual Walkthrough & System Tray States
+## 📷 Visual Walkthrough
 
-The following screenshots illustrate the layout and tray behavior options of the application:
+### Dashboard — Status Cockpit
 
-### Taskbar Navigation & Default Electron Frame
 
-![Windows Taskbar Jump List](Pictures/image1.png)
+*Real-time monitoring dashboard showing stat cards (Total Monitored, Online Services, Offline Failures, Active Alerts), the Endpoint Status Cockpit with per-endpoint latency sparklines and individual Check buttons, the Active Alerts Feed with Acknowledge controls, and the Recent Monitor Activity log.*
 
-*Shows the standard Windows OS Jump list for the active taskbar window button.*
+### Endpoint Registry
 
-### Active Application Settings View
 
-![Active Application Settings View](Pictures/image2.png)
+*The Endpoint Registry tab listing all registered endpoints with their authentication badge (OAuth2, NTLM, Basic, None), last-check timestamps, and edit/delete controls. The Background Engine panel below configures the consecutive-failure alert threshold and tray/autostart behaviour.*
 
-*The main application interface displaying the settings tab with endpoint registration, check interval settings, notifications, and the Test Connection button.*
+### Add New Endpoint — Authentication Method Selector
 
-### Endpoint Authentication Configuration
 
-![Endpoint Authentication Configuration](Pictures/image3.png)
+*The Add New Endpoint form with the Authentication Method dropdown expanded, showing all seven supported auth methods: None (Public Endpoint), API Key Header/Query, Windows Domain (NTLM), Client Certificate (mTLS), OAuth2 Client Credentials, Basic Credentials, and Session Cookie Authentication. The per-endpoint self-signed TLS toggle and Test Connection button are visible at the bottom.*
 
-*The settings panel showing the dropdown list of supported enterprise authentication methods, including API Key, Windows NTLM, mTLS Client Certificate, OAuth2, and Session Cookies.*
+### Notification & JSON — Alert Delivery
 
-### System Tray Icons Caret
 
-![System Tray Icons Caret](Pictures/image4.png)
+*The Notification & JSON tab configured with a live SMTP relay (host, port, username, masked password), the Allow self-signed SMTP certificates toggle for private-CA mail relays, recipient alert emails, a Teams/Office 365 webhook channel, native OS toast toggle, Maintenance Mode switch, Weekly Auto-Export, and the Backup & Data / Danger Zone panels below.*
 
-*The Windows taskbar caret (`^`) where background-monitored tray processes reside.*
+### Reports — Per-Endpoint Latency Charts
 
-### Expanded Tray Applications Pop-up
 
-![Tray Applications Pop-up](Pictures/image5.png)
-
-*The expanded Windows notification tray displaying all active background items.*
-
-### Tray Context Menu Controls
-
-![Tray Context Menu Controls](Pictures/image6.png)
-
-*The custom right-click options displayed on the Xerox tray icon, exposing status details and exit controls.*
-
+*The Reports tab displaying per-endpoint latency trace charts with 10-point sparklines (PEAK ms annotated), Current Status badges (Reachable / Unreachable), and an Export CSV button. Endpoints monitored with OAuth2, NTLM, and unauthenticated methods are shown side-by-side with live fleet health and average response statistics in the header.*
