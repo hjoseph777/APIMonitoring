@@ -28,9 +28,6 @@ This guide walks through the four tabs of the app exactly as they exist today, c
 
 ## 1. First Launch
 
-![Empty state mockup](Pictures/mockup-empty-state.svg)
-*Mockup — the Dashboard and sidebar tabs exactly as they appear on first launch, before anything is registered. Not a live screen capture.*
-
 The app opens on the **Dashboard** tab with an empty state until you register your first endpoint. Use the left sidebar to move between the four tabs:
 
 * **Dashboard** — live status, alerts, and activity
@@ -56,8 +53,8 @@ The sidebar footer shows the installed version. The app defaults to the **Tokyo 
 
 ## 3. Dashboard
 
-![Dashboard mockup](Pictures/mockup-dashboard.svg)
-*Mockup drawn to match the shipped layout and Tokyo Night color values — not a live screen capture.*
+![Dashboard Status Cockpit](Pictures/screenshot-dashboard.png)
+*(Live screenshot - Dashboard: stat cards, Endpoint Status Cockpit with sparklines, Active Alerts Feed, and Recent Monitor Activity)*
 
 ### KPI cards (top row)
 Four cards — **Total Monitored**, **Online**, **Down**, **Degraded** — each showing the current count plus a small colored delta (e.g. `+1`, `−1`) comparing against roughly 15 minutes ago, so you can tell at a glance whether things are trending better or worse.
@@ -80,8 +77,8 @@ A rolling feed of the latest check results (not just failures) — successful ch
 
 ## 4. Endpoint Registry
 
-![Endpoint Registry mockup](Pictures/mockup-registry.svg)
-*Mockup drawn to match the shipped layout and Tokyo Night color values — not a live screen capture.*
+![Endpoint Registry](Pictures/screenshot-registry.png)
+*(Live screenshot - Endpoint Registry listing registered endpoints with auth tags, edit/delete controls, and the Background Engine settings panel)*
 
 ### Registered Endpoints
 The list of everything currently monitored leads the page, since most visits here are to review or adjust an existing endpoint rather than add a new one. Each row shows the name, URL, and auth tag, plus:
@@ -96,6 +93,9 @@ Collapsed by default — click the dashed **Register New Endpoint** row to expan
 2. **Check Interval** and **Timeout**
 3. **Authentication Method** (see [UserManual.md § 4](UserManual.md#4-authentication-guide) for details on each type)
 4. **Accept self-signed certificates**, only for internal HTTPS endpoints with a private CA
+
+![Add Endpoint Form](Pictures/screenshot-add-endpoint.png)
+*(Live screenshot - Add New Endpoint form with Authentication Method dropdown showing all seven supported auth methods)*
 
 Click **Test Connection** to verify before saving, then **Add Endpoint** to register it. The form closes automatically after a successful save (or edit).
 
@@ -147,8 +147,8 @@ If a normally-working endpoint keeps reporting failures, raise the timeout befor
 
 ## 5. Notification & JSON
 
-![Notification & JSON mockup](Pictures/mockup-notification.svg)
-*Mockup drawn to match the shipped layout and Tokyo Night color values — not a live screen capture.*
+![Notification and JSON Settings](Pictures/screenshot-notifications.png)
+*(Live screenshot - Notification & JSON tab: SMTP settings, self-signed cert toggle, recipient emails, webhook channel, Maintenance Mode, and Backup & Data controls)*
 
 ### Alert Delivery
 SMTP server/port/credentials, the **self-signed SMTP certificate** option (for internal mail relays), recipient email addresses, and the chat webhook (Teams/Discord/Slack) — each with a **Test** button. Both Test buttons save your current form values first, then send a real test message; the field caption says so.
@@ -201,9 +201,6 @@ Visually separated (red-bordered panel) from routine settings, because these thr
 
 #### What each seed option actually creates
 
-![Seed comparison mockup](Pictures/mockup-seed-comparison.svg)
-*Mockup — the four real demo endpoints the app seeds, shown in both outcomes. Not a live screen capture.*
-
 Both options seed the same four demo endpoints (`ERP Sales API`, `HR Portal Service`, `Finance Reporting`, `Inventory Sync`) — only the status of the middle two changes:
 
 | | ERP Sales API | HR Portal Service | Finance Reporting | Inventory Sync |
@@ -217,8 +214,8 @@ Use **Seed Healthy** to confirm the dashboard renders a fully green fleet correc
 
 ## 6. Reports
 
-![Reports mockup](Pictures/mockup-reports.svg)
-*Mockup drawn to match the shipped layout and Tokyo Night color values — not a live screen capture.*
+![Reports Latency Charts](Pictures/screenshot-reports.png)
+*(Live screenshot - Reports tab: per-endpoint latency trace charts with peak annotations, Current Status badges, fleet health strip, and Export CSV button)*
 
 ### Summary strip
 **Fleet health**, **Avg response**, and total **Monitored** count — the same figures as the Dashboard's fleet strip, so the two screens never disagree — plus an **Export CSV** button that downloads your full log history as a `.csv` file on demand (separate from the recurring weekly auto-export configured in Notification & JSON).

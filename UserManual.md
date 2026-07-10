@@ -67,6 +67,9 @@ When you launch the application, you are greeted by the **Dashboard**.
 * **Endpoint Status Cockpit**: Displays a real-time list of all monitored links, their status (Online/Offline), current response latency (ms), and last check timestamp.
 * **Xerox Logs Tracker**: Scrollable audit trail showing the success and failure history of all background check events. *(Note: High-frequency local UI actions like copying payloads to the clipboard are explicitly excluded from database logging to prevent bloat).*
 
+![Dashboard Status Cockpit](Pictures/screenshot-dashboard.png)
+*(Live screenshot - Dashboard showing stat cards, Endpoint Status Cockpit with sparklines, Active Alerts Feed, and Recent Monitor Activity)*
+
 ---
 
 ## 3. Registering & Configuring Endpoints
@@ -83,16 +86,16 @@ To start monitoring a new URL:
 6. Click **Test Connection** to execute a test before saving. If successful, you will see a green check banner.
 7. Click **+ Add Endpoint** to save and activate monitoring.
 
-![Endpoint Settings View](Pictures/image2.png)
-*(The Settings Panel showing the endpoint configuration inputs and the pre-save Test Connection option)*
+![Endpoint Registry](Pictures/screenshot-registry.png)
+*(Live screenshot — Endpoint Registry listing registered endpoints with auth badges and the Add New Endpoint form)*
 
 ---
 
 ## 4. Authentication Guide
 The application supports multiple security layers. Under the **Authentication Method** dropdown, select the protocol required by your target server:
 
-![Authentication Dropdown Menu](Pictures/image3.png)
-*(Supported enterprise authentication methods dropdown list)*
+![Add Endpoint - Authentication Method Selector](Pictures/screenshot-add-endpoint.png)
+*(Live screenshot — Add New Endpoint form with the Authentication Method dropdown expanded showing all seven supported auth methods)*
 
 ### A. None (Public Endpoint)
 * **Use Case**: Public websites, unauthenticated internal status pages.
@@ -205,14 +208,9 @@ The application is designed to run 24/7 in the background without cluttering you
 
 ### Visual Guide:
 
-#### System Notifications & Enterprise Settings:
-![Windows Notification Caret](Pictures/image4.png)
-
-#### Expanded Notification Icons:
-![System Tray Expanded List](Pictures/image5.png)
-
-#### Right-Click Context Menu controls:
-![Tray Right-Click Options](Pictures/image6.png)
+#### Notification & JSON Settings:
+![Notification and JSON Settings](Pictures/screenshot-notifications.png)
+*(Live screenshot — SMTP, webhook, maintenance mode, and auto-export settings panel)*
 
 ---
 
