@@ -466,6 +466,86 @@ export const DatabaseService = {
       }
     ]
     seedEndpoints.forEach((ep) => this.saveEndpoint(ep))
+
+    // Seed matching logs/alerts directly, deterministically — seed endpoints are no
+    // longer placed on the live check loop (see MonitoringService.schedule), so
+    // nothing would otherwise ever populate the Recent Activity / Active Alerts
+    // feeds for them. "Seed data" should be a complete static snapshot, not
+    // something that depends on a live check to fill in the rest.
+    const lockoutMessage = 'Authentication rejected (401/403) — AD Lockout Protection engaged, automatic checks paused for this endpoint until it is rechecked or re-saved.'
+    // HR Portal Service / Finance Reporting share the same failure wording in a
+    // given mode — the real threshold-alert text for 'mixed', the real lockout
+    // text for 'lockout'.
+    const hrFinanceFailureDetail = mode === 'lockout' ? lockoutMessage : 'Simulated 503 Service Unavailable'
+
+    const seedLogs: Log[] = [
+      {
+        id: 'sl-1',
+        endpointId: seedEndpoints[0].id,
+        endpointName: seedEndpoints[0].name,
+        message: erpStatus === 'success' ? 'Reachable. Latency: 130ms.' : 'Failure check: timeout',
+        timestamp: t(2),
+        type: erpStatus === 'success' ? 'info' : 'error'
+      },
+      {
+        id: 'sl-2',
+        endpointId: seedEndpoints[1].id,
+        endpointName: seedEndpoints[1].name,
+        message: hrOrFinanceFails ? `Failure check: ${hrFinanceFailureDetail}` : 'Reachable. Latency: 225ms.',
+        timestamp: t(8),
+        type: hrOrFinanceFails ? 'error' : 'info'
+      },
+      {
+        id: 'sl-3',
+        endpointId: seedEndpoints[2].id,
+        endpointName: seedEndpoints[2].name,
+        message: hrOrFinanceFails ? `Failure check: ${hrFinanceFailureDetail}` : 'Reachable. Latency: 92ms.',
+        timestamp: t(1),
+        type: hrOrFinanceFails ? 'error' : 'info'
+      },
+      {
+        id: 'sl-4',
+        endpointId: seedEndpoints[3].id,
+        endpointName: seedEndpoints[3].name,
+        message: 'Reachable. Latency: 315ms.',
+        timestamp: t(5),
+        type: 'info'
+      }
+    ]
+    seedLogs.forEach((lo) => this.saveLog(lo))
+
+    const seedAlerts: Alert[] = []
+    if (mode !== 'green') {
+      seedAlerts.push(
+        {
+          id: 'sa-1',
+          endpointId: seedEndpoints[1].id,
+          endpointName: seedEndpoints[1].name,
+          message: mode === 'lockout' ? lockoutMessage : 'Failed checks consecutive threshold hit (3 failures).',
+          timestamp: t(8),
+          read: false
+        },
+        {
+          id: 'sa-2',
+          endpointId: seedEndpoints[2].id,
+          endpointName: seedEndpoints[2].name,
+          message: mode === 'lockout' ? lockoutMessage : 'Failed checks consecutive threshold hit (5 failures).',
+          timestamp: t(1),
+          read: false
+        }
+      )
+    }
+    if (mode === 'lockout') {
+      seedAlerts.push({
+        id: 'sa-3',
+        endpointId: seedEndpoints[0].id,
+        endpointName: seedEndpoints[0].name,
+        message: 'Failed checks consecutive threshold hit (4 failures).',
+        timestamp: t(2),
+        read: false
+      })
+    }
+    seedAlerts.forEach((al) => this.saveAlert(al))
   }
 }
 
