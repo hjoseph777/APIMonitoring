@@ -30,7 +30,6 @@ Unlike browser-only or Docker-first uptime tools, this product is optimized for 
 - [Authentication Coverage](#authentication-coverage)
 - [Reliability and Security Highlights](#reliability-and-security-highlights)
 - [Design Principles](#design-principles)
-- [Quick Start](#quick-start)
 - [Operational Features](#operational-features)
 - [Performance: Connection Reuse](#performance-connection-reuse)
 - [Visual Walkthrough](#visual-walkthrough)
@@ -64,6 +63,7 @@ API Monitor ERP Desktop is a Windows-native monitoring product built for interna
 1. Choose this product when endpoints are internal, auth-heavy, and Windows-operational.
 2. Choose this product when teams need fast adoption without container infrastructure.
 3. Choose this product when test accuracy must match continuous monitoring behavior.
+4. Choose this product when you need to confirm an endpoint is valid quickly, without opening a separate testing tool.
 
 ---
 
@@ -183,39 +183,6 @@ This protects the customer's own Active Directory infrastructure from the monito
 
 ---
 
-## Quick Start
-
-### Prerequisites
-
-- Windows
-- Node.js 18+
-- npm
-
-### Run in Development
-
-```bash
-npm install
-npm run dev
-```
-
-### Build
-
-```bash
-npm run compile
-npm run build
-```
-
-### Validation Pipeline
-
-```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run ci
-```
-
----
-
 ## Operational Features
 
 ### Background Operations
@@ -243,11 +210,11 @@ The monitoring engine uses persistent keep-alive connections and endpoint-level 
 
 This is especially important for NTLM, where authentication binds to the connection rather than a single request.
 
-| Behavior | Fresh Agent per Poll (Old) | Shared Keep-Alive Agent (Current) |
-|---|---|---|
-| TCP connections (6 probes) | 6 separate connections | 1 persistent connection |
-| Connection pattern | Repeated connect and teardown | Reused established connection |
-| NTLM handshake cost | Handshake repeated each poll | Handshake reused for connection lifetime |
+| Behavior | Shared Keep-Alive Agent (Current) |
+|---|---|
+| TCP connections (6 probes) | 1 persistent connection |
+| Connection pattern | Reused established connection |
+| NTLM handshake cost | Handshake reused for connection lifetime |
 
 Implementation note: agents are cached per endpoint (`agentCache` in `electron/monitoring.ts`) and evicted when an endpoint is edited or deleted, so updates take effect on the next check.
 
@@ -354,7 +321,7 @@ Internal ERP outages are rarely just availability problems. They are often authe
 
 API Monitor ERP Desktop gives operations teams a lightweight, always-on Windows tray monitor that validates real enterprise access paths, including NTLM, OAuth2, cookie sessions, and client certificate flows.
 
-Why buyers choose it:
+Benefits for integrators:
 
 1. Native desktop monitoring instead of another hosted service.
 2. Strong intranet and localhost access from a local runtime.
@@ -368,11 +335,11 @@ Bottom line: for internal enterprise API reliability on Windows, this product is
 
 ## Roadmap
 
-- ERP gateway support with POST probes and body-level validation.
-- M-Files auto-discovery from server URL (status, auth, vault probe generation).
-- Import from Swagger/OpenAPI; migrate existing Postman collections into monitored endpoints (a replacement path, not a coexistence integration).
-- Compose mode: ad-hoc request runner with one-click Save as Monitor.
-- Optional headless service mode for 24/7 engine operation.
+1. **Complete Postman retirement** — Test Connection already removes the need for Postman in an estimated ~95% of daily use (validating known endpoints). The remaining slice — ad-hoc, exploratory requests against new or misbehaving APIs, and endpoints requiring methods beyond GET — is closed by **Compose mode** (a free-form request runner with one-click *Save as Monitor*) together with a **one-time import** of existing Postman collections. After this milestone, every request — saved, new, or exploratory — lives in one tool, and every experiment can become a monitor.
+2. **ERP gateway monitoring** (e.g., Solution Infomédia's ERPConnector bridging Acomba) — POST probes with request-body credentials and response-body validation, for gateways that report failures inside an HTTP 200 response. A single read-only probe exercises the full chain (hosted WebAPI → on-premises listener service → accounting system) so the dashboard reflects true end-to-end health, not just gateway reachability.
+3. **M-Files auto-discovery** — enter a server URL and probes are generated automatically: server status, authentication, and one per discovered vault (catching "server up, vault offline").
+4. **Headless / Windows service mode** — run the monitoring engine as a native Windows service for unattended 24/7 operation (auto-start with the machine, no logged-in session required, automatic restart on failure), with the desktop application serving as its dashboard. Desktop-only mode remains fully supported for interactive use during implementations.
+5. **Swagger / OpenAPI import** — load an API definition from a live specification URL or a downloaded spec file. Every available endpoint is listed; select only the ones you need, and each is created with its method, path, and authentication scheme pre-filled, then validated with Test Connection before monitoring begins — endpoint onboarding goes from manual entry to *import, select, validate, monitor* in one flow.
 
 ---
 
@@ -424,12 +391,34 @@ API_Monitor/
 - License: MIT
 - Documentation last reviewed: `July 11, 2026`
 
+### Prerequisites
+
+- Windows
+- Node.js 18+
+- npm
+
+### Run in Development
+
+```bash
+npm install
+npm run dev
+```
+
+### Build
+
+```bash
+npm run compile
+npm run build
+```
+
 ### Quality Gates
 
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test`
-- `npm run compile`
-- `npm run ci`
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run compile
+npm run ci
+```
 
 CI runs on push and pull requests to `main` via `.github/workflows/ci.yml`.
