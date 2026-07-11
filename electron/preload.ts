@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { Endpoint } from '../src/types'
+import { Endpoint, FootprintSnapshot } from '../src/types'
 
 // Expose safe, protected APIs to the React renderer process
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -37,6 +37,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   clearDemoData: () => ipcRenderer.invoke('clear-demo-data'),
   // P16-14: IPC push so renderer refreshes on state change instead of polling
   onStateChanged: (callback: () => void) => ipcRenderer.on('state-changed', (_event) => callback()),
-  offStateChanged: () => ipcRenderer.removeAllListeners('state-changed')
+  offStateChanged: () => ipcRenderer.removeAllListeners('state-changed'),
+
+  // Self-monitoring footprint widget
+  getFootprint: () => ipcRenderer.invoke('get-footprint'),
+  onFootprintUpdate: (callback: (snapshot: FootprintSnapshot) => void) =>
+    ipcRenderer.on('footprint-update', (_event, snapshot) => callback(snapshot)),
+  offFootprintUpdate: () => ipcRenderer.removeAllListeners('footprint-update')
 })
 export {}

@@ -3,9 +3,9 @@ import https from 'https'
 import http from 'http'
 import fs from 'fs'
 import { randomUUID } from 'crypto'
-import { Notification, safeStorage } from 'electron'
+import { app, Notification, safeStorage } from 'electron'
 import DatabaseService from './database'
-import { Endpoint, Alert, Log } from '../src/types'
+import { Endpoint, Alert, Log, FootprintSnapshot } from '../src/types'
 import { NtlmClient } from 'axios-ntlm'
 import { wrapper } from 'axios-cookiejar-support'
 import { CookieJar } from 'tough-cookie'
@@ -163,20 +163,70 @@ function emitHeartbeat() {
   const healthy = endpoints.filter((ep) => ep.status === 'success').length
   const down = endpoints.filter((ep) => ep.status === 'error').length
   const paused = endpoints.filter((ep) => ep.monitoringPaused).length
+
+  let footprintSuffix = ''
+  if (footprintHistory.length > 0) {
+    const avgCpu = footprintHistory.reduce((sum, s) => sum + s.cpuPercent, 0) / footprintHistory.length
+    const avgRam = footprintHistory.reduce((sum, s) => sum + s.ramMB, 0) / footprintHistory.length
+    footprintSuffix = `, CPU avg ${avgCpu.toFixed(1)}%, RAM ${avgRam.toFixed(0)} MB`
+  }
+
   DatabaseService.saveLog({
     id: randomUUID(),
-    message: `Heartbeat: ${endpoints.length} endpoint(s) monitored — ${healthy} healthy, ${down} down, ${paused} paused.`,
+    message: `Heartbeat: ${endpoints.length} endpoint(s) monitored — ${healthy} healthy, ${down} down, ${paused} paused${footprintSuffix}.`,
     timestamp: new Date().toISOString(),
     type: 'info'
   })
 }
 
+// --- Self-monitoring footprint ---
+// One sampler, one widget — no separate metrics subsystem. Feeds both the live
+// dashboard widget (via onFootprintUpdate) and the hourly heartbeat aggregate above.
+const FOOTPRINT_SAMPLE_MS = 10 * 1000 // 10s
+const FOOTPRINT_HISTORY_MAX = 360 // 1h at a 10s sample rate
+let footprintTimer: NodeJS.Timeout | null = null
+const footprintHistory: { cpuPercent: number; ramMB: number; at: string }[] = []
+
+function sampleFootprint() {
+  const metrics = app.getAppMetrics()
+  const cpuPercent = metrics.reduce((sum, m) => sum + (m.cpu?.percentCPUUsage || 0), 0)
+  const ramMB = metrics.reduce((sum, m) => sum + (m.memory?.workingSetSize || 0), 0) / 1024
+  const processes = metrics.map((m) => ({
+    type: m.type,
+    cpuPercent: m.cpu?.percentCPUUsage || 0,
+    ramMB: (m.memory?.workingSetSize || 0) / 1024
+  }))
+
+  footprintHistory.push({ cpuPercent, ramMB, at: new Date().toISOString() })
+  if (footprintHistory.length > FOOTPRINT_HISTORY_MAX) {
+    footprintHistory.splice(0, footprintHistory.length - FOOTPRINT_HISTORY_MAX)
+  }
+
+  MonitoringService.onFootprintUpdate?.({ cpuPercent, ramMB, history: footprintHistory, processes })
+}
+
 export const MonitoringService = {
   onStateChange: null as (() => void) | null,
+  onFootprintUpdate: null as ((snapshot: FootprintSnapshot) => void) | null,
+
+  // For the widget's initial paint, before the first 10s sample/push arrives.
+  getFootprintSnapshot(): FootprintSnapshot {
+    const latest = footprintHistory[footprintHistory.length - 1]
+    return {
+      cpuPercent: latest?.cpuPercent ?? 0,
+      ramMB: latest?.ramMB ?? 0,
+      history: footprintHistory,
+      processes: []
+    }
+  },
 
   start() {
     console.log('Background Monitoring Engine started...')
     this.scheduleAll()
+    if (!footprintTimer) {
+      sampleFootprint() // immediate first sample so the widget isn't blank on launch
+      footprintTimer = setInterval(sampleFootprint, FOOTPRINT_SAMPLE_MS)
+    }
     if (!heartbeatTimer) {
       emitHeartbeat() // immediate proof-of-life entry on launch, not just on the hour
       heartbeatTimer = setInterval(emitHeartbeat, HEARTBEAT_INTERVAL_MS)

@@ -217,6 +217,8 @@ app.whenReady().then(() => {
     return { success: true }
   })
 
+  ipcMain.handle('get-footprint', () => MonitoringService.getFootprintSnapshot())
+
   ipcMain.handle('get-alerts', () => DatabaseService.getAlerts())
   ipcMain.handle('clear-all-alerts', () => {
     DatabaseService.clearAllAlerts()
@@ -540,6 +542,11 @@ app.whenReady().then(() => {
     // P16-14: push state-changed event to renderer so UI refreshes without polling
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('state-changed')
+    }
+  }
+  MonitoringService.onFootprintUpdate = (snapshot) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('footprint-update', snapshot)
     }
   }
 

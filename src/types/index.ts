@@ -44,6 +44,13 @@ export interface Log {
   success?: boolean; // specifically for clipboard copy events
 }
 
+export interface FootprintSnapshot {
+  cpuPercent: number; // combined CPU % across all app processes
+  ramMB: number; // combined working set across all app processes
+  history: { cpuPercent: number; ramMB: number; at: string }[]; // rolling 1h window, 10s samples
+  processes: { type: string; cpuPercent: number; ramMB: number }[]; // per-process breakdown (main/renderer/GPU)
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -74,6 +81,9 @@ declare global {
       clearDemoData: () => Promise<{ success: boolean; message?: string }>;
       onStateChanged: (callback: () => void) => void;
       offStateChanged: () => void;
+      getFootprint: () => Promise<FootprintSnapshot>;
+      onFootprintUpdate: (callback: (snapshot: FootprintSnapshot) => void) => void;
+      offFootprintUpdate: () => void;
     }
   }
 }
