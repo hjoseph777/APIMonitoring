@@ -1,5 +1,6 @@
 import axios from 'axios'
 import https from 'https'
+import http from 'http'
 import fs from 'fs'
 import { randomUUID } from 'crypto'
 import { Notification, safeStorage } from 'electron'
@@ -25,6 +26,37 @@ const cookieJars = new Map<string, CookieJar>()
 // Cookie session validity tracking — only re-login when session has expired
 const cookieSessionExpiry = new Map<string, number>()
 const COOKIE_SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
+
+// Persistent keep-alive agents per endpoint, reused across every recurring check.
+// NTLM in particular authenticates the connection, not the request — without a
+// shared keep-alive agent, every poll re-runs the full handshake. Evicted in
+// unschedule() (called on every edit/resave via schedule(), and on delete).
+const agentCache = new Map<string, { http: http.Agent; https: https.Agent }>()
+
+function getAgentsForEndpoint(endpoint: Endpoint): { http: http.Agent; https: https.Agent } {
+  const cached = agentCache.get(endpoint.id)
+  if (cached) return cached
+
+  const defaultRejectUnauthorized = !(endpoint.allowSelfSigned === true)
+  const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized, keepAlive: true, maxSockets: 10 }
+
+  if (endpoint.authType === 'certificate') {
+    const auth = endpoint.authConfig
+    if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
+      const cert = fs.readFileSync(auth.certPath)
+      agentOptions.pfx = cert
+      agentOptions.passphrase = auth.passphrase || ''
+      agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? defaultRejectUnauthorized
+    }
+  }
+
+  const agents = {
+    http: new http.Agent({ keepAlive: true, maxSockets: 10 }),
+    https: new https.Agent(agentOptions)
+  }
+  agentCache.set(endpoint.id, agents)
+  return agents
+}
 
 // --- Alert burst protection (P16-4) ---
 // Outage events that arrive within ALERT_DEBOUNCE_MS of the first call are
@@ -136,6 +168,14 @@ export const MonitoringService = {
     oauth2Cache.delete(id)
     cookieJars.delete(id)
     cookieSessionExpiry.delete(id)
+    // schedule() always calls unschedule() first, so this also invalidates the
+    // cached agent on every edit/resave (auth or cert changes take effect immediately)
+    const agents = agentCache.get(id)
+    if (agents) {
+      agents.http.destroy()
+      agents.https.destroy()
+      agentCache.delete(id)
+    }
   },
 
   // True while an endpoint's recurring check loop is armed — false after AD Lockout
@@ -206,26 +246,13 @@ export const MonitoringService = {
           headers: {}
         }
 
-        // Configure HTTPS Agent for SSL / self-signed certs.
-        // Reject unauthorised by default (secure). Only disable when the user
-        // has explicitly enabled "Allow Self-Signed Certificates" on this endpoint,
-        // or when using certificate auth where the server cert may be self-signed.
-        const defaultRejectUnauthorized = !(endpoint.allowSelfSigned === true)
-        const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized }
-        
-        // Apply certificate config first if certificate auth
-        if (endpoint.authType === 'certificate') {
-          const auth = endpoint.authConfig
-          if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
-            const cert = fs.readFileSync(auth.certPath)
-            agentOptions.pfx = cert
-            agentOptions.passphrase = auth.passphrase || ''
-            // For mTLS, respect the per-cert setting; fall back to the endpoint's allowSelfSigned flag
-            agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? defaultRejectUnauthorized
-          }
-        }
-
-        config.httpsAgent = new https.Agent(agentOptions)
+        // Shared, persistent keep-alive agents (per endpoint) — never rebuilt per
+        // check. Reject unauthorised by default (secure); only disabled when the
+        // user has explicitly enabled "Allow Self-Signed Certificates", or via a
+        // certificate's own rejectUnauthorized setting for mTLS endpoints.
+        const agents = getAgentsForEndpoint(endpoint)
+        config.httpsAgent = agents.https
+        config.httpAgent = agents.http
 
         let response: any
 
@@ -246,7 +273,7 @@ export const MonitoringService = {
                 domain: auth.domain,
                 workstation: auth.workstation || ''
               },
-              { httpsAgent: config.httpsAgent, timeout: requestTimeout }
+              { httpsAgent: config.httpsAgent, httpAgent: config.httpAgent, timeout: requestTimeout }
             )
             reqPromise = ntlmClient.get(endpoint.url)
           } else {
