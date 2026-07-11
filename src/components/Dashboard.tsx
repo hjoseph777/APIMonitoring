@@ -194,7 +194,7 @@ export function Dashboard() {
                     <span>{ep.lastCheck ? new Date(ep.lastCheck).toLocaleTimeString() : 'Never'}</span>
                   </div>
                   <div className="w-14 text-right">
-                    {latest !== undefined ? <ToneText tone={responseTone(latest)}>{latest}ms</ToneText> : <span className="font-mono text-slate-400">--</span>}
+                    {latest !== undefined ? <ToneText tone={responseTone(latest, ep.degradedMs)}>{latest}ms</ToneText> : <span className="font-mono text-slate-400">--</span>}
                   </div>
                   <button
                     onClick={() => handleRefresh(ep.id)}

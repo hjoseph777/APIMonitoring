@@ -10,7 +10,7 @@ export interface FleetStats {
   fleetHealthPct: number | null
 }
 
-const DEGRADED_MS = 500
+const DEFAULT_DEGRADED_MS = 500
 
 // Shared by Dashboard and Reports so the two screens can't drift into disagreeing numbers.
 export function computeFleetStats(endpoints: Endpoint[]): FleetStats {
@@ -24,11 +24,12 @@ export function computeFleetStats(endpoints: Endpoint[]): FleetStats {
     const latest = ep.responseTimeHistory && ep.responseTimeHistory.length > 0
       ? ep.responseTimeHistory[ep.responseTimeHistory.length - 1]
       : undefined
+    const degradedMs = ep.degradedMs ?? DEFAULT_DEGRADED_MS
 
     if (ep.status === 'error') {
       down++
     } else if (ep.status === 'success') {
-      if (latest !== undefined && latest > DEGRADED_MS) {
+      if (latest !== undefined && latest > degradedMs) {
         degraded++
       } else {
         online++
@@ -62,9 +63,11 @@ export function fleetHealthTone(stats: FleetStats): Tone {
   return 'ok'
 }
 
-export function responseTone(ms: number | null): Tone {
+// degradedMs defaults to the global 500ms fallback for aggregate/fleet-wide values
+// that aren't tied to one endpoint's configured threshold.
+export function responseTone(ms: number | null, degradedMs: number = DEFAULT_DEGRADED_MS): Tone {
   if (ms === null) return 'neutral'
-  if (ms < 200) return 'ok'
-  if (ms <= 500) return 'warn'
+  if (ms < degradedMs * 0.4) return 'ok'
+  if (ms <= degradedMs) return 'warn'
   return 'crit'
 }

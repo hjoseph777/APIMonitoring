@@ -34,7 +34,8 @@ try {
       responseTimeHistory TEXT,
       timeout INTEGER,
       allow_self_signed INTEGER DEFAULT 0,
-      monitoring_paused INTEGER DEFAULT 0
+      monitoring_paused INTEGER DEFAULT 0,
+      degraded_ms INTEGER DEFAULT 500
     );
 
     CREATE TABLE IF NOT EXISTS alerts (
@@ -72,6 +73,12 @@ try {
 
   try {
     dbInstance.exec('ALTER TABLE endpoints ADD COLUMN monitoring_paused INTEGER DEFAULT 0;')
+  } catch {
+    // Column already exists, ignore
+  }
+
+  try {
+    dbInstance.exec('ALTER TABLE endpoints ADD COLUMN degraded_ms INTEGER DEFAULT 500;')
   } catch {
     // Column already exists, ignore
   }
@@ -139,6 +146,7 @@ export const DatabaseService = {
         ...row,
         allowSelfSigned: row.allow_self_signed === 1,
         monitoringPaused: row.monitoring_paused === 1,
+        degradedMs: row.degraded_ms ?? 500,
         responseTimeHistory: row.responseTimeHistory ? JSON.parse(row.responseTimeHistory) : [],
         authConfig: parseAuthConfig(row.authConfig)
       }))
@@ -167,8 +175,8 @@ export const DatabaseService = {
 
     if (useSqlite) {
       const stmt = dbInstance.prepare(`
-        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout, allow_self_signed, monitoring_paused)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO endpoints (id, name, url, interval, status, lastCheck, errorCount, consecutiveErrors, authType, authConfig, responseTimeHistory, timeout, allow_self_signed, monitoring_paused, degraded_ms)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       stmt.run(
         endpoint.id,
@@ -184,7 +192,8 @@ export const DatabaseService = {
         JSON.stringify(endpoint.responseTimeHistory || []),
         endpoint.timeout !== undefined ? endpoint.timeout : null,
         endpoint.allowSelfSigned ? 1 : 0,
-        endpoint.monitoringPaused ? 1 : 0
+        endpoint.monitoringPaused ? 1 : 0,
+        endpoint.degradedMs !== undefined ? endpoint.degradedMs : 500
       )
     } else {
       // For electron-store, we can keep the object as is since store handles it,

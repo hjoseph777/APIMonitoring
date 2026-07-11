@@ -70,7 +70,8 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       authConfig: newEp.authConfig,
       responseTimeHistory: [],
       timeout: newEp.timeout,
-      allowSelfSigned: newEp.allowSelfSigned === true
+      allowSelfSigned: newEp.allowSelfSigned === true,
+      degradedMs: newEp.degradedMs
     }
     if (window.electronAPI) {
       await window.electronAPI.saveEndpoint(created)
@@ -91,7 +92,8 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       authType: changes.authType ?? existing.authType,
       authConfig: changes.authConfig ?? existing.authConfig,
       timeout: changes.timeout ?? existing.timeout,
-      allowSelfSigned: changes.allowSelfSigned ?? existing.allowSelfSigned
+      allowSelfSigned: changes.allowSelfSigned ?? existing.allowSelfSigned,
+      degradedMs: changes.degradedMs ?? existing.degradedMs
     }
     if (window.electronAPI) {
       await window.electronAPI.saveEndpoint(updated)
