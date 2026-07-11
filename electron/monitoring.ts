@@ -149,12 +149,35 @@ async function performCookieLoginIfNeeded(endpointId: string, authConfig: any) {
   }
 }
 
+// --- Heartbeat (P4, July 17 sprint) ---
+// One aggregate log entry per sweep — not per-endpoint — so overnight/weekend
+// coverage can be proven without multiplying log volume by endpoint count.
+const HEARTBEAT_INTERVAL_MS = 60 * 60 * 1000 // hourly
+let heartbeatTimer: NodeJS.Timeout | null = null
+
+function emitHeartbeat() {
+  const endpoints = DatabaseService.getEndpoints().filter((ep) => !ep.id.startsWith('seed-'))
+  const healthy = endpoints.filter((ep) => ep.status === 'success').length
+  const down = endpoints.filter((ep) => ep.status === 'error').length
+  const paused = endpoints.filter((ep) => ep.monitoringPaused).length
+  DatabaseService.saveLog({
+    id: randomUUID(),
+    message: `Heartbeat: ${endpoints.length} endpoint(s) monitored — ${healthy} healthy, ${down} down, ${paused} paused.`,
+    timestamp: new Date().toISOString(),
+    type: 'info'
+  })
+}
+
 export const MonitoringService = {
   onStateChange: null as (() => void) | null,
 
   start() {
     console.log('Background Monitoring Engine started...')
     this.scheduleAll()
+    if (!heartbeatTimer) {
+      emitHeartbeat() // immediate proof-of-life entry on launch, not just on the hour
+      heartbeatTimer = setInterval(emitHeartbeat, HEARTBEAT_INTERVAL_MS)
+    }
   },
 
   scheduleAll() {
