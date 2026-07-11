@@ -33,12 +33,12 @@ const COOKIE_SESSION_TTL_MS = 30 * 60 * 1000 // 30 minutes
 // unschedule() (called on every edit/resave via schedule(), and on delete).
 const agentCache = new Map<string, { http: http.Agent; https: https.Agent }>()
 
-function getAgentsForEndpoint(endpoint: Endpoint): { http: http.Agent; https: https.Agent } {
-  const cached = agentCache.get(endpoint.id)
-  if (cached) return cached
-
+// Shared by getAgentsForEndpoint() and testConnection() — reject unauthorised by
+// default (secure); only disabled via the endpoint's allowSelfSigned flag, or a
+// certificate's own rejectUnauthorized setting for mTLS endpoints.
+function buildAgentOptions(endpoint: Partial<Endpoint>): any {
   const defaultRejectUnauthorized = !(endpoint.allowSelfSigned === true)
-  const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized, keepAlive: true, maxSockets: 10 }
+  const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized }
 
   if (endpoint.authType === 'certificate') {
     const auth = endpoint.authConfig
@@ -50,6 +50,14 @@ function getAgentsForEndpoint(endpoint: Endpoint): { http: http.Agent; https: ht
     }
   }
 
+  return agentOptions
+}
+
+function getAgentsForEndpoint(endpoint: Endpoint): { http: http.Agent; https: https.Agent } {
+  const cached = agentCache.get(endpoint.id)
+  if (cached) return cached
+
+  const agentOptions = { ...buildAgentOptions(endpoint), keepAlive: true, maxSockets: 10 }
   const agents = {
     http: new http.Agent({ keepAlive: true, maxSockets: 10 }),
     https: new https.Agent(agentOptions)
@@ -584,18 +592,9 @@ export const MonitoringService = {
         headers: {}
       }
 
-      const defaultRejectUnauthorized = !(endpoint.allowSelfSigned === true)
-      const agentOptions: any = { rejectUnauthorized: defaultRejectUnauthorized }
-      if (endpoint.authType === 'certificate') {
-        const auth = endpoint.authConfig
-        if (auth && 'certPath' in auth && auth.certPath && fs.existsSync(auth.certPath)) {
-          const cert = fs.readFileSync(auth.certPath)
-          agentOptions.pfx = cert
-          agentOptions.passphrase = auth.passphrase || ''
-          agentOptions.rejectUnauthorized = auth.rejectUnauthorized ?? defaultRejectUnauthorized
-        }
-      }
-      config.httpsAgent = new https.Agent(agentOptions)
+      // Intentionally uncached (unlike getAgentsForEndpoint) — this may be testing
+      // draft config that's never saved, so there's nothing to key a cache on yet.
+      config.httpsAgent = new https.Agent(buildAgentOptions(endpoint))
 
       let response: any
 
