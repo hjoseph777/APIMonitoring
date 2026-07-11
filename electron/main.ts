@@ -218,6 +218,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.handle('get-footprint', () => MonitoringService.getFootprintSnapshot())
+  ipcMain.handle('get-app-version', () => app.getVersion())
 
   ipcMain.handle('get-alerts', () => DatabaseService.getAlerts())
   ipcMain.handle('clear-all-alerts', () => {

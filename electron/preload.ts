@@ -43,6 +43,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getFootprint: () => ipcRenderer.invoke('get-footprint'),
   onFootprintUpdate: (callback: (snapshot: FootprintSnapshot) => void) =>
     ipcRenderer.on('footprint-update', (_event, snapshot) => callback(snapshot)),
-  offFootprintUpdate: () => ipcRenderer.removeAllListeners('footprint-update')
+  offFootprintUpdate: () => ipcRenderer.removeAllListeners('footprint-update'),
+
+  getAppVersion: () => ipcRenderer.invoke('get-app-version')
 })
 export {}

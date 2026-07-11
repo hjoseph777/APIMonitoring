@@ -84,6 +84,7 @@ declare global {
       getFootprint: () => Promise<FootprintSnapshot>;
       onFootprintUpdate: (callback: (snapshot: FootprintSnapshot) => void) => void;
       offFootprintUpdate: () => void;
+      getAppVersion: () => Promise<string>;
     }
   }
 }

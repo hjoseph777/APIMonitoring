@@ -20,6 +20,11 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
     return saved !== 'light' // Default to dark mode
   })
   const [bellOpen, setBellOpen] = useState(false)
+  const [appVersion, setAppVersion] = useState('')
+
+  useEffect(() => {
+    window.electronAPI?.getAppVersion().then(setAppVersion)
+  }, [])
 
   const alerts = useMonitoringStore(state => state.alerts)
   const markAlertAsRead = useMonitoringStore(state => state.markAlertAsRead)
@@ -109,7 +114,7 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         {/* Footer/Version Info in Sidebar */}
         <div className="p-4 border-t border-[var(--border-color)] flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wider">
           <Cpu className="w-3.5 h-3.5" />
-          <span>v1.0.0 (GUI v2.0)</span>
+          <span>{appVersion ? `v${appVersion}` : ''}</span>
         </div>
       </aside>
 
