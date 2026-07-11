@@ -418,14 +418,14 @@ export const DatabaseService = {
       {
         id: mode === 'lockout' ? 'seed-lockout-1' : 'seed-1',
         name: 'ERP Sales API',
-        url: 'https://api.xerox.com/v1/sales',
+        url: 'https://api.example.com/v1/sales',
         interval: 1,
         status: erpStatus,
         lastCheck: t(2),
         errorCount: mode === 'lockout' ? 4 : 0,
         consecutiveErrors: mode === 'lockout' ? 4 : 0,
         authType: 'oauth2',
-        authConfig: { type: 'oauth2', clientId: 'app_123', clientSecret: '***', tokenUrl: 'https://oauth.xerox.com/token' },
+        authConfig: { type: 'oauth2', clientId: 'app_123', clientSecret: '***', tokenUrl: 'https://oauth.example.com/token' },
         responseTimeHistory: mode === 'lockout' ? [5000] : [120, 135, 125, 140, 130],
         timeout: 10
       },
@@ -439,7 +439,7 @@ export const DatabaseService = {
         errorCount: hrOrFinanceFails ? 10 : 0,
         consecutiveErrors: hrOrFinanceFails ? 3 : 0,
         authType: 'ntlm',
-        authConfig: { type: 'ntlm', username: 'svc_monitor', password: '***', domain: 'XEROX' },
+        authConfig: { type: 'ntlm', username: 'svc_monitor', password: '***', domain: 'CORP' },
         responseTimeHistory: hrOrFinanceFails ? [5000] : [220, 240, 215, 230, 225],
         timeout: 15,
         monitoringPaused: mode === 'lockout'
@@ -447,7 +447,7 @@ export const DatabaseService = {
       {
         id: hrOrFinanceFails ? 'seed-error-2' : 'seed-3',
         name: 'Finance Reporting',
-        url: 'https://finance.xerox.internal/api/reports',
+        url: 'https://finance.internal.example.com/api/reports',
         interval: 1,
         status: hrOrFinanceFails ? 'error' : 'success',
         lastCheck: t(1),
@@ -462,7 +462,7 @@ export const DatabaseService = {
       {
         id: 'seed-4',
         name: 'Inventory Sync',
-        url: 'http://inventory.xerox.local:7777/api/stock',
+        url: 'http://inventory.example.local:7777/api/stock',
         interval: 1,
         status: 'success',
         lastCheck: t(5),
