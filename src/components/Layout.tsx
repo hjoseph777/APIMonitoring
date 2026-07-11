@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Bell, ShieldCheck, ShieldAlert, Terminal, Monitor, Cpu, Sun, Moon, BarChart3, Settings, Database, CheckCircle2 } from 'lucide-react'
 import { useMonitoringStore } from '../store/monitoringStore'
 import { Pill } from './ui/Pill'
+import { FootprintWidget } from './ui/FootprintWidget'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -219,7 +220,10 @@ export function Layout({ children, activeTab, setActiveTab, alertCount, systemSt
         {/* Footer */}
         <footer className="h-8 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] px-6 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>Xerox API Engine Running</span>
-          <span className="font-mono uppercase tracking-wider text-xs">Auto-polling active</span>
+          <div className="flex items-center gap-3">
+            <FootprintWidget />
+            <span className="font-mono uppercase tracking-wider text-xs">Auto-polling active</span>
+          </div>
         </footer>
 
       </div>

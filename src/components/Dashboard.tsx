@@ -7,6 +7,7 @@ import { AuthTag } from './ui/AuthTag'
 import { Panel } from './ui/Panel'
 import { EmptyState } from './ui/EmptyState'
 import { ToneText } from './ui/ToneText'
+import { Sparkline } from './ui/Sparkline'
 import { computeFleetStats, fleetHealthTone, responseTone } from '../lib/fleetStats'
 
 const STATUS_RANK: Record<string, number> = { error: 0, idle: 1, success: 2 }
@@ -306,26 +307,6 @@ function StatCard({ icon: Icon, label, value, delta, deltaTone, bgClass, textCla
         <Icon className={`w-4 h-4 ${textClass}`} />
       </div>
     </div>
-  )
-}
-
-function Sparkline({ history, tone }: { history?: number[]; tone: 'ok' | 'crit' | 'neutral' }) {
-  if (!history || history.length < 2) return <span className="w-[46px]" />
-  const w = 46
-  const h = 18
-  const max = Math.max(...history)
-  const min = Math.min(...history)
-  const range = max - min || 1
-  const points = history.map((v, i) => {
-    const x = (i / (history.length - 1)) * w
-    const y = h - ((v - min) / range) * h
-    return `${x.toFixed(1)},${y.toFixed(1)}`
-  }).join(' ')
-  const colorVar = tone === 'ok' ? '--color-green' : tone === 'crit' ? '--color-red' : '--text-secondary'
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0">
-      <polyline points={points} fill="none" stroke={`var(${colorVar})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }
 
