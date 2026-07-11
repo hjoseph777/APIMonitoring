@@ -151,10 +151,23 @@ export const MonitoringService = {
 
   scheduleAll() {
     const endpoints = DatabaseService.getEndpoints()
-    endpoints.forEach((ep) => this.schedule(ep))
+    endpoints.forEach((ep, index) => {
+      // Reset stale last-known status at launch so the dashboard never shows a
+      // prior-run outage/success as if it were current while the first post-launch
+      // check is still pending. Seed/demo endpoints are excluded — they're a static
+      // snapshot, and resetting their status would defeat the demo they're seeded for.
+      if (!ep.id.startsWith('seed-') && ep.status !== 'idle') {
+        DatabaseService.saveEndpoint({ ...ep, status: 'idle' })
+      }
+      this.schedule(ep, index)
+    })
   },
 
-  schedule(endpoint: Endpoint) {
+  // staggerIndex is only passed by scheduleAll() at startup — it spreads the
+  // initial sweep out instead of every endpoint firing in the same instant,
+  // avoiding a thundering-herd of concurrent outbound requests on every launch.
+  // Ad-hoc callers (add/edit/refresh) omit it and get the original 1s delay.
+  schedule(endpoint: Endpoint, staggerIndex?: number) {
     // Clear existing timer if any
     this.unschedule(endpoint.id)
 
@@ -167,7 +180,8 @@ export const MonitoringService = {
     }
 
     // Schedule immediate/initial run loop
-    const timer = setTimeout(() => this.runCheckLoop(endpoint.id), 1000)
+    const initialDelayMs = staggerIndex !== undefined ? 1000 + staggerIndex * 250 : 1000
+    const timer = setTimeout(() => this.runCheckLoop(endpoint.id), initialDelayMs)
     activeTimers.set(endpoint.id, timer)
   },
 
