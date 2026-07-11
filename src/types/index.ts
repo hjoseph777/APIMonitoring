@@ -13,6 +13,7 @@ export interface Endpoint {
   timeout?: number; // in seconds
   allowSelfSigned?: boolean; // allow self-signed / internal TLS certificates (default: false)
   monitoringPaused?: boolean; // true while AD Lockout Protection has halted this endpoint's recurring checks
+  degradedMs?: number; // latency threshold (ms) above which this endpoint shows as degraded/amber (default: 500)
 }
 
 export type AuthConfig = 
@@ -61,7 +62,7 @@ declare global {
       copyToClipboard: (text: string, endpointName?: string) => Promise<{ success: boolean }>;
       validateCertificate: (path: string, passphrase?: string) => Promise<boolean>;
       testAuthentication: (endpointId: string) => Promise<{ status: number }>;
-      testConnection: (endpoint: Partial<Endpoint>) => Promise<{ success: boolean; status?: number; message?: string }>;
+      testConnection: (endpoint: Partial<Endpoint>) => Promise<{ success: boolean; status?: number; message?: string; body?: string; timeMs?: number }>;
       exportBackup: () => Promise<string>;
       importBackup: (jsonString: string) => Promise<{ success: boolean }>;
       resetAllData: () => Promise<{ success: boolean }>;

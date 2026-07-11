@@ -71,6 +71,18 @@ let emailFlushTimer: NodeJS.Timeout | null = null
 // See main.ts's mainStore for why Record<string, any> instead of a stricter shape.
 const monitorStore = new Store<Record<string, any>>()
 
+const RESPONSE_BODY_CAP = 20 * 1024 // 20 KB — enough for a response inspector, not enough to bloat the UI
+
+function formatResponseBody(data: unknown): string {
+  let text: string
+  try {
+    text = typeof data === 'string' ? data : JSON.stringify(data, null, 2)
+  } catch {
+    text = String(data)
+  }
+  return text.length > RESPONSE_BODY_CAP ? `${text.slice(0, RESPONSE_BODY_CAP)}\n… (truncated)` : text
+}
+
 async function getOAuth2Token(endpointId: string, authConfig: any): Promise<string> {
   const cached = oauth2Cache.get(endpointId)
   if (cached && cached.expiresAt > Date.now()) {
@@ -544,10 +556,11 @@ export const MonitoringService = {
     }, ALERT_DEBOUNCE_MS)
   },
 
-  async testConnection(endpoint: Partial<Endpoint>): Promise<{ success: boolean; status?: number; message?: string }> {
+  async testConnection(endpoint: Partial<Endpoint>): Promise<{ success: boolean; status?: number; message?: string; body?: string; timeMs?: number }> {
     if (!endpoint.url) {
       return { success: false, message: 'URL is required' }
     }
+    const startTime = Date.now()
     try {
       const requestTimeout = endpoint.timeout ? (endpoint.timeout * 1000) : 10000
       const config: any = {
@@ -614,13 +627,18 @@ export const MonitoringService = {
         }
       }
 
+      const timeMs = Date.now() - startTime
+      const body = formatResponseBody(response.data)
+
       if (response.status >= 200 && response.status < 400) {
-        return { success: true, status: response.status }
+        return { success: true, status: response.status, body, timeMs }
       } else {
-        return { success: false, status: response.status, message: `Returned status code ${response.status}` }
+        return { success: false, status: response.status, message: `Returned status code ${response.status}`, body, timeMs }
       }
     } catch (err: any) {
-      return { success: false, message: err.message || 'Connection failed' }
+      const timeMs = Date.now() - startTime
+      const body = err.response ? formatResponseBody(err.response.data) : undefined
+      return { success: false, status: err.response?.status, message: err.message || 'Connection failed', body, timeMs }
     } finally {
       // P16-3: Always remove test-temp entries — prevents indefinite Map growth on repeated test clicks
       oauth2Cache.delete('test-temp')

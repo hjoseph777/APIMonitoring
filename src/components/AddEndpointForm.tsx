@@ -6,7 +6,7 @@ import type { Endpoint } from '../types'
 interface AddEndpointFormProps {
   mode?: 'add' | 'edit'
   initialEndpoint?: Endpoint
-  onSubmit: (endpoint: { name: string; url: string; interval: number; authType: string; authConfig: any; timeout?: number; allowSelfSigned?: boolean }) => Promise<void>
+  onSubmit: (endpoint: { name: string; url: string; interval: number; authType: string; authConfig: any; timeout?: number; allowSelfSigned?: boolean; degradedMs?: number }) => Promise<void>
   onCancel?: () => void
 }
 
@@ -15,12 +15,13 @@ export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCan
   const [url, setUrl] = useState(initialEndpoint?.url ?? '')
   const [interval, setInterval] = useState(initialEndpoint?.interval ?? 5)
   const [timeoutVal, setTimeoutVal] = useState(initialEndpoint?.timeout ?? 10)
+  const [degradedMs, setDegradedMs] = useState(initialEndpoint?.degradedMs ?? 500)
   const [authType, setAuthType] = useState(initialEndpoint?.authType ?? 'none')
   const [authConfig, setAuthConfig] = useState<any>(initialEndpoint?.authConfig ?? { type: 'none' })
   const [allowSelfSigned, setAllowSelfSigned] = useState(initialEndpoint?.allowSelfSigned === true)
   const [loading, setLoading] = useState(false)
   const [testing, setTesting] = useState(false)
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; status?: number; body?: string; timeMs?: number } | null>(null)
   const [error, setError] = useState('')
 
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -51,9 +52,9 @@ export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCan
       if (window.electronAPI) {
         const res = await window.electronAPI.testConnection({ url, authType: authType as Endpoint['authType'], authConfig, timeout: timeoutVal, allowSelfSigned })
         if (res.success) {
-          setTestResult({ success: true, message: `Connected successfully! Status: ${res.status || 200}` })
+          setTestResult({ success: true, message: `Connected successfully! Status: ${res.status || 200}`, status: res.status, body: res.body, timeMs: res.timeMs })
         } else {
-          setTestResult({ success: false, message: res.message || 'Connection failed.' })
+          setTestResult({ success: false, message: res.message || 'Connection failed.', status: res.status, body: res.body, timeMs: res.timeMs })
         }
       } else {
         setTestResult({ success: true, message: 'Mock connection test passed (Browser environment).' })
@@ -100,7 +101,8 @@ export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCan
         authType,
         authConfig,
         timeout: timeoutVal,
-        allowSelfSigned
+        allowSelfSigned,
+        degradedMs
       })
       if (mode === 'edit') {
         onCancel?.()
@@ -110,6 +112,7 @@ export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCan
         setUrl('')
         setInterval(5)
         setTimeoutVal(10)
+        setDegradedMs(500)
         setAuthType('none')
         setAuthConfig({ type: 'none' })
         setAllowSelfSigned(false)
@@ -209,6 +212,19 @@ export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCan
               </select>
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">Degraded Threshold (ms)</label>
+            <input
+              type="number"
+              min={1}
+              value={degradedMs}
+              onChange={(e) => setDegradedMs(parseInt(e.target.value) || 500)}
+              disabled={loading}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-400"
+            />
+            <p className="mt-1 text-[11px] text-slate-500">Response times above this show amber on the Dashboard/Reports (default 500ms)</p>
+          </div>
         </div>
 
         {/* Column 2: Authentication Configurations */}
@@ -226,12 +242,20 @@ export function AddEndpointForm({ mode = 'add', initialEndpoint, onSubmit, onCan
       </div>
 
       {testResult && (
-        <div className={`p-3 rounded-xl border text-xs font-semibold ${
-          testResult.success
-            ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
-            : 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
-        }`}>
-          {testResult.message}
+        <div className="space-y-2">
+          <div className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-between gap-4 ${
+            testResult.success
+              ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300'
+              : 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-800/60 text-rose-700 dark:text-rose-300'
+          }`}>
+            <span>{testResult.message}</span>
+            {typeof testResult.timeMs === 'number' && <span className="whitespace-nowrap opacity-80">{testResult.timeMs} ms</span>}
+          </div>
+          {testResult.body && (
+            <pre className="max-h-48 overflow-auto rounded-xl border border-slate-700 bg-slate-900 p-3 text-[11px] leading-relaxed text-slate-300 whitespace-pre-wrap break-all">
+              {testResult.body}
+            </pre>
+          )}
         </div>
       )}
 
