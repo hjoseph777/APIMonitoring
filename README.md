@@ -407,6 +407,7 @@ API_Monitor/
 - Version: `1.2.0`
 - Platform target: Windows desktop
 - License: MIT
+- Documentation last reviewed: `July 11, 2026`
 
 ### Quality Gates
 
