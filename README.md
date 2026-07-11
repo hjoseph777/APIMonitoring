@@ -98,7 +98,7 @@ API Monitor ERP Desktop is a Windows-native monitoring product built for interna
 
 | Capability | Delivered Value |
 |---|---|
-| Endpoint Monitoring | Recurring checks with per-endpoint intervals and timeout controls |
+| Endpoint Monitoring | Recurring checks with per-endpoint intervals, timeout, and degraded-latency threshold controls |
 | Enterprise Auth | API Key, NTLM, mTLS certs, OAuth2 client credentials, Basic, Session Cookie |
 | Alerting | Native notifications, SMTP email, and webhook channels |
 | Tray Operations | Background checks continue with tray controls and quick actions |
@@ -179,7 +179,7 @@ This protects the customer's own Active Directory infrastructure from the monito
 
 1. One endpoint equals one probe and one source of truth for status, history, and alerts.
 2. Monitoring is read-only and does not mutate monitored systems.
-3. On restart, statuses reset to a clean pending state and all endpoints are re-verified in a staggered sweep; history persists, and gaps are shown as no-data rather than a false status.
+3. On restart, statuses reset to a clean pending state and all endpoints are re-verified in a staggered sweep — never displaying a stale pre-restart status as current while re-verification is still in progress. Latency history persists across restarts.
 
 ---
 
@@ -226,7 +226,7 @@ Implementation note: agents are cached per endpoint (`agentCache` in `electron/m
 
 ![Dashboard Status Cockpit](Pictures/screenshot-dashboard.png)
 
-Status summary, endpoint health, active alerts, and recent activity feed.
+Status summary, endpoint health, active alerts, and recent activity feed — including a live self-monitoring footprint widget in the footer (CPU % · RAM MB, measured and displayed by the app itself), so "is this a memory hog?" is answered by the running product rather than a claim. It ambers itself if it ever crosses its own threshold (10% sustained CPU or 500MB RAM).
 
 ### Endpoint Registry
 
