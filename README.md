@@ -125,6 +125,8 @@ Result: no copy-paste between "test tool" and "monitoring tool," and no config d
 
 Most lightweight open-source monitors are excellent at generic uptime checks. This product is purpose-built for internal ERP monitoring realities.
 
+**Postman validates but doesn't watch; generic monitors watch but never validated — API_Monitor does both with the same probe.**
+
 1. Desktop-first architecture for Windows operations teams.
 2. Direct monitoring of localhost and intranet endpoints from a native runtime.
 3. Multi-auth support in one application, including NTLM and cookie session flows.
@@ -159,6 +161,17 @@ Most lightweight open-source monitors are excellent at generic uptime checks. Th
 - Encrypted credential persistence with Windows DPAPI (`safeStorage`).
 - Webhook SSRF protections for outbound URLs.
 - Typed settings boundary validation and bounded log retrieval behavior.
+- Hourly heartbeat log entry — a receipt proving the engine was alive and monitoring overnight and on weekends, not just a claim.
+
+---
+
+## Built for Enterprise Networks
+
+### AD Lockout Protection
+
+Repeatedly failing NTLM or Basic-auth checks against a domain-joined service can trip Active Directory's own account lockout policy — the monitor itself becomes the outage. API Monitor ERP Desktop's circuit breaker detects a 401/403 on an NTLM or Basic-authenticated endpoint, halts that endpoint's automatic checks immediately, and surfaces a distinct "Paused — Auth Lockout" status instead of silently continuing to hammer the credential. Checks resume automatically on the next manual recheck or endpoint re-save.
+
+This protects the customer's own Active Directory infrastructure from the monitor, not just the monitor from the network — no generic uptime tool in the comparison tables below has an equivalent safeguard.
 
 ---
 
@@ -166,7 +179,7 @@ Most lightweight open-source monitors are excellent at generic uptime checks. Th
 
 1. One endpoint equals one probe and one source of truth for status, history, and alerts.
 2. Monitoring is read-only and does not mutate monitored systems.
-3. Restarts re-verify current state while preserving historical records.
+3. On restart, statuses reset to a clean pending state and all endpoints are re-verified in a staggered sweep; history persists, and gaps are shown as no-data rather than a false status.
 
 ---
 
@@ -220,7 +233,7 @@ npm run ci
 
 ### Error Visibility
 
-The monitoring engine captures and classifies common network, TLS, 4xx, and 5xx failure modes for fast operational diagnosis.
+The monitoring engine surfaces the underlying error for fast operational diagnosis — including TLS-specific codes such as `CERT_HAS_EXPIRED`, connection-level failures, and 4xx/5xx status responses.
 
 ---
 
@@ -276,10 +289,12 @@ Per-endpoint trend visibility and exportable diagnostic view.
 
 ## Competitive Research and Positioning
 
-The tables below compare this product with popular free GitHub monitoring tools typically considered lightweight.
+The tables below compare this product with popular free GitHub monitoring tools typically considered lightweight. Scores are a qualitative, self-assessed comparison based on public documentation and feature review — not an independent benchmark.
+
+The standout numbers here aren't the lightweight-runtime row (an honest 8/10 — static Go binaries like Gatus and Upptime score 9/10 there, a real trade-off of running on Electron): it's **enterprise auth depth (10/10)** and **internal network/localhost reach (10/10)**, where every generic competitor scores 5 or lower.
 
 <div align="left">
-  <img src="https://img.shields.io/badge/API%20Monitor%20ERP%20Desktop-Top%20Fit%20for%20Internal%20ERP%20APIs-dc2626?style=for-the-badge" alt="API Monitor ERP Desktop Top Fit" />
+  <img src="https://img.shields.io/badge/API%20Monitor%20ERP%20Desktop-Top%20Fit%20for%20Enterprise%20Auth%20%26%20Internal%20Reach-dc2626?style=for-the-badge" alt="API Monitor ERP Desktop Top Fit" />
 </div>
 
 ### Table 1: General OSS Comparison (Lightweight + Feature Fit)
@@ -355,7 +370,7 @@ Bottom line: for internal enterprise API reliability on Windows, this product is
 
 - ERP gateway support with POST probes and body-level validation.
 - M-Files auto-discovery from server URL (status, auth, vault probe generation).
-- Import from Swagger/OpenAPI and Postman collections.
+- Import from Swagger/OpenAPI; migrate existing Postman collections into monitored endpoints (a replacement path, not a coexistence integration).
 - Compose mode: ad-hoc request runner with one-click Save as Monitor.
 - Optional headless service mode for 24/7 engine operation.
 
