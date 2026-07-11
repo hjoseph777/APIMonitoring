@@ -157,6 +157,9 @@ let heartbeatTimer: NodeJS.Timeout | null = null
 
 function emitHeartbeat() {
   const endpoints = DatabaseService.getEndpoints().filter((ep) => !ep.id.startsWith('seed-'))
+  // Nothing real to report yet (fresh install exploring seed data) — a "0 endpoints
+  // monitored" row next to visibly-healthy seed rows reads as a bug, not a receipt.
+  if (endpoints.length === 0) return
   const healthy = endpoints.filter((ep) => ep.status === 'success').length
   const down = endpoints.filter((ep) => ep.status === 'error').length
   const paused = endpoints.filter((ep) => ep.monitoringPaused).length
