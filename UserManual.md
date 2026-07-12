@@ -277,7 +277,16 @@ The application supports multiple security layers. Under the **Authentication Me
   * **Domain**: Your Active Directory domain name.
   * **Workstation** *(Optional)*: Your local workstation name.
 
-### E. OAuth2 Client Credentials
+### E. Client Certificate (mTLS)
+
+* **Use Case**: Internal APIs that require a client-certificate handshake (mutual TLS).
+* **Config**:
+  * **Certificate File**: Select your `.pfx` / `.p12` client certificate.
+  * **Passphrase** *(Optional)*: Enter the certificate password when required by your key material.
+  * **Strict TLS Validation**: Keep strict validation enabled by default; only allow self-signed/internal CA certs for trusted internal endpoints.
+  * **Tip**: Use **Validate Certificate** before saving to confirm file + passphrase are valid.
+
+### F. OAuth2 Client Credentials
 
 * **Use Case**: Modern microservices returning short-lived Bearer tokens.
 * **Config**:
@@ -286,7 +295,7 @@ The application supports multiple security layers. Under the **Authentication Me
   * **Client Secret**: Your application password.
   * *Note: The application automatically handles fetching, caching, and renewing the transient Bearer token.*
 
-### F. Session Cookie Authentication
+### G. Session Cookie Authentication
 
 * **Use Case**: Portals requiring a preliminary POST request login to retrieve a session cookie.
 * **Config**:
@@ -306,7 +315,7 @@ To push real-time failure alerts directly to your team's chat rooms:
 
 | Provider | Where to get the webhook URL |
 | --- | --- |
-| **Microsoft Teams** | In the target channel: `···` → **Connectors** → **Incoming Webhook** → **Configure** → copy the generated URL |
+| **Microsoft Teams** | In the target channel: **More options (`···`)** → **Workflows** → choose **When a Teams webhook is received** → copy the generated webhook URL. Legacy **Incoming Webhook** connector URLs remain supported if you already use them. |
 | **Discord** | Channel **Settings** → **Integrations** → **Webhooks** → **New Webhook** → **Copy Webhook URL** |
 | **Slack** | Add the **Incoming Webhooks** app to your workspace → choose a channel → copy the generated webhook URL |
 
