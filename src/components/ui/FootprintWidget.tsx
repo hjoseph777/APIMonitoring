@@ -13,8 +13,8 @@ export function FootprintWidget() {
   useEffect(() => {
     if (!window.electronAPI) return
     window.electronAPI.getFootprint().then(setSnapshot)
-    window.electronAPI.onFootprintUpdate(setSnapshot)
-    return () => window.electronAPI.offFootprintUpdate()
+    const listener = window.electronAPI.onFootprintUpdate(setSnapshot)
+    return () => window.electronAPI.offFootprintUpdate(listener)
   }, [])
 
   if (!snapshot) return null

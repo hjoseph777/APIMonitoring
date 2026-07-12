@@ -19,8 +19,8 @@ function AppContent() {
   useEffect(() => {
     refetchData() // initial load
     if (window.electronAPI?.onStateChanged) {
-      window.electronAPI.onStateChanged(refetchData)
-      return () => window.electronAPI?.offStateChanged?.()
+      const listener = window.electronAPI.onStateChanged(refetchData)
+      return () => window.electronAPI?.offStateChanged?.(listener)
     } else {
       const timer = setInterval(refetchData, 3000)
       return () => clearInterval(timer)

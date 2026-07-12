@@ -66,9 +66,8 @@ declare global {
       getLogs: () => Promise<Log[]>;
       exportLogsCsv: () => Promise<string>;
       clearLogs: () => Promise<{ success: boolean }>;
-      copyToClipboard: (text: string, endpointName?: string) => Promise<{ success: boolean }>;
+      copyToClipboard: (text: string) => Promise<{ success: boolean }>;
       validateCertificate: (path: string, passphrase?: string) => Promise<boolean>;
-      testAuthentication: (endpointId: string) => Promise<{ status: number }>;
       testConnection: (endpoint: Partial<Endpoint>) => Promise<{ success: boolean; status?: number; message?: string; body?: string; timeMs?: number }>;
       exportBackup: () => Promise<string>;
       importBackup: (jsonString: string) => Promise<{ success: boolean }>;
@@ -79,11 +78,11 @@ declare global {
       sendTestEmail: () => Promise<{ success: boolean; message?: string }>;
       seedDemoData: (mode: 'green' | 'mixed' | 'lockout') => Promise<{ success: boolean; message?: string }>;
       clearDemoData: () => Promise<{ success: boolean; message?: string }>;
-      onStateChanged: (callback: () => void) => void;
-      offStateChanged: () => void;
+      onStateChanged: (callback: () => void) => (...args: unknown[]) => void;
+      offStateChanged: (listener: (...args: unknown[]) => void) => void;
       getFootprint: () => Promise<FootprintSnapshot>;
-      onFootprintUpdate: (callback: (snapshot: FootprintSnapshot) => void) => void;
-      offFootprintUpdate: () => void;
+      onFootprintUpdate: (callback: (snapshot: FootprintSnapshot) => void) => (...args: unknown[]) => void;
+      offFootprintUpdate: (listener: (...args: unknown[]) => void) => void;
       getAppVersion: () => Promise<string>;
     }
   }

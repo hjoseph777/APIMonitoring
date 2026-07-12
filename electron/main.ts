@@ -269,14 +269,6 @@ app.whenReady().then(() => {
     }
   })
 
-  // Auth tester
-  ipcMain.handle('test-authentication', async (_, { endpointId }) => {
-    const endpoints = DatabaseService.getEndpoints()
-    const endpoint = endpoints.find((e) => e.id === endpointId)
-    if (!endpoint) throw new Error('Endpoint not found')
-    await MonitoringService.checkEndpoint(endpointId)
-    return { status: 200 }
-  })
 
   ipcMain.handle('test-connection', async (_, endpoint: Partial<Endpoint>) => {
     return await MonitoringService.testConnection(endpoint)
