@@ -162,6 +162,7 @@ Most lightweight open-source monitors are excellent at generic uptime checks. Th
 - Webhook SSRF protections for outbound URLs.
 - Typed settings boundary validation and bounded log retrieval behavior.
 - Hourly heartbeat log entry — a receipt proving the engine was alive and monitoring overnight and on weekends, not just a claim.
+- Sandboxed, context-isolated renderer process with no direct file system, network, or OS access — even a compromised dependency in the interface layer cannot reach outside that process, and can only talk to the backend through a fixed, whitelisted set of IPC calls.
 
 ---
 
