@@ -5,7 +5,7 @@
 </div>
 
 | | |
-|---|---|
+| --- | --- |
 | **Author** | Harry Joseph |
 | **Version** | 1.2.0 |
 | **Date** | July 11, 2026 |
@@ -16,6 +16,7 @@ Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to 
 ---
 
 ## Table of Contents
+
 1. [Overview](#1-overview)
 2. [How To: Screen-by-Screen Walkthrough](#2-how-to-screen-by-screen-walkthrough)
 3. [Registering & Configuring Endpoints](#3-registering--configuring-endpoints)
@@ -30,13 +31,17 @@ Welcome to the **Xerox API Monitor ERP** user manual. This guide is designed to 
 ---
 
 ## 1. Overview
+
 The Xerox API Monitor ERP is a lightweight desktop utility designed to monitor internal and external ERP service links. The application runs a background service that continuously verifies connection uptime, response latencies, and service integrity — the same probe you test with **Test Connection** is the probe that keeps running afterward, so what you validated and what you're watching can never drift apart.
 
 ### Performance Architecture
+
 Under the hood, the user interface relies on a **Zustand Atomic Store**. This architectural choice ensures that the application remains extremely responsive and consumes minimal CPU. By using an atomic store rather than traditional React Context, the high-frequency latency updates arriving from the background engine only re-render the specific charts and text fields that need to change, rather than redrawing the entire application every time a sync occurs.
 
 ### Enterprise Dependability Guarantees
+
 To ensure stable 24/7 background operation on corporate infrastructure, the Xerox API Monitor v1.2.0 strictly enforces:
+
 * **Zero-Collision Cryptographic IDs**: All records are generated using `crypto.randomUUID()`, guaranteeing globally unique IDs and safe backup restorations.
 * **Bounded Queries & Log Capping**: Database read queries are permanently capped at 500 records per UI push, and long-term storage is strictly pruned past 5,000 records with a 7-day expiry — the application never slows down as months pass.
 * **Full Settings Persistence**: Every configuration value — alert threshold, auto-start, minimize-to-tray behaviour, SMTP TLS mode — is loaded from the backend on mount and written back on save. No setting ever silently reverts.
@@ -48,7 +53,7 @@ To ensure stable 24/7 background operation on corporate infrastructure, the Xero
 A full line-by-line expert security and reliability audit was conducted on **July 9, 2026**, with follow-up hardening, quality-gate, and reliability passes on **July 10–11, 2026** (keep-alive connection reuse, per-endpoint degraded-latency thresholds, staggered restart sweep, self-monitoring footprint widget, hourly heartbeat log). The results are recorded here for enterprise procurement and IT security reviews.
 
 | Dimension | Result | Summary |
-|---|---|---|
+| --- | --- | --- |
 | **Security** | ✅ PASS | TLS enforced by default; SSRF-guarded webhooks (including a fixed IPv6 loopback check); SMTP passwords encrypted via Windows DPAPI; context-isolated **and sandboxed** renderer (`sandbox: true`); structurally validated backup imports; cryptographic UUIDs throughout; settings IPC payload is schema-validated (`unknown`, not `any`), not blindly persisted. |
 | **Memory Leaks** | ✅ NONE | All module-level caches bounded and evicted in `finally` blocks or on endpoint edit/delete; alert buffers flush on schedule; response history capped; database bounded at 5,000 records + 7-day expiry. |
 | **CPU Efficiency** | ✅ PASS | Event-driven tray and UI (zero polling when idle); self-scheduling check loops (zero request stacking); Zustand atomic selectors (no full-tree re-renders); shared keep-alive connections instead of a fresh handshake per poll. |
@@ -78,7 +83,7 @@ The sidebar footer shows the installed version (read live from the app itself, s
 ### 2.2 The Header Bar
 
 | Control | What it does |
-|---|---|
+| --- | --- |
 | **Status pill** | One glance at fleet health: *All Systems Online* (green), *Minor Issues* (yellow), or *Critical Outages* (red) — computed from your actual endpoints, not a static label. |
 | **Last sync** | Timestamp of the most recent check across all endpoints. |
 | **TLS pill** | *TLS Verified* if every endpoint validates certificates strictly, or *N of M allow self-signed* if any endpoint has "Accept self-signed certificates" enabled. This reflects real per-endpoint settings — it does not just claim security is on. |
@@ -95,6 +100,7 @@ The sidebar footer shows the installed version (read live from the app itself, s
 **Fleet health strip** — Just below the cards: **Fleet health** (percentage of endpoints currently online) and **Avg response** (mean of the latest latency per endpoint), both colored by threshold — green/amber/red.
 
 **Endpoint Status Cockpit**:
+
 * **Filter box** — type any part of a name, URL, or auth method (e.g. `ntlm`, `sap`, `10.0.0`) to narrow the list instantly.
 * **Sort order** — failing endpoints always sort to the top, then idle, then healthy — the ones needing attention are never buried below a long list of healthy ones.
 * Each row shows: status dot, name, **auth-method tag** (API Key / NTLM / Certificate / OAuth2 / Basic / Cookie), full URL, a small **sparkline** of recent response times colored by current status, last-check time, the latest latency, and a **Check** button to trigger an immediate re-check outside the normal schedule. The latency is colored green/amber/red against **that endpoint's own degraded-latency threshold** — configurable per endpoint (default 500ms; see [§3](#3-registering--configuring-endpoints)), not one fixed value for every endpoint.
@@ -112,6 +118,7 @@ The sidebar footer shows the installed version (read live from the app itself, s
 *(Live screenshot — Endpoint Registry listing registered endpoints with auth tags, edit/delete controls, and the Background Engine settings panel)*
 
 **Registered Endpoints** — The list of everything currently monitored leads the page. Each row shows the name, URL, and auth tag, plus:
+
 * **Pencil icon** — opens an inline edit form pre-filled with that endpoint's current settings. Change anything and click **Save Changes**.
 * **Trash icon** — asks for confirmation before deleting ("Remove *name*?" with Cancel/Confirm).
 
@@ -136,7 +143,7 @@ The sidebar footer shows the installed version (read live from the app itself, s
 **Danger Zone** — Visually separated (red-bordered panel), because these actions are either synthetic or irreversible:
 
 | Button | What it shows |
-|---|---|
+| --- | --- |
 | **Seed Healthy (4)** | All 4 demo endpoints online. |
 | **Seed Mixed (2 Good, 2 Err)** | 2 online, 2 down — also triggers your configured SMTP/webhook alerts, so it's the one to use when testing alert delivery end-to-end. |
 | **Seed Auth Lockout** | An NTLM and a Basic-auth endpoint shown in the purple **Paused — Auth Lockout** state, plus an OAuth2 endpoint shown as a plain **Down** for contrast (OAuth2 isn't covered by that protection). |
@@ -157,7 +164,7 @@ Demo data injection is strictly manual — it will not reappear automatically af
 ### 2.7 Quick Reference Table
 
 | I want to... | Go to |
-|---|---|
+| --- | --- |
 | See what's failing right now | Dashboard → Endpoint Status Cockpit (failures sort to top) |
 | Add a new endpoint | Endpoint Registry → Register New Endpoint |
 | Change an endpoint's settings | Endpoint Registry → pencil icon on that row |
@@ -175,6 +182,7 @@ Demo data injection is strictly manual — it will not reappear automatically af
 ---
 
 ## 3. Registering & Configuring Endpoints
+
 To start monitoring a new URL:
 
 1. Click the **Endpoint Registry** tab in the sidebar.
@@ -199,7 +207,7 @@ To start monitoring a new URL:
 **Check Interval** — the dropdown offers `1, 2, 5, 10, 15, 30, 60` minutes. Match it to how critical the endpoint is:
 
 | Endpoint type | Recommended interval |
-|---|---|
+| --- | --- |
 | Critical production API | **1–2 min** |
 | Standard internal service | **5 min** ← default, recommended for most endpoints |
 | Low-priority / rarely-changing endpoint | **15–30 min** |
@@ -210,7 +218,7 @@ Shorter intervals catch outages faster but generate more check traffic and more 
 **Timeout** — the dropdown offers `5, 10, 15, 30, 60, 120` seconds.
 
 | Endpoint type | Recommended timeout |
-|---|---|
+| --- | --- |
 | Fast internal REST API | 5 sec |
 | Typical internal API | **10 sec** ← default, recommended for most endpoints |
 | Known-slow / legacy system | 30–60 sec |
@@ -221,6 +229,7 @@ If a normally-working endpoint keeps reporting failures, raise the timeout befor
 **Degraded Threshold** — the default of 500ms suits most standard internal APIs. Lower it (e.g. 100–200ms) for latency-sensitive production APIs where a slowdown itself is worth flagging before it becomes an outage. Raise it for known-slow legacy systems or batch/report endpoints where a few seconds is normal — otherwise every check will show amber even when nothing is actually wrong.
 
 **Authentication method** — pick the one the server actually enforces (full details per type in [§4](#4-authentication-guide)):
+
 * Prefer **API Key** or **OAuth2** over **Basic Auth** wherever the server supports it.
 * Use **NTLM** only for internal Windows-domain-protected portals.
 * Use **Certificate (mTLS)** when the server requires a client-certificate handshake.
@@ -234,22 +243,26 @@ If a normally-working endpoint keeps reporting failures, raise the timeout befor
 ---
 
 ## 4. Authentication Guide
+
 The application supports multiple security layers. Under the **Authentication Method** dropdown, select the protocol required by your target server:
 
 ![Add Endpoint - Authentication Method Selector](Pictures/screenshot-add-endpoint.png)
 *(Live screenshot — Add New Endpoint form with the Authentication Method dropdown expanded showing all seven supported auth methods)*
 
 ### A. None (Public Endpoint)
+
 * **Use Case**: Public websites, unauthenticated internal status pages.
 * **Config**: No credentials required.
 
 ### B. Basic Credentials
+
 * **Use Case**: Standard username/password protection.
 * **Config**:
   * **Username**: Your login ID.
   * **Password**: Your login password.
 
 ### C. API Key Header/Query
+
 * **Use Case**: REST APIs requiring static developer keys.
 * **Config**:
   * **API Key Name**: The key header/query name (e.g., `X-API-Key` or `Authorization`).
@@ -257,6 +270,7 @@ The application supports multiple security layers. Under the **Authentication Me
   * **Location**: Select `Header` (sent invisibly in request headers) or `Query Parameter` (appended to the end of the URL like `?api_key=value`).
 
 ### D. Windows Domain (NTLM)
+
 * **Use Case**: Internal corporate portals protected by Microsoft Active Directory.
 * **Config**:
   * **Username / Password**: Your AD credentials.
@@ -264,6 +278,7 @@ The application supports multiple security layers. Under the **Authentication Me
   * **Workstation** *(Optional)*: Your local workstation name.
 
 ### E. OAuth2 Client Credentials
+
 * **Use Case**: Modern microservices returning short-lived Bearer tokens.
 * **Config**:
   * **Token URL**: The token generation address.
@@ -272,6 +287,7 @@ The application supports multiple security layers. Under the **Authentication Me
   * *Note: The application automatically handles fetching, caching, and renewing the transient Bearer token.*
 
 ### F. Session Cookie Authentication
+
 * **Use Case**: Portals requiring a preliminary POST request login to retrieve a session cookie.
 * **Config**:
   * **Login URL**: The page where credentials are submitted.
@@ -281,6 +297,7 @@ The application supports multiple security layers. Under the **Authentication Me
 ---
 
 ## 5. Configuring Chat Alerts & Webhooks
+
 To push real-time failure alerts directly to your team's chat rooms:
 
 1. Click the **Notification & JSON** tab.
@@ -288,14 +305,14 @@ To push real-time failure alerts directly to your team's chat rooms:
 3. Paste the incoming webhook link generated by your chat provider:
 
 | Provider | Where to get the webhook URL |
-|---|---|
+| --- | --- |
 | **Microsoft Teams** | In the target channel: `···` → **Connectors** → **Incoming Webhook** → **Configure** → copy the generated URL |
 | **Discord** | Channel **Settings** → **Integrations** → **Webhooks** → **New Webhook** → **Copy Webhook URL** |
 | **Slack** | Add the **Incoming Webhooks** app to your workspace → choose a channel → copy the generated webhook URL |
 
-4. Set **Channel Type** to match your provider.
-5. Click **Test** — sends a simulated alert card so you can confirm it lands in the right channel.
-6. Click **Save Settings** to persist.
+1. Set **Channel Type** to match your provider.
+2. Click **Test** — sends a simulated alert card so you can confirm it lands in the right channel.
+3. Click **Save Settings** to persist.
 
 When a monitored link goes offline, a detailed warning card is automatically posted to your channel. Both webhook and SMTP fields only accept `https://` URLs and validated SMTP hosts — this is enforced to prevent alerts leaking to an unintended or insecure destination.
 
@@ -312,12 +329,13 @@ When a monitored link goes offline, a detailed warning card is automatically pos
 ### Setting up SMTP email alerts
 
 | Provider | Server | Port | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Gmail | `smtp.gmail.com` | 587 | Requires an **App Password**, not your normal Google password, if 2FA is enabled |
 | Microsoft 365 / Outlook | `smtp.office365.com` | 587 | Use your normal mailbox credentials |
 | Internal corporate relay | ask your IT team | usually 25 or 587 | If it uses an internal CA certificate, check **"Allow self-signed / untrusted SMTP certificates"** |
 
 Steps:
+
 1. Go to **Notification & JSON → Alert Delivery**.
 2. Enter **SMTP Server Host** and **Port** from the table above.
 3. Enter **SMTP Username** / **Password** (the App Password for Gmail).
@@ -332,31 +350,38 @@ Steps:
 Because this application uses native system APIs, all of your configurations, logs, and alerts are securely centralized in a predictable location on your machine.
 
 ### A. Raw Storage Paths (Windows)
+
 Navigate to `C:\Users\<Username>\AppData\Roaming\api-monitor-erp\`:
+
 * **The SQLite Database**: `api_monitor.db` (Contains all endpoints, historical ping logs, and alert records)
 * **The Configuration File**: `config.json` (Contains your SMTP credentials, Webhook URLs, and UI toggles)
 
 ### B. GUI Export & Backup (Recommended)
+
 Under **Backup & Data** in the **Notification & JSON** tab:
+
 * **Export Backup JSON**: Saves your entire configuration as a single local `.json` file.
 * **Import Backup JSON**: Restores all endpoints and system configurations from a previously saved backup.
 * **Wipe Database Records**: Securely clears all endpoints, alert histories, and logs, resetting the application to a clean slate.
 
 ### C. Extracting Logs
+
 1. Go to the **Reports** tab.
 2. Click **Export CSV** to instantly save the formatted logs.
 
 ### D. Automated Log Exporting
+
 1. Go to the **Notification & JSON** tab.
 2. Check **Enable Weekly Auto-Export (CSV)**.
 3. Provide a valid folder path (e.g., `C:\Logs` or `\\Server\Shared\Logs`).
 4. A new CSV file is dropped into that folder every 7 days. Disabled by default to prevent clutter.
 
 ### E. Demo Data Testing
+
 Go to **Notification & JSON → Danger Zone** and choose one of three seed options:
 
 | Button | What it shows |
-|---|---|
+| --- | --- |
 | **Seed Healthy (4)** | All 4 demo endpoints online. |
 | **Seed Mixed (2 Good, 2 Err)** | 2 online, 2 down — also triggers your configured SMTP/webhook alerts. |
 | **Seed Auth Lockout** | Demonstrates AD Lockout Protection: an NTLM and a Basic-auth endpoint shown in the purple **Paused — Auth Lockout** state, plus an OAuth2 endpoint shown as a plain **Down** for contrast (OAuth2 isn't covered by that protection). |
@@ -366,6 +391,7 @@ Demo data injection is strictly manual — it will not reappear automatically af
 ---
 
 ## 8. System Tray & Background Operations
+
 The application is designed to run 24/7 in the background without cluttering your desktop space.
 
 * **Minimize on Close**: Clicking the `X` (close window) button automatically hides the app into your Windows system tray.
@@ -380,12 +406,15 @@ The application is designed to run 24/7 in the background without cluttering you
 ## 9. Self-Monitoring & Performance
 
 ### Footprint Widget
+
 A small widget in the Dashboard footer shows `CPU x% · RAM y MB` — measured and displayed by the app itself, live, with a 1-hour micro-sparkline. Hover over it for a breakdown by process (main / renderer / GPU). It ambers itself if CPU or RAM stays above its own threshold (10% sustained CPU, or 500MB RAM) for 5 minutes or more — so "is this a memory hog?" is answered by the running product, not a claim.
 
 ### Hourly Heartbeat Log
+
 Once an hour (and once immediately at launch), the engine writes one log entry summarizing real (non-demo) endpoints monitored, healthy, down, and paused. This is a receipt that the engine was alive and checking overnight and on weekends — not just a claim that it should have been. (This entry does not appear if you have zero real endpoints registered — seed/demo data alone doesn't generate a heartbeat.)
 
 ### Connection Reuse
+
 Each endpoint reuses one persistent connection across every poll instead of reconnecting from scratch each time. This matters most for **NTLM**, which authenticates the connection itself, not just the request — without reuse, every single poll would repeat the full authentication handshake. Editing or deleting an endpoint invalidates its cached connection immediately, so credential or URL changes always take effect on the next check.
 
 ---

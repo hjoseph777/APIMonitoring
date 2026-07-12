@@ -51,7 +51,7 @@ API Monitor ERP Desktop is a Windows-native monitoring product built for interna
 ### Why It Matters to Leadership
 
 | Executive Concern | What This Product Delivers |
-|---|---|
+| --- | --- |
 | Service continuity risk | 24/7 tray-resident monitoring with alerting on state transitions |
 | Integration outage cost | Validate and monitor the same probe to prevent test/monitor config drift |
 | Enterprise auth complexity | Support for NTLM, mTLS, OAuth2, Basic, API key, and cookie-session patterns |
@@ -70,7 +70,7 @@ API Monitor ERP Desktop is a Windows-native monitoring product built for interna
 ## At a Glance
 
 | Item | Details |
-|---|---|
+| --- | --- |
 | Product | Xerox API Monitor ERP Desktop |
 | Author | Harry Joseph |
 | Date | July 11, 2026 |
@@ -86,7 +86,7 @@ API Monitor ERP Desktop is a Windows-native monitoring product built for interna
 ## Who This Is For
 
 | Role | Outcome |
-|---|---|
+| --- | --- |
 | IT Operations | Early warning when internal services degrade or fail |
 | System Administrators | Always-on tray monitoring with webhook and SMTP alerts |
 | Integration Engineers | Validate auth flows (NTLM, OAuth2, mTLS, cookie sessions) before production incidents |
@@ -97,7 +97,7 @@ API Monitor ERP Desktop is a Windows-native monitoring product built for interna
 ## What You Get
 
 | Capability | Delivered Value |
-|---|---|
+| --- | --- |
 | Endpoint Monitoring | Recurring checks with per-endpoint intervals, timeout, and degraded-latency threshold controls |
 | Enterprise Auth | API Key, NTLM, mTLS certs, OAuth2 client credentials, Basic, Session Cookie |
 | Alerting | Native notifications, SMTP email, and webhook channels |
@@ -140,7 +140,7 @@ Most lightweight open-source monitors are excellent at generic uptime checks. Th
 ## Authentication Coverage
 
 | Authentication Type | Supported | Notes |
-|---|---|---|
+| --- | --- | --- |
 | None/Public | Yes | Baseline health checks |
 | API Key (Header/Query) | Yes | Per-endpoint config |
 | Windows Auth (NTLM) | Yes | Domain credential flow via `axios-ntlm` |
@@ -212,7 +212,7 @@ The monitoring engine uses persistent keep-alive connections and endpoint-level 
 This is especially important for NTLM, where authentication binds to the connection rather than a single request.
 
 | Behavior | Shared Keep-Alive Agent (Current) |
-|---|---|
+| --- | --- |
 | TCP connections (6 probes) | 1 persistent connection |
 | Connection pattern | Reused established connection |
 | NTLM handshake cost | Handshake reused for connection lifetime |
@@ -268,7 +268,7 @@ The standout numbers here aren't the lightweight-runtime row (an honest 8/10 —
 ### Table 1: General OSS Comparison (Lightweight + Feature Fit)
 
 | Area | **API Monitor ERP Desktop** | Uptime Kuma | Gatus | Statping-ng | Upptime | Healthchecks | Grafana |
-|---|---:|---:|---:|---:|---:|---:|---:|
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | Lightweight runtime footprint | 8 | 7 | 9 | 7 | 9 | 7 | 6 |
 | Setup simplicity | 8 | 9 | 8 | 7 | 7 | 9 | 6 |
 | Internal network and localhost reach | 10 | 8 | 7 | 7 | 3 | 4 | 8 |
@@ -280,7 +280,7 @@ The standout numbers here aren't the lightweight-runtime row (an honest 8/10 —
 | Desktop UX for non-technical ops users | 9 | 6 | 4 | 6 | 3 | 2 | 5 |
 | Extensibility and ecosystem size | 6 | 9 | 7 | 7 | 8 | 8 | 10 |
 
-**Weighted totals for internal ERP monitoring fit**
+#### Weighted totals for internal ERP monitoring fit
 
 1. API Monitor ERP Desktop: **86/100**
 2. Uptime Kuma: **74/100**
@@ -293,7 +293,7 @@ The standout numbers here aren't the lightweight-runtime row (an honest 8/10 —
 ### Table 2: Desktop-Capable and No-Docker-Friendly Comparison
 
 | Area | **API Monitor ERP Desktop** | Uptime Kuma | Gatus | Statping-ng | Monika | Grafana |
-|---|---:|---:|---:|---:|---:|---:|
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | Lightweight runtime footprint | 8 | 7 | 9 | 7 | 8 | 6 |
 | Windows/local desktop fit | 10 | 7 | 8 | 6 | 8 | 5 |
 | Internal localhost/intranet reach | 10 | 8 | 7 | 7 | 8 | 8 |
@@ -305,7 +305,7 @@ The standout numbers here aren't the lightweight-runtime row (an honest 8/10 —
 | Config simplicity | 8 | 9 | 8 | 7 | 7 | 6 |
 | Extensibility and community | 6 | 9 | 7 | 7 | 6 | 10 |
 
-**Weighted totals for Windows desktop + internal ERP endpoints**
+#### Weighted totals for Windows desktop + internal ERP endpoints
 
 1. API Monitor ERP Desktop: **87/100**
 2. Uptime Kuma: **73/100**

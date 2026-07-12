@@ -1,0 +1,13 @@
+{
+  "config": {
+    "default": true,
+    // GitHub's renderer ignores source line length entirely — enforcing an
+    // 80-char wrap would mean hand-breaking wide table rows and long prose,
+    // making the source less readable to satisfy a convention that doesn't
+    // apply to how these docs are actually read.
+    "MD013": false,
+    // <div align="center">/<img> is the standard GitHub README idiom for
+    // centering a logo or badge row — Markdown has no native equivalent.
+    "MD033": false
+  }
+}
