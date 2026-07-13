@@ -34,6 +34,11 @@ export function NotificationJson() {
   const [saving, setSaving] = useState(false)
   const [testingWebhook, setTestingWebhook] = useState(false)
   const [testingEmail, setTestingEmail] = useState(false)
+  const [appVersion, setAppVersion] = useState('')
+
+  useEffect(() => {
+    window.electronAPI?.getAppVersion().then(setAppVersion)
+  }, [])
 
   // Load settings on mount
   useEffect(() => {
@@ -556,7 +561,7 @@ export function NotificationJson() {
         <div className="flex items-center gap-4 text-slate-400 dark:text-slate-300 font-medium">
           <div className="flex items-center gap-1">
             <Cpu className="w-3.5 h-3.5 text-slate-400" />
-            <span>Version: 1.0.0 (v2.0 UI)</span>
+            <span>Version: {appVersion || '...'}</span>
           </div>
           <span>•</span>
           <span>Engine: Electron + React + SQLite</span>
