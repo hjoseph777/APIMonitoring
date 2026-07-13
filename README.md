@@ -5,6 +5,8 @@
 <div align="center">
   <img src="resources/icon.svg" width="120" height="120" alt="API Monitor ERP Desktop Logo" />
 
+  [![Download APIMonitoring](https://img.shields.io/badge/Download-APIMonitoring-2ea44f?style=for-the-badge&logo=github&logoColor=white)](https://github.com/hjoseph777/APIMonitoring/releases/latest/download/API.Monitor.ERP.Setup.1.2.0.zip)
+
   [![Version](https://img.shields.io/badge/version-1.2.0-red)](#release-and-quality)
   [![Platform](https://img.shields.io/badge/platform-Windows-blue)](#at-a-glance)
   [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
@@ -21,24 +23,47 @@ Unlike browser-only or Docker-first uptime tools, this product is optimized for 
 
 ## Table of Contents
 
-- [Executive Brief](#executive-brief)
-- [At a Glance](#at-a-glance)
-- [Who This Is For](#who-this-is-for)
-- [What You Get](#what-you-get)
-- [Core Workflow: Validate Then Monitor](#core-workflow-validate-then-monitor)
-- [Why It Is Different](#why-it-is-different)
-- [Authentication Coverage](#authentication-coverage)
-- [Reliability and Security Highlights](#reliability-and-security-highlights)
-- [Design Principles](#design-principles)
-- [Operational Features](#operational-features)
-- [Performance: Connection Reuse](#performance-connection-reuse)
-- [Visual Walkthrough](#visual-walkthrough)
-- [Competitive Research and Positioning](#competitive-research-and-positioning)
-- [Sales Pitch (Reuse Ready)](#sales-pitch-reuse-ready)
-- [Roadmap](#roadmap)
-- [Technology Stack](#technology-stack)
-- [Repository Layout](#repository-layout)
-- [Release and Quality](#release-and-quality)
+- [Xerox API Monitor ERP Desktop](#xerox-api-monitor-erp-desktop)
+  - [Table of Contents](#table-of-contents)
+  - [Executive Brief](#executive-brief)
+    - [Why It Matters to Leadership](#why-it-matters-to-leadership)
+    - [30-Second Decision Snapshot](#30-second-decision-snapshot)
+  - [At a Glance](#at-a-glance)
+  - [Who This Is For](#who-this-is-for)
+  - [What You Get](#what-you-get)
+  - [Core Workflow: Validate Then Monitor](#core-workflow-validate-then-monitor)
+  - [Why It Is Different](#why-it-is-different)
+  - [Authentication Coverage](#authentication-coverage)
+  - [Reliability and Security Highlights](#reliability-and-security-highlights)
+  - [Built for Enterprise Networks](#built-for-enterprise-networks)
+    - [AD Lockout Protection](#ad-lockout-protection)
+  - [Design Principles](#design-principles)
+  - [Operational Features](#operational-features)
+    - [Background Operations](#background-operations)
+    - [Data and Storage](#data-and-storage)
+    - [Error Visibility](#error-visibility)
+  - [Performance: Connection Reuse](#performance-connection-reuse)
+  - [Visual Walkthrough](#visual-walkthrough)
+    - [Dashboard](#dashboard)
+    - [Endpoint Registry](#endpoint-registry)
+    - [Add Endpoint and Auth Setup](#add-endpoint-and-auth-setup)
+    - [Notifications and JSON Settings](#notifications-and-json-settings)
+    - [Reports](#reports)
+  - [Competitive Research and Positioning](#competitive-research-and-positioning)
+    - [Table 1: General OSS Comparison (Lightweight + Feature Fit)](#table-1-general-oss-comparison-lightweight--feature-fit)
+      - [Weighted totals for internal ERP monitoring fit](#weighted-totals-for-internal-erp-monitoring-fit)
+    - [Table 2: Desktop-Capable and No-Docker-Friendly Comparison](#table-2-desktop-capable-and-no-docker-friendly-comparison)
+      - [Weighted totals for Windows desktop + internal ERP endpoints](#weighted-totals-for-windows-desktop--internal-erp-endpoints)
+  - [(Reuse Ready)](#reuse-ready)
+  - [Roadmap](#roadmap)
+  - [Technology Stack](#technology-stack)
+  - [Repository Layout](#repository-layout)
+  - [Release and Quality](#release-and-quality)
+    - [Current Release](#current-release)
+    - [Prerequisites](#prerequisites)
+    - [Run in Development](#run-in-development)
+    - [Build](#build)
+    - [Quality Gates](#quality-gates)
 
 ---
 
@@ -316,7 +341,7 @@ The standout numbers here aren't the lightweight-runtime row (an honest 8/10 —
 
 ---
 
-## Sales Pitch (Reuse Ready)
+## (Reuse Ready)
 
 Internal ERP outages are rarely just availability problems. They are often authentication, certificate, and network-context problems.
 
@@ -329,6 +354,7 @@ Benefits for integrators:
 3. Practical support for complex authentication configurations.
 4. Security-conscious defaults for long-running operation.
 5. Fast onboarding without mandatory Docker infrastructure.
+6. Testing endpoints stability before hand-off.
 
 Bottom line: for internal enterprise API reliability on Windows, this product is optimized for operational realism, not generic public uptime checks.
 
