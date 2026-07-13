@@ -54,7 +54,7 @@ Unlike browser-only or Docker-first uptime tools, this product is optimized for 
       - [Weighted totals for internal ERP monitoring fit](#weighted-totals-for-internal-erp-monitoring-fit)
     - [Table 2: Desktop-Capable and No-Docker-Friendly Comparison](#table-2-desktop-capable-and-no-docker-friendly-comparison)
       - [Weighted totals for Windows desktop + internal ERP endpoints](#weighted-totals-for-windows-desktop--internal-erp-endpoints)
-  - [Sales Pitch (Reuse Ready)](#sales-pitch-reuse-ready)
+  - [(Reuse Ready)](#reuse-ready)
   - [Roadmap](#roadmap)
   - [Technology Stack](#technology-stack)
   - [Repository Layout](#repository-layout)
@@ -341,7 +341,7 @@ The standout numbers here aren't the lightweight-runtime row (an honest 8/10 —
 
 ---
 
-## Sales Pitch (Reuse Ready)
+## (Reuse Ready)
 
 Internal ERP outages are rarely just availability problems. They are often authentication, certificate, and network-context problems.
 
